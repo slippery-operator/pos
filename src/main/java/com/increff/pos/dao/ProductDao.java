@@ -91,7 +91,6 @@
 package com.increff.pos.dao;
 
 import com.increff.pos.entity.ProductPojo;
-import com.increff.pos.model.response.ProductSearchData;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.criteria.CriteriaBuilder;

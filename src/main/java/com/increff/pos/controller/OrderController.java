@@ -2,7 +2,6 @@ package com.increff.pos.controller;
 
 import com.increff.pos.dto.OrderDto;
 import com.increff.pos.model.form.OrderItemForm;
-import com.increff.pos.model.form.OrderSearchForm;
 import com.increff.pos.model.response.OrderResponse;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -11,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -30,16 +30,18 @@ public class OrderController {
             @ApiParam(value = "Order ID")
             @RequestParam(required = false, name = "order-id") Integer orderId) {
 
-        OrderSearchForm searchForm = new OrderSearchForm();
+        // Parse dates directly in controller (simple parameter parsing)
+        LocalDate parsedStartDate = null;
+        LocalDate parsedEndDate = null;
+
         if (startDate != null && !startDate.isEmpty()) {
-            searchForm.setStartDate(java.time.LocalDate.parse(startDate));
+            parsedStartDate = LocalDate.parse(startDate);
         }
         if (endDate != null && !endDate.isEmpty()) {
-            searchForm.setEndDate(java.time.LocalDate.parse(endDate));
+            parsedEndDate = LocalDate.parse(endDate);
         }
-        searchForm.setOrderId(orderId);
 
-        return orderDto.searchOrders(searchForm);
+        return orderDto.searchOrders(parsedStartDate, parsedEndDate, orderId);
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
