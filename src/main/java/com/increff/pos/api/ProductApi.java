@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -21,6 +22,17 @@ public class ProductApi {
 
     @Autowired
     private ProductDao productDao;
+
+    public Map<String, ProductResponse> findProductsByBarcodes(List<String> barcodes) {
+        Set<String> uniqueBarcodes = barcodes.stream().collect(Collectors.toSet());
+        List<ProductPojo> products = productDao.selectByBarcodes(uniqueBarcodes);
+
+        return products.stream()
+                .collect(Collectors.toMap(
+                        ProductPojo::getBarcode,
+                        this::convertToProductData
+                ));
+    }
 
     public List<ProductResponse> searchProducts(ProductSearchForm searchRequest) {
         List<ProductPojo> products = productDao.findBySearchCriteria(searchRequest);

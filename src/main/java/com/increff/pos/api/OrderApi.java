@@ -1,55 +1,81 @@
-//// OrderApi.java
-//package com.increff.pos.service;
-//
-//import com.increff.pos.dao.OrderDao;
-//
-//import com.increff.pos.entity.OrderPojo;
-//import com.increff.pos.exception.ApiException;
-//
-//import com.increff.pos.model.form.OrderForm;
-//import com.increff.pos.model.response.OrderResponse;
-//import com.increff.pos.util.ConverterUtil;
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.stereotype.Service;
-//import org.springframework.transaction.annotation.Transactional;
-//
-//import java.time.ZonedDateTime;
-//import java.util.List;
-//import java.util.stream.Collectors;
-//
-//@Service
-//@Transactional
-//public class OrderApi {
-//    @Autowired
-//    private OrderDao orderDao;
-//
-//    public OrderResponse createOrder(OrderForm orderForm) {
-//        OrderPojo order = new OrderPojo();
-//        order.setTime(ZonedDateTime.now());
-//        orderDao.insert(order);
-//        return ConverterUtil.convert(order);
-//    }
-//
-//    public OrderResponse getOrderById(Integer id) throws ApiException {
-//        OrderPojo order = orderDao.selectById(id);
-//        if (order == null) {
-//            throw new ApiException("Order with ID " + id + " not found");
-//        }
-//        return ConverterUtil.convert(order);
-//    }
-//
-//    public List<OrderResponse> getOrdersByDateRange(ZonedDateTime startDate, ZonedDateTime endDate) {
-//        return orderDao.selectByDateRange(startDate, endDate).stream()
-//                .map(ConverterUtil::convert)
-//                .collect(Collectors.toList());
-//    }
-//
-//    public void updateInvoicePath(Integer orderId, String invoicePath) throws ApiException {
-//        OrderPojo order = orderDao.selectById(orderId);
-//        if (order == null) {
-//            throw new ApiException("Order with ID " + orderId + " not found");
-//        }
-//        order.setInvoicePath(invoicePath);
-//        orderDao.update(order);
-//    }
-//}
+package com.increff.pos.api;
+
+import com.increff.pos.dao.OrderDao;
+import com.increff.pos.entity.OrderItemPojo;
+import com.increff.pos.entity.OrderPojo;
+import com.increff.pos.exception.EntityNotFoundException;
+import com.increff.pos.model.form.OrderForm;
+import com.increff.pos.model.response.OrderItemResponse;
+import com.increff.pos.model.response.OrderResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import javax.transaction.Transactional;
+import java.time.ZonedDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@Transactional
+public class OrderApi {
+
+    @Autowired
+    private OrderDao orderDao;
+
+    public List<OrderResponse> searchOrders(ZonedDateTime startDate, ZonedDateTime endDate, Integer orderId) {
+        List<OrderPojo> orders = orderDao.findBySearchCriteria(startDate, endDate, orderId);
+        return orders.stream()
+                .map(this::convertToOrderResponse)
+                .collect(Collectors.toList());
+    }
+
+    public OrderResponse getOrderById(Integer id) {
+        OrderPojo order = orderDao.selectById(id);
+        if (order == null) {
+            throw new EntityNotFoundException("Order not found with id: " + id);
+        }
+        return convertToOrderResponse(order);
+    }
+
+    public OrderResponse createOrder() {
+        OrderPojo order = new OrderPojo();
+        order.setTime(ZonedDateTime.now());
+        orderDao.insert(order);
+        return convertToOrderResponse(order);
+    }
+
+    public void updateInvoicePath(Integer orderId, String invoicePath) {
+        OrderPojo order = orderDao.selectById(orderId);
+        if (order == null) {
+            throw new EntityNotFoundException("Order not found with id: " + orderId);
+        }
+        orderDao.updateInvoicePath(orderId, invoicePath);
+    }
+
+    private OrderResponse convertToOrderResponse(OrderPojo order) {
+        OrderResponse response = new OrderResponse();
+        response.setId(order.getId());
+        response.setTime(order.getTime());
+//        response.setInvoicePath(order.getInvoicePath());
+//        response.setVersion(order.getVersion());
+//        response.setCreatedAt(order.getCreatedAt());
+//        response.setUpdatedAt(order.getUpdatedAt());
+        if (order.getOrderItems() != null && !order.getOrderItems().isEmpty()) {
+            List<OrderItemResponse> orderItemResponses = order.getOrderItems().stream()
+                    .map(this::convertOrderItemToResponse)
+                    .collect(Collectors.toList());
+            response.setOrderItems(orderItemResponses);
+        }
+        return response;
+    }
+
+    private OrderItemResponse convertOrderItemToResponse(OrderItemPojo orderItem) {
+        OrderItemResponse response = new OrderItemResponse();
+        response.setId(orderItem.getId());
+        response.setOrderId(orderItem.getOrderId());
+        response.setProductId(orderItem.getProductId());
+        response.setQuantity(orderItem.getQuantity());
+        response.setSellingPrice(orderItem.getSellingPrice());
+        return response;
+    }
+}

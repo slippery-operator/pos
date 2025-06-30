@@ -2,6 +2,7 @@ package com.increff.pos.api;
 
 import com.increff.pos.dao.InventoryDao;
 import com.increff.pos.entity.InventoryPojo;
+import com.increff.pos.exception.ValidationException;
 import com.increff.pos.model.form.InventoryUpdateForm;
 import com.increff.pos.model.response.InventoryResponse;
 import com.increff.pos.model.form.InventoryForm;
@@ -67,6 +68,32 @@ public class InventoryApi {
         return inventories.stream()
                 .map(this::convertToInventoryData)
                 .collect(Collectors.toList());
+    }
+
+    public void validateInventoryAvailability(Integer productId, Integer requiredQuantity) {
+        InventoryPojo inventory = inventoryDao.selectByProductId(productId);
+        if (inventory == null) {
+            throw new ValidationException("No inventory found for product id: " + productId);
+        }
+        if (inventory.getQuantity() < requiredQuantity) {
+            throw new ValidationException("Insufficient inventory. Available: " + inventory.getQuantity() +
+                    ", Required: " + requiredQuantity + " for product id: " + productId);
+        }
+    }
+
+    public void reduceInventory(Integer productId, Integer quantity) {
+        InventoryPojo inventory = inventoryDao.selectByProductId(productId);
+        if (inventory == null) {
+            throw new ValidationException("No inventory found for product id: " + productId);
+        }
+
+        int newQuantity = inventory.getQuantity() - quantity;
+        if (newQuantity < 0) {
+            throw new ValidationException("Cannot reduce inventory below zero for product id: " + productId);
+        }
+
+        inventory.setQuantity(newQuantity);
+        inventoryDao.update(inventory);
     }
 
     private InventoryPojo convertToInventory(InventoryForm form) {

@@ -22,4 +22,7 @@ public class OrderItemForm {
     @NotNull(message = "MRP cannot be null")
     @DecimalMin(value = "0.01", message = "MRP must be greater than 0")
     private Double mrp;
+
+    private Integer productId;
+    private Integer orderId;
 }

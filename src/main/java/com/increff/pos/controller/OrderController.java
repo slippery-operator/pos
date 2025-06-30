@@ -1,32 +1,60 @@
-//package com.increff.pos.controller;
-//
-//
-//import com.increff.pos.model.response.OrderResponse;
-//import com.increff.pos.model.response.ProductResponse;
-//import io.swagger.annotations.ApiOperation;
-//import io.swagger.annotations.ApiParam;
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.http.MediaType;
-//import org.springframework.web.bind.annotation.PostMapping;
-//import org.springframework.web.bind.annotation.RequestMapping;
-//import org.springframework.web.bind.annotation.RequestPart;
-//import org.springframework.web.bind.annotation.RestController;
-//import org.springframework.web.multipart.MultipartFile;
-//
-//import java.util.List;
-//
-//@RestController
-//@RequestMapping("/orders")
-//public class OrderController {
-//
-//    @Autowired
-//    private OrderDto orderDto;
-//
-//    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-//    @ApiOperation(value = "Upload products from TSV file", consumes = "multipart/form-data")
-//    public List<OrderResponse> createOrdersTsv(
-//            @ApiParam(value = "TSV file containing order data", required = true)
-//            @RequestPart(value = "file") MultipartFile file) {
-//        return orderDto.createOrdersTsv(file);
-//    }
-//}
+package com.increff.pos.controller;
+
+import com.increff.pos.dto.OrderDto;
+import com.increff.pos.model.form.OrderItemForm;
+import com.increff.pos.model.form.OrderSearchForm;
+import com.increff.pos.model.response.OrderResponse;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
+import java.util.List;
+
+@RestController
+@RequestMapping("/orders")
+public class OrderController {
+
+    @Autowired
+    private OrderDto orderDto;
+
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiOperation(value = "Search orders by date range and order ID")
+    public List<OrderResponse> searchOrders(
+            @ApiParam(value = "Start date (YYYY-MM-DD)")
+            @RequestParam(required = false, name = "start-date") String startDate,
+            @ApiParam(value = "End date (YYYY-MM-DD)")
+            @RequestParam(required = false, name = "end-date") String endDate,
+            @ApiParam(value = "Order ID")
+            @RequestParam(required = false, name = "order-id") Integer orderId) {
+
+        OrderSearchForm searchForm = new OrderSearchForm();
+        if (startDate != null && !startDate.isEmpty()) {
+            searchForm.setStartDate(java.time.LocalDate.parse(startDate));
+        }
+        if (endDate != null && !endDate.isEmpty()) {
+            searchForm.setEndDate(java.time.LocalDate.parse(endDate));
+        }
+        searchForm.setOrderId(orderId);
+
+        return orderDto.searchOrders(searchForm);
+    }
+
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiOperation(value = "Create order from list of order items")
+    public OrderResponse createOrders(
+            @ApiParam(value = "List of order items", required = true)
+            @Valid @RequestBody List<OrderItemForm> orderItems) {
+        return orderDto.createOrders(orderItems);
+    }
+
+    @GetMapping(value = "/{id}/order-items", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiOperation(value = "Get order details with items by order ID")
+    public OrderResponse getOrderById(
+            @ApiParam(value = "Order ID", required = true)
+            @PathVariable Integer id) {
+        return orderDto.getOrderById(id);
+    }
+}

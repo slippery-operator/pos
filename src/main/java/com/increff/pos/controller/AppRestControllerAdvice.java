@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
@@ -67,6 +68,27 @@ public class AppRestControllerAdvice {
         ErrorResponse errorResponse = new ErrorResponse(
                 "FILE_SIZE_EXCEEDED",
                 "File size exceeds the maximum allowed limit",
+                request.getDescription(false).replace("uri=", "")
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(
+            MethodArgumentNotValidException ex, WebRequest request) {
+
+        logger.warn("MethodArgumentNotValidException: {}", ex.getMessage());
+
+        // Extract first error message from BindingResult
+        String errorMessage = ex.getBindingResult().getFieldErrors().stream()
+                .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
+                .findFirst()
+                .orElse("Invalid input");
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                "INVALID_FORM_",
+                errorMessage,
                 request.getDescription(false).replace("uri=", "")
         );
 

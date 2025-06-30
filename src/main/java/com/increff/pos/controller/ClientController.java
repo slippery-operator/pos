@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import java.util.List;
 
@@ -42,7 +43,7 @@ public class ClientController {
 
     @ApiOperation(value = "Adds new client")
     @PostMapping
-    public ResponseEntity<ClientResponse> add(@RequestBody ClientForm form) {
+    public ResponseEntity<ClientResponse> add(@Valid @RequestBody ClientForm form) {
         logger.info("Adding new client");
         ClientResponse client = clientDto.add(form);
         return ResponseEntity.status(HttpStatus.CREATED).body(client);
@@ -50,7 +51,7 @@ public class ClientController {
 
     @ApiOperation(value = "Updates existing client")
     @PutMapping("/{id}")
-    public ResponseEntity<ClientResponse> update(@PathVariable @Min(1) Integer id, @RequestBody ClientForm form) {
+    public ResponseEntity<ClientResponse> update(@PathVariable @Min(1) Integer id, @Valid @RequestBody ClientForm form) {
         logger.info("Updating client with id: " + id);
         ClientResponse client = clientDto.update(id, form);
         return ResponseEntity.ok(client);

@@ -8,7 +8,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "order")
+@Table(name = "orders")
 @Getter
 @Setter
 public class OrderPojo extends AbstractPojo {
@@ -20,9 +20,10 @@ public class OrderPojo extends AbstractPojo {
     @Column(name = "time", nullable = false)
     private ZonedDateTime time;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id")
     private List<OrderItemPojo> orderItems;
 
-    @Column(name = "invoice_path")
-    private String invoicePath;
+//    @Column(name = "invoice_path")
+//    private String invoicePath;
 }

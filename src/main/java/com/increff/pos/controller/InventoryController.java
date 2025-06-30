@@ -11,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -38,7 +39,7 @@ public class InventoryController {
     @PutMapping("/{product-id}")
     public InventoryResponse updateInventoryByProductId(
             @PathVariable("product-id") Integer productId,
-            @RequestBody InventoryUpdateForm inventoryUpdateForm) {
+            @Valid @RequestBody InventoryUpdateForm inventoryUpdateForm) {
         return inventoryDto.updateInventoryByProductId(productId, inventoryUpdateForm);
     }
 }
