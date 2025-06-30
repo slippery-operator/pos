@@ -7,14 +7,11 @@ import com.increff.pos.exception.DuplicateEntityException;
 import com.increff.pos.exception.EntityNotFoundException;
 import com.increff.pos.exception.ValidationException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Set;
-
-// TODO: Fix validateClientExists() and move validation to caller in ProductDto.
 
 @Service
 @Transactional
