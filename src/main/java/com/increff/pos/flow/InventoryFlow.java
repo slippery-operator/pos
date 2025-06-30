@@ -1,12 +1,10 @@
 package com.increff.pos.flow;
 
 import com.increff.pos.api.InventoryApi;
+import com.increff.pos.entity.InventoryPojo;
 import com.increff.pos.model.response.InventoryResponse;
-import com.increff.pos.model.form.InventoryForm;
-import com.increff.pos.util.TsvParserUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
 import java.util.List;
@@ -19,13 +17,10 @@ public class InventoryFlow {
     @Autowired
     private InventoryApi inventoryApi;
 
-    public List<InventoryResponse> processInventoryTsvUpload(MultipartFile file) {
-        // Parse TSV file
-        List<InventoryForm> inventoryForms = TsvParserUtil.parseInventoryTsv(file);
-
-        // Update inventories
-        return inventoryForms.stream()
-                .map(form -> inventoryApi.updateInventoryByProductId(form.getProductId(), form))
+    public List<InventoryResponse> processInventoryTsvUpload(List<InventoryPojo> inventoryPojos) {
+        // Update inventories using method parameters instead of forms
+        return inventoryPojos.stream()
+                .map(pojo -> inventoryApi.updateInventoryByProductId(pojo.getProductId(), pojo.getQuantity()))
                 .collect(Collectors.toList());
     }
 }

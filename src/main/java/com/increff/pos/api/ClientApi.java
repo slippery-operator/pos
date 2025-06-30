@@ -14,8 +14,7 @@ import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Set;
 
-// TODO: define validateClientExist(clientId), validateClientsExist(set<clientId>)
-
+// TODO: Fix validateClientExists() and move validation to caller in ProductDto.
 
 @Service
 @Transactional
@@ -25,13 +24,14 @@ public class ClientApi {
     private ClientDao clientDao;
 
     public ClientPojo add(String name) {
-        try {
-            ClientPojo pojo = new ClientPojo(name);
-            clientDao.insert(pojo);
-            return pojo;
-        } catch (DataIntegrityViolationException e) {
-            throw new DuplicateEntityException("Client with name " + name + " already exists");
+        ClientPojo nameAlrExists = clientDao.selectByName(name);
+        if(nameAlrExists != null) {
+            throw new DuplicateEntityException("Client with name: " + name + " alr exists.");
         }
+
+        ClientPojo pojo = new ClientPojo(name);
+        clientDao.insert(pojo);
+        return pojo;
     }
 
     public ClientPojo getById(Integer id) {
@@ -42,27 +42,28 @@ public class ClientApi {
         return pojo;
     }
 
-
     public List<ClientPojo> getAll() {
         return clientDao.selectAll();
     }
 
 
     public ClientPojo update(Integer clientId, String name) {
-        try {
-            ClientPojo pojo = getById(clientId);
-            pojo.setName(name);
-            clientDao.update(pojo);
-            return pojo;
-        } catch (DataIntegrityViolationException e) {
-            throw new DuplicateEntityException("Client with name " + name + " already exists");
+        ClientPojo nameAlrExists = clientDao.selectByName(name);
+        if(nameAlrExists != null) {
+            throw new DuplicateEntityException("Client with name: " + name + " alr exists.");
         }
+
+        ClientPojo pojo = getById(clientId);
+        pojo.setName(name);
+        clientDao.update(pojo);
+        return pojo;
+
     }
 
     public void validateClientExists(Integer clientId)  {
         if(clientId == null || clientId <= 0) {
             throw new ValidationException("Invalid client id: " + clientId);
-        }
+        } // move this to whoever calls it
         getById(clientId);
     }
 

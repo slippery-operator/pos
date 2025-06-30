@@ -44,4 +44,7 @@ public abstract class AbstractDao<T extends AbstractPojo> {
 		entityManager.merge(pojo);
 	}
 
+	public T selectByName(String name) {
+		return entityManager.find(entityClass, name);
+	}
 }

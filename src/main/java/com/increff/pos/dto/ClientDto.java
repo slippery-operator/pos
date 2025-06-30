@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.validation.ConstraintViolation;
+import javax.validation.Valid;
 import javax.validation.Validator;
 import java.util.List;
 import java.util.Set;
@@ -34,29 +35,31 @@ public class ClientDto {
     public ClientResponse add(ClientForm form) {
         validateForm(form);
         String name = normalize(form.getName());
+
         ClientPojo pojo = clientApi.add(name);
         return convertToResponse(pojo);
     }
 
     public List<ClientResponse> getAll() {
         logger.info("getAll() @ ClientDto");
+
         List<ClientPojo> pojos = clientApi.getAll();
         return convertToResponseList(pojos);
     }
 
     public List<ClientResponse> searchByName(String name) {
-        if (name == null || name.trim().isEmpty()) {
-            throw new ApiException("Search name cannot be empty");
-        }
-
+        validateSearchName(name);
         String normalizedName = normalize(name);
+
         List<ClientPojo> pojos = clientApi.searchByName(normalizedName);
         return convertToResponseList(pojos);
     }
 
     public ClientResponse update(Integer clientId, ClientForm form) {
+        validateClientId(clientId);
         validateForm(form);
         String name = normalize(form.getName());
+
         ClientPojo pojo = clientApi.update(clientId, name);
         return convertToResponse(pojo);
     }
@@ -87,5 +90,17 @@ public class ClientDto {
         return pojos.stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
+    }
+
+    private void validateClientId(Integer clientId) {
+        if(clientId == null || clientId <= 0) {
+            throw new ValidationException("Invalid client Id: " +  clientId);
+        }
+    }
+
+    private void validateSearchName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new ValidationException("Search name cannot be empty");
+        }
     }
 }

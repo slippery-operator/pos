@@ -19,7 +19,7 @@ public class ProductPojo extends AbstractPojo {
     @Column(name = "id")
     private Integer id;
 
-    @Column(name = "barcode", nullable = false, unique = true,length = 255)
+    @Column(name = "barcode", nullable = false, unique = true, length = 255)
     private String barcode;
 
     @Column(name = "client_id", nullable = false)

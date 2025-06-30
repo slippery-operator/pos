@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -28,7 +29,7 @@ public class ProductController {
     }
 
     @PostMapping
-    public ProductResponse createProduct(@RequestBody ProductForm productForm) {
+    public ProductResponse createProduct(@Valid @RequestBody ProductForm productForm) {
         return productDto.createProduct(productForm);
     }
 
@@ -41,7 +42,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    public ProductResponse updateProduct(@PathVariable Integer id, @RequestBody ProductForm productForm) {
+    public ProductResponse updateProduct(@PathVariable Integer id, @Valid @RequestBody ProductForm productForm) {
         return productDto.updateProduct(id, productForm);
     }
 }

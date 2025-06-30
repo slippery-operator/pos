@@ -3,13 +3,11 @@ package com.increff.pos.flow;
 import com.increff.pos.api.ClientApi;
 import com.increff.pos.api.InventoryApi;
 import com.increff.pos.api.ProductApi;
-import com.increff.pos.model.form.InventoryForm;
+import com.increff.pos.entity.InventoryPojo;
+import com.increff.pos.entity.ProductPojo;
 import com.increff.pos.model.response.ProductResponse;
-import com.increff.pos.model.form.ProductForm;
-import com.increff.pos.util.TsvParserUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
 import java.util.List;
@@ -29,60 +27,53 @@ public class ProductFlow {
     @Autowired
     private ClientApi clientApi;
 
-    public ProductResponse validateAndCreateProduct(ProductForm productForm) {
+    public ProductPojo validateAndCreateProduct(ProductPojo productPojo) {
         // Validate client exists
-        clientApi.validateClientExists(productForm.getClientId());
+        clientApi.validateClientExists(productPojo.getClientId());
 
         // Validate barcode uniqueness
-        productApi.validateBarcodeUniqueness(productForm.getBarcode(), null);
+        productApi.validateBarcodeUniqueness(productPojo.getBarcode(), null);
 
         // Create product
-        ProductResponse productData = productApi.createProduct(productForm);
+        ProductPojo createdProduct = productApi.createProduct(productPojo);
 
-        // Create inventory with quantity 0
-        InventoryForm inventoryForm = new InventoryForm();
-        inventoryForm.setProductId(productData.getId());
-        inventoryForm.setQuantity(0);
-        inventoryApi.createInventory(inventoryForm);
+        // Create initial inventory with 0 quantity
+        inventoryApi.createInventory(createdProduct.getId(), 0);
 
-        return productData;
+        return createdProduct;
     }
 
-    public List<ProductResponse> processProductTsvUpload(MultipartFile file) {
-        // Parse TSV file
-        List<ProductForm> productForms = TsvParserUtil.parseProductTsv(file);
-        System.out.println("Parsed productForms size: " + productForms.size());
-
+    public List<ProductPojo> processProductTsvUpload(List<ProductPojo> productPojos) {
         // Extract client IDs for validation
-        Set<Integer> clientIds = productForms.stream()
-                .map(ProductForm::getClientId)
+        Set<Integer> clientIds = productPojos.stream()
+                .map(ProductPojo::getClientId)
                 .collect(Collectors.toSet());
 
         // Validate all clients exist
         clientApi.validateClientsExist(clientIds);
 
         // Extract barcodes for validation
-        List<String> barcodes = productForms.stream()
-                .map(ProductForm::getBarcode)
+        List<String> barcodes = productPojos.stream()
+                .map(ProductPojo::getBarcode)
                 .collect(Collectors.toList());
 
         // Validate barcode uniqueness
         productApi.validateBarcodesUniqueness(barcodes);
 
         // Bulk create products
-        List<ProductResponse> createdProducts = productApi.bulkCreateProducts(productForms);
+        List<ProductPojo> createdProducts = productApi.bulkCreateProducts(productPojos);
 
-        // Bulk create inventories with quantity 0
-        List<InventoryForm> inventoryForms = createdProducts.stream()
+        // Create inventory POJOs for bulk insertion
+        List<InventoryPojo> inventoryPojos = createdProducts.stream()
                 .map(product -> {
-                    InventoryForm inventoryForm = new InventoryForm();
-                    inventoryForm.setProductId(product.getId());
-                    inventoryForm.setQuantity(0);
-                    return inventoryForm;
+                    InventoryPojo inventoryPojo = new InventoryPojo();
+                    inventoryPojo.setProductId(product.getId());
+                    inventoryPojo.setQuantity(0);
+                    return inventoryPojo;
                 })
                 .collect(Collectors.toList());
 
-        inventoryApi.bulkCreateInventory(inventoryForms);
+        inventoryApi.bulkCreateInventory(inventoryPojos);
 
         return createdProducts;
     }

@@ -5,8 +5,6 @@ import com.increff.pos.entity.ProductPojo;
 import com.increff.pos.exception.DuplicateEntityException;
 import com.increff.pos.exception.EntityNotFoundException;
 import com.increff.pos.model.response.ProductResponse;
-import com.increff.pos.model.form.ProductForm;
-import com.increff.pos.model.form.ProductSearchForm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +12,7 @@ import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,47 +22,49 @@ public class ProductApi {
     @Autowired
     private ProductDao productDao;
 
-    public Map<String, ProductResponse> findProductsByBarcodes(List<String> barcodes) {
+    public Map<String, ProductPojo> findProductsByBarcodes(List<String> barcodes) {
         Set<String> uniqueBarcodes = barcodes.stream().collect(Collectors.toSet());
         List<ProductPojo> products = productDao.selectByBarcodes(uniqueBarcodes);
 
         return products.stream()
                 .collect(Collectors.toMap(
                         ProductPojo::getBarcode,
-                        this::convertToProductData
+                        Function.identity()
                 ));
     }
 
-    public List<ProductResponse> searchProducts(ProductSearchForm searchRequest) {
-        List<ProductPojo> products = productDao.findBySearchCriteria(searchRequest);
-        return products.stream()
-                .map(this::convertToProductData)
-                .collect(Collectors.toList());
+    public List<ProductPojo> searchProducts(String barcode, Integer clientId, String productName) {
+        List<ProductPojo> products = productDao.findBySearchCriteria(barcode, clientId, productName);
+        return products;
     }
 
-    public ProductResponse getProductById(Integer id) {
+    public ProductPojo getProductById(Integer id) {
         ProductPojo product = productDao.selectById(id);
         if (product == null) {
             throw new EntityNotFoundException("Product not found with id: " + id);
         }
-        return convertToProductData(product);
+        return product;
     }
 
-    public ProductResponse createProduct(ProductForm productForm) {
-        ProductPojo product = convertToProduct(productForm);
+    public ProductPojo createProduct(ProductPojo product) {
         productDao.insert(product);
-        return convertToProductData(product);
+        return product;
     }
 
-    public ProductResponse updateProduct(Integer id, ProductForm productForm) {
+    public ProductPojo updateProduct(Integer id, String barcode, Integer clientId, String name, Double mrp, String imageUrl) {
         ProductPojo existingProduct = productDao.selectById(id);
         if (existingProduct == null) {
             throw new EntityNotFoundException("Product not found with id: " + id);
         }
 
-        updateProductFromForm(existingProduct, productForm);
+        existingProduct.setBarcode(barcode);
+        existingProduct.setClientId(clientId);
+        existingProduct.setName(name);
+        existingProduct.setMrp(mrp);
+        existingProduct.setImageUrl(imageUrl);
+
         productDao.update(existingProduct);
-        return convertToProductData(existingProduct);
+        return existingProduct;
     }
 
     public void validateBarcodeUniqueness(String barcode, Integer excludeId) {
@@ -88,26 +89,10 @@ public class ProductApi {
         }
     }
 
-    public List<ProductResponse> bulkCreateProducts(List<ProductForm> productForms) {
-        List<ProductPojo> products = productForms.stream()
-                .map(this::convertToProduct)
-                .collect(Collectors.toList());
-
+    public List<ProductPojo> bulkCreateProducts(List<ProductPojo> products) {
         productDao.bulkInsert(products);
 
-        return products.stream()
-                .map(this::convertToProductData)
-                .collect(Collectors.toList());
-    }
-
-    private ProductPojo convertToProduct(ProductForm form) {
-        ProductPojo product = new ProductPojo();
-        product.setBarcode(form.getBarcode());
-        product.setClientId(form.getClientId());
-        product.setName(form.getName());
-        product.setMrp(form.getMrp());
-        product.setImageUrl(form.getImageUrl());
-        return product;
+        return products;
     }
 
     private ProductResponse convertToProductData(ProductPojo product) {
@@ -122,13 +107,5 @@ public class ProductApi {
         data.setCreatedAt(product.getCreatedAt());
         data.setUpdatedAt(product.getUpdatedAt());
         return data;
-    }
-
-    private void updateProductFromForm(ProductPojo product, ProductForm form) {
-        product.setBarcode(form.getBarcode());
-        product.setClientId(form.getClientId());
-        product.setName(form.getName());
-        product.setMrp(form.getMrp());
-        product.setImageUrl(form.getImageUrl());
     }
 }
