@@ -28,6 +28,7 @@ public class ClientController {
 
     @ApiOperation(value = "Fetches list of all clients")
     @GetMapping
+    //TODO: to remove response entity across all controllers
     public ResponseEntity<List<ClientResponse>> getAll() {
 
         logger.info("Fetching all clients");

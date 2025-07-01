@@ -1,5 +1,6 @@
 package com.increff.pos.exception;
 
+//TODO: add a enum status field
 public class ApiException extends RuntimeException {
     public ApiException(String message) {
         super(message);

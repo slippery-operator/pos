@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
+//TODO: extend AbstractDto and keep all common dependencies like ValidationUtil in it
 public class InventoryDto {
 
     @Autowired
@@ -27,6 +28,7 @@ public class InventoryDto {
     @Autowired
     private InventoryFlow inventoryFlow;
 
+    //TODO: to create a separate validationUtil component, move all validation logic there
     @Autowired
     private Validator validator;
 

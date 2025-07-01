@@ -31,6 +31,7 @@ public class OrderController {
             @RequestParam(required = false, name = "order-id") Integer orderId) {
 
         // Parse dates directly in controller (simple parameter parsing)
+        //TODO: move these to DTO
         LocalDate parsedStartDate = null;
         LocalDate parsedEndDate = null;
 
@@ -44,6 +45,7 @@ public class OrderController {
         return orderDto.searchOrders(parsedStartDate, parsedEndDate, orderId);
     }
 
+    //TODO: to remove mediatype
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Create order from list of order items")
     public OrderResponse createOrders(

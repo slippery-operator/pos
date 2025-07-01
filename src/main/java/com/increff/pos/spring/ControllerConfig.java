@@ -85,12 +85,14 @@ ControllerConfig extends WebMvcConfigurerAdapter {
 		return new HandlerMappingIntrospector(context);
 	}
 
+	//TODO: to move this to spring config file
 	@Bean
 	public Validator validator() {
 		ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
 		return factory.getValidator();
 	}
 
+	//TODO: to move this to spring config file
 	@Bean
 	public CommonsMultipartResolver multipartResolver() {
 		CommonsMultipartResolver resolver = new CommonsMultipartResolver();

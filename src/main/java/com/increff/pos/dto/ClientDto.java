@@ -75,6 +75,7 @@ public class ClientDto {
         }
     }
 
+    //TODO: to explore convertUtil library
     private ClientResponse convertToResponse(ClientPojo pojo) {
         ClientResponse data = new ClientResponse();
         data.setClientId(pojo.getClientId());

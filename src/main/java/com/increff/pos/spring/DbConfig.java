@@ -19,7 +19,9 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 public class DbConfig {
 
 	public static final String PACKAGE_POJO = "com.increff.pos.entity";
-	
+
+	//TODO: to move all of this to a new ApplicationProperties.java class and autowire it
+
 	@Value("${jdbc.driverClassName}")
 	private String jdbcDriver;
 	@Value("${jdbc.url}")

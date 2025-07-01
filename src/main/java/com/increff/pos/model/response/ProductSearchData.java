@@ -9,6 +9,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+//TODO: to remove
 public class ProductSearchData {
 
     private String barcode;

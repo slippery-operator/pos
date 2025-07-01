@@ -8,7 +8,6 @@ import com.increff.pos.entity.OrderItemPojo;
 import com.increff.pos.entity.OrderPojo;
 import com.increff.pos.entity.ProductPojo;
 import com.increff.pos.exception.EntityNotFoundException;
-import com.increff.pos.model.response.ProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

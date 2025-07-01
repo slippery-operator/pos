@@ -13,6 +13,7 @@ import javax.persistence.*;
 @Table(name = "client", uniqueConstraints = {
         @UniqueConstraint(columnNames = "name", name = "uk_client_name")
 })
+//TODO: physical naming strategy
 public class ClientPojo extends AbstractPojo {
 
     @Id

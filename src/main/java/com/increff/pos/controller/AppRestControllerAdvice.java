@@ -24,6 +24,7 @@ public class AppRestControllerAdvice {
         logger.warn("Validation error: {}", ex.getMessage());
 
         ErrorResponse errorResponse = new ErrorResponse(
+                //TODO: This should be enum
                 "VALIDATION_ERROR",
                 ex.getMessage(),
                 request.getDescription(false).replace("uri=", "")
