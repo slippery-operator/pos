@@ -1,5 +1,7 @@
 package com.increff.pos.dto;
 
+import com.increff.pos.api.OrderApi;
+import com.increff.pos.exception.ValidationException;
 import com.increff.pos.flow.OrderFlow;
 import com.increff.pos.entity.OrderItemPojo;
 import com.increff.pos.entity.OrderPojo;
@@ -13,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.validation.ConstraintViolation;
+import javax.validation.Valid;
 import javax.validation.Validator;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
@@ -32,6 +35,9 @@ public class OrderDto {
 
     @Autowired
     private Validator validator;
+
+    @Autowired
+    private OrderApi orderApi;
 
     public OrderResponse createOrders(List<OrderItemForm> orderItems) {
         // Validate all order items
@@ -85,7 +91,7 @@ public class OrderDto {
 
     private void validateOrderItems(List<OrderItemForm> orderItems) {
         if (orderItems == null || orderItems.isEmpty()) {
-            throw new IllegalArgumentException("Order items cannot be empty");
+            throw new ValidationException("Order items cannot be empty");
         }
 
         for (OrderItemForm orderItem : orderItems) {
@@ -94,7 +100,7 @@ public class OrderDto {
                 String errorMessage = violations.stream()
                         .map(ConstraintViolation::getMessage)
                         .collect(Collectors.joining(", "));
-                throw new IllegalArgumentException("Validation failed: " + errorMessage);
+                throw new ValidationException("Validation failed: " + errorMessage);
             }
         }
     }

@@ -9,8 +9,8 @@ public class OrderItemResponse {
     private Integer id;
     private Integer orderId;
     private Integer productId;
-    private String productName;
-    private String barcode;
+//    private String productName;
+//    private String barcode;
     private Integer quantity;
     private Double sellingPrice;
 }
