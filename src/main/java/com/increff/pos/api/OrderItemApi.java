@@ -1,7 +1,7 @@
 package com.increff.pos.api;
 
 import com.increff.pos.dao.OrderItemDao;
-import com.increff.pos.entity.OrderItemPojo;
+import com.increff.pos.entity.OrderItemsPojo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,11 +15,11 @@ public class OrderItemApi {
     @Autowired
     private OrderItemDao orderItemDao;
 
-    public List<OrderItemPojo> getOrderItemsByOrderId(Integer orderId) {
+    public List<OrderItemsPojo> getOrderItemsByOrderId(Integer orderId) {
         return orderItemDao.selectByOrderId(orderId);
     }
 
-    public void bulkCreateOrderItems(List<OrderItemPojo> orderItems) {
+    public void bulkCreateOrderItems(List<OrderItemsPojo> orderItems) {
         orderItemDao.bulkInsert(orderItems);
     }
 }

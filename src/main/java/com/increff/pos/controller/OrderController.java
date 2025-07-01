@@ -6,11 +6,9 @@ import com.increff.pos.model.response.OrderResponse;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -20,7 +18,7 @@ public class OrderController {
     @Autowired
     private OrderDto orderDto;
 
-    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping
     @ApiOperation(value = "Search orders by date range and order ID")
     public List<OrderResponse> searchOrders(
             @ApiParam(value = "Start date (YYYY-MM-DD)")
@@ -30,23 +28,13 @@ public class OrderController {
             @ApiParam(value = "Order ID")
             @RequestParam(required = false, name = "order-id") Integer orderId) {
 
-        // Parse dates directly in controller (simple parameter parsing)
         //TODO: move these to DTO
-        LocalDate parsedStartDate = null;
-        LocalDate parsedEndDate = null;
 
-        if (startDate != null && !startDate.isEmpty()) {
-            parsedStartDate = LocalDate.parse(startDate);
-        }
-        if (endDate != null && !endDate.isEmpty()) {
-            parsedEndDate = LocalDate.parse(endDate);
-        }
-
-        return orderDto.searchOrders(parsedStartDate, parsedEndDate, orderId);
+        return orderDto.searchOrders(startDate, endDate, orderId);
     }
 
     //TODO: to remove mediatype
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping
     @ApiOperation(value = "Create order from list of order items")
     public OrderResponse createOrders(
             @ApiParam(value = "List of order items", required = true)
@@ -54,7 +42,7 @@ public class OrderController {
         return orderDto.createOrders(orderItems);
     }
 
-    @GetMapping(value = "/{id}/order-items", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping("/{id}/order-items")
     @ApiOperation(value = "Get order details with items by order ID")
     public OrderResponse getOrderById(
             @ApiParam(value = "Order ID", required = true)

@@ -1,6 +1,6 @@
 package com.increff.pos.dao;
 
-import com.increff.pos.entity.OrderItemPojo;
+import com.increff.pos.entity.OrderItemsPojo;
 import org.springframework.stereotype.Repository;
 import javax.persistence.criteria.*;
 import javax.transaction.Transactional;
@@ -8,23 +8,23 @@ import java.util.List;
 
 @Repository
 @Transactional
-public class OrderItemDao extends AbstractDao<OrderItemPojo> {
+public class OrderItemDao extends AbstractDao<OrderItemsPojo> {
 
     public OrderItemDao() {
-        super(OrderItemPojo.class);
+        super(OrderItemsPojo.class);
     }
 
-    public List<OrderItemPojo> selectByOrderId(Integer orderId) {
+    public List<OrderItemsPojo> selectByOrderId(Integer orderId) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        CriteriaQuery<OrderItemPojo> query = cb.createQuery(OrderItemPojo.class);
-        Root<OrderItemPojo> root = query.from(OrderItemPojo.class);
+        CriteriaQuery<OrderItemsPojo> query = cb.createQuery(OrderItemsPojo.class);
+        Root<OrderItemsPojo> root = query.from(OrderItemsPojo.class);
 
         query.select(root).where(cb.equal(root.get("orderId"), orderId));
 
         return entityManager.createQuery(query).getResultList();
     }
 
-    public void bulkInsert(List<OrderItemPojo> orderItems) {
+    public void bulkInsert(List<OrderItemsPojo> orderItems) {
         for (int i = 0; i < orderItems.size(); i++) {
             entityManager.persist(orderItems.get(i));
             if (i % 50 == 0) { // Batch processing

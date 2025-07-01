@@ -14,15 +14,15 @@ import java.time.ZonedDateTime;
 public abstract class AbstractPojo {
 
     @Version
-    @Column(name = "version", nullable = false)
+    @Column(nullable = false)
     private Integer version = 0;
 
     @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(nullable = false, updatable = false)
     private ZonedDateTime createdAt;
 
     @UpdateTimestamp
-    @Column(name = "updated_at", nullable = false)
+    @Column(nullable = false)
     private ZonedDateTime updatedAt;
 
     @PrePersist

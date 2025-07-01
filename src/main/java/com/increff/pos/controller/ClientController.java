@@ -7,8 +7,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -29,41 +27,37 @@ public class ClientController {
     @ApiOperation(value = "Fetches list of all clients")
     @GetMapping
     //TODO: to remove response entity across all controllers
-    public ResponseEntity<List<ClientResponse>> getAll() {
+    public List<ClientResponse> getAll() {
 
         logger.info("Fetching all clients");
 
-        List<ClientResponse> clients = clientDto.getAll();
-        return ResponseEntity.ok(clients);
+        return clientDto.getAll();
     }
 
     @ApiOperation(value = "Search clients by name")
     @GetMapping("/search")
-    public ResponseEntity<List<ClientResponse>> searchByName(@RequestParam String name) {
+    public List<ClientResponse> searchByName(@RequestParam String name) {
 
         logger.info("Searching clients by name: " + name);
 
-        List<ClientResponse> clients = clientDto.searchByName(name);
-        return ResponseEntity.ok(clients);
+        return clientDto.searchByName(name);
     }
 
     @ApiOperation(value = "Adds new client")
     @PostMapping
-    public ResponseEntity<ClientResponse> add(@Valid @RequestBody ClientForm form) {
+    public ClientResponse add(@Valid @RequestBody ClientForm form) {
 
         logger.info("Adding new client");
 
-        ClientResponse client = clientDto.add(form);
-        return ResponseEntity.status(HttpStatus.CREATED).body(client);
+        return clientDto.add(form);
     }
 
     @ApiOperation(value = "Updates existing client")
     @PutMapping("/{id}")
-    public ResponseEntity<ClientResponse> update(@PathVariable @Min(1) Integer id, @Valid @RequestBody ClientForm form) {
+    public ClientResponse update(@PathVariable @Min(1) Integer id, @Valid @RequestBody ClientForm form) {
 
         logger.info("Updating client with id: " + id);
 
-        ClientResponse client = clientDto.update(id, form);
-        return ResponseEntity.ok(client);
+        return clientDto.update(id, form);
     }
 }

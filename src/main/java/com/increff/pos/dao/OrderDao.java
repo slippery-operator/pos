@@ -1,6 +1,6 @@
 package com.increff.pos.dao;
 
-import com.increff.pos.entity.OrderPojo;
+import com.increff.pos.entity.OrdersPojo;
 import org.springframework.stereotype.Repository;
 import javax.persistence.criteria.*;
 import javax.transaction.Transactional;
@@ -10,16 +10,16 @@ import java.util.List;
 
 @Repository
 @Transactional
-public class OrderDao extends AbstractDao<OrderPojo> {
+public class OrderDao extends AbstractDao<OrdersPojo> {
 
     public OrderDao() {
-        super(OrderPojo.class);
+        super(OrdersPojo.class);
     }
 
-    public List<OrderPojo> findBySearchCriteria(ZonedDateTime startDate, ZonedDateTime endDate, Integer orderId) {
+    public List<OrdersPojo> findBySearchCriteria(ZonedDateTime startDate, ZonedDateTime endDate, Integer orderId) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        CriteriaQuery<OrderPojo> query = cb.createQuery(OrderPojo.class);
-        Root<OrderPojo> root = query.from(OrderPojo.class);
+        CriteriaQuery<OrdersPojo> query = cb.createQuery(OrdersPojo.class);
+        Root<OrdersPojo> root = query.from(OrdersPojo.class);
 
         List<Predicate> predicates = new ArrayList<>();
 
@@ -46,8 +46,8 @@ public class OrderDao extends AbstractDao<OrderPojo> {
 
     public void updateInvoicePath(Integer orderId, String invoicePath) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        CriteriaUpdate<OrderPojo> update = cb.createCriteriaUpdate(OrderPojo.class);
-        Root<OrderPojo> root = update.from(OrderPojo.class);
+        CriteriaUpdate<OrdersPojo> update = cb.createCriteriaUpdate(OrdersPojo.class);
+        Root<OrdersPojo> root = update.from(OrdersPojo.class);
 
         update.set(root.get("invoicePath"), invoicePath);
         update.where(cb.equal(root.get("id"), orderId));

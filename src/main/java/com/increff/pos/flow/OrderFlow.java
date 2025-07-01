@@ -4,8 +4,8 @@ import com.increff.pos.api.InventoryApi;
 import com.increff.pos.api.OrderApi;
 import com.increff.pos.api.OrderItemApi;
 import com.increff.pos.api.ProductApi;
-import com.increff.pos.entity.OrderItemPojo;
-import com.increff.pos.entity.OrderPojo;
+import com.increff.pos.entity.OrderItemsPojo;
+import com.increff.pos.entity.OrdersPojo;
 import com.increff.pos.entity.ProductPojo;
 import com.increff.pos.exception.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +33,7 @@ public class OrderFlow {
     private InventoryApi inventoryApi;
 
     @Transactional
-    public OrderPojo createOrderFromBarcodes(List<String> barcodes, List<Integer> quantities, List<Double> mrps) {
+    public OrdersPojo createOrderFromBarcodes(List<String> barcodes, List<Integer> quantities, List<Double> mrps) {
         // Look up products by their barcodes
         Map<String, ProductPojo> productMap = productApi.findProductsByBarcodes(barcodes);
 
@@ -51,10 +51,10 @@ public class OrderFlow {
         }
 
         // Create the main order record
-        OrderPojo createdOrder = orderApi.createOrder();
+        OrdersPojo createdOrder = orderApi.createOrder();
 
         // Process each order item
-        List<OrderItemPojo> orderItemsToCreate = new ArrayList<>();
+        List<OrderItemsPojo> orderItemsToCreate = new ArrayList<>();
         for (int i = 0; i < barcodes.size(); i++) {
             // Get the product for this barcode
             ProductPojo product = productMap.get(barcodes.get(i));
@@ -63,7 +63,7 @@ public class OrderFlow {
             inventoryApi.reduceInventory(product.getId(), quantities.get(i));
 
             // Create order item pojo
-            OrderItemPojo orderItem = new OrderItemPojo();
+            OrderItemsPojo orderItem = new OrderItemsPojo();
             orderItem.setOrderId(createdOrder.getId());
             orderItem.setProductId(product.getId());
             orderItem.setQuantity(quantities.get(i));
@@ -77,15 +77,15 @@ public class OrderFlow {
         return createdOrder;
     }
 
-    public List<OrderPojo> searchOrders(ZonedDateTime startDate, ZonedDateTime endDate, Integer orderId) {
+    public List<OrdersPojo> searchOrders(ZonedDateTime startDate, ZonedDateTime endDate, Integer orderId) {
         return orderApi.searchOrders(startDate, endDate, orderId);
     }
 
-    public OrderPojo getOrderWithItems(Integer orderId) {
+    public OrdersPojo getOrderWithItems(Integer orderId) {
         return orderApi.getOrderById(orderId);
     }
 
-    public List<OrderItemPojo> getOrderItemsByOrderId(Integer orderId) {
+    public List<OrderItemsPojo> getOrderItemsByOrderId(Integer orderId) {
         return orderItemApi.getOrderItemsByOrderId(orderId);
     }
 }
