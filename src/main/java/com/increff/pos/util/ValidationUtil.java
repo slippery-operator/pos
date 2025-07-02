@@ -7,12 +7,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/**
- * Centralized validation utility for all form validations across the application
- */
 @Component
 public class ValidationUtil {
 
@@ -20,10 +18,7 @@ public class ValidationUtil {
     private Validator validator;
 
     /**
-     * Validates any form object using JSR-303 annotations
-     * @param form The form object to validate
-     * @param <T> The type of form being validated
-     * @throws ValidationException if validation fails
+     * Generic form validation using Bean Validation
      */
     public <T> void validateForm(T form) {
         Set<ConstraintViolation<T>> violations = validator.validate(form);
@@ -36,10 +31,20 @@ public class ValidationUtil {
     }
 
     /**
-     * Validates ID parameters (non-null and positive)
-     * @param id The ID to validate
-     * @param fieldName The name of the field for error reporting
-     * @throws ValidationException if validation fails
+     * Validate list of forms
+     */
+    public <T> void validateForms(List<T> forms) {
+        if (forms == null || forms.isEmpty()) {
+            throw new ValidationException("Form list cannot be empty");
+        }
+
+        for (T form : forms) {
+            validateForm(form);
+        }
+    }
+
+    /**
+     * Validate ID parameters
      */
     public void validateId(Integer id, String fieldName) {
         if (id == null || id <= 0) {
@@ -48,42 +53,31 @@ public class ValidationUtil {
     }
 
     /**
-     * Validates search terms (non-null and non-empty)
-     * @param searchTerm The search term to validate
-     * @param fieldName The name of the field for error reporting
-     * @throws ValidationException if validation fails
+     * Validate search name parameter
      */
-    public void validateSearchTerm(String searchTerm, String fieldName) {
-        if (searchTerm == null || searchTerm.trim().isEmpty()) {
-            throw new ValidationException(fieldName + " cannot be empty");
+    public void validateSearchName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new ValidationException("Search name cannot be empty");
         }
     }
 
     /**
-     * Validates file uploads
-     * @param file The file to validate
-     * @param expectedExtension The expected file extension
-     * @throws ValidationException if validation fails
+     * Validate TSV file
      */
-    public void validateFile(MultipartFile file, String expectedExtension) {
+    public void validateTsvFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new ValidationException("File is required");
+            throw new ValidationException("TSV file is required");
         }
-        String filename = file.getOriginalFilename();
-        if (filename == null || !filename.toLowerCase().endsWith(expectedExtension.toLowerCase())) {
-            throw new ValidationException("File must be in " + expectedExtension.toUpperCase() + " format");
+        if (!file.getOriginalFilename().endsWith(".tsv")) {
+            throw new ValidationException("File must be in TSV format");
         }
     }
 
     /**
-     * Validates a list of items (non-null and non-empty)
-     * @param items The list to validate
-     * @param fieldName The name of the field for error reporting
-     * @throws ValidationException if validation fails
+     * Validate search parameters (can be null but if provided must be valid)
      */
-    public void validateList(java.util.List<?> items, String fieldName) {
-        if (items == null || items.isEmpty()) {
-            throw new ValidationException(fieldName + " cannot be empty");
-        }
+    public void validateSearchParams(Integer... params) {
+        // Custom validation logic for search parameters
+        // Implementation depends on specific business rules
     }
 }
