@@ -19,7 +19,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
-//TODO: extend AbstractDto and keep all common dependencies like ValidationUtil in it
+//TODO: extend Abstractdto and keep all convesions in convertUtil
 public class InventoryDto {
 
     @Autowired

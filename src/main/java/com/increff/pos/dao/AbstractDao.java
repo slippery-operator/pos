@@ -45,6 +45,15 @@ public abstract class AbstractDao<T extends AbstractPojo> {
 	}
 
 	public T selectByName(String name) {
-		return entityManager.find(entityClass, name);
+		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+		CriteriaQuery<T> query = cb.createQuery(entityClass);
+		Root<T> root = query.from(entityClass);
+
+		query.select(root)
+				.where(cb.equal(root.get("name"), name));
+
+		List<T> results = entityManager.createQuery(query).getResultList();
+		return results.isEmpty() ? null : results.get(0);
 	}
+
 }
