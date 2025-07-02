@@ -78,15 +78,16 @@ public class OrderDto {
         ZonedDateTime startDateTime = parsedStartDate != null ?
                 parsedStartDate.atStartOfDay(java.time.ZoneOffset.UTC) : null;
         ZonedDateTime endDateTime = parsedEndDate != null ?
-                parsedEndDate.atTime(23, 59, 59).atZone(java.time.ZoneOffset.UTC) : null;
+                parsedEndDate.plusDays(1).atStartOfDay(java.time.ZoneOffset.UTC) : null;
 
         // Call flow layer with parameters
         List<OrdersPojo> orders = orderFlow.searchOrders(startDateTime, endDateTime, orderId);
 
-        // Convert to response
-        return orders.stream()
+        List<OrderResponse> retrievedOrders = orders.stream()
                 .map(order -> convertToOrderResponse(order, orderFlow.getOrderItemsByOrderId(order.getId())))
                 .collect(Collectors.toList());
+
+        return retrievedOrders;
     }
 
     public OrderResponse getOrderById(Integer orderId) {

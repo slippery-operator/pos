@@ -42,6 +42,12 @@ public class OrderDao extends AbstractDao<OrdersPojo> {
         query.orderBy(cb.desc(root.get("time")));
 
         return entityManager.createQuery(query).getResultList();
+//        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+//        CriteriaQuery<OrdersPojo> query = cb.createQuery(OrdersPojo.class);
+//        Root<OrdersPojo> root = query.from(OrdersPojo.class);
+//
+//        query.orderBy(cb.desc(root.get("time")));
+//        return entityManager.createQuery(query).getResultList();
     }
 
     public void updateInvoicePath(Integer orderId, String invoicePath) {

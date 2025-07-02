@@ -70,6 +70,7 @@ public class DbConfig {
 		jpaProperties.put("hibernate.show_sql", hibernateShowSql);
 		jpaProperties.put("hibernate.hbm2ddl.auto", hibernateHbm2ddl);
 		jpaProperties.put("hibernate.hbm2ddl.auto", hibernateHbm2ddl);
+		jpaProperties.put("hibernate.physical_naming_strategy", "com.increff.pos.spring.SnakeCaseNamingStrategy");
 		bean.setJpaProperties(jpaProperties);
 		return bean;
 	}
