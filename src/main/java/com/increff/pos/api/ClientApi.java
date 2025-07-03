@@ -3,9 +3,6 @@ package com.increff.pos.api;
 import com.increff.pos.dao.ClientDao;
 import com.increff.pos.entity.ClientPojo;
 import com.increff.pos.exception.ApiException;
-import com.increff.pos.exception.DuplicateEntityException;
-import com.increff.pos.exception.EntityNotFoundException;
-import com.increff.pos.exception.ValidationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,53 +18,62 @@ public class ClientApi {
     private ClientDao clientDao;
 
     public ClientPojo add(String name) {
-        ClientPojo nameAlrExists = clientDao.selectByName(name);
-        if(nameAlrExists != null) {
-            throw new DuplicateEntityException("Client with name: " + name + " alr exists.");
+        // Check if client with same name already exists
+        ClientPojo existingClient = clientDao.selectByName(name);
+        if (existingClient != null) {
+            throw new ApiException(ApiException.ErrorType.RESOURCE_ALREADY_EXISTS, 
+                "Client with name: " + name + " already exists.");
         }
 
-        ClientPojo pojo = new ClientPojo(name);
-        clientDao.insert(pojo);
-        return pojo;
+        ClientPojo client = new ClientPojo();
+        client.setName(name);
+        clientDao.insert(client);
+        return client;
     }
 
     public ClientPojo getById(Integer id) {
-        ClientPojo pojo = clientDao.selectById(id);
-        if(pojo == null) {
-            throw new EntityNotFoundException("Client with ID " + id + " not found.");
+        ClientPojo client = clientDao.selectById(id);
+        if (client == null) {
+            throw new ApiException(ApiException.ErrorType.ENTITY_NOT_FOUND, 
+                "Client with ID " + id + " not found.");
         }
-        return pojo;
+        return client;
+    }
+
+    public ClientPojo update(Integer id, String name) {
+        // Check if client with same name already exists (excluding current client)
+        ClientPojo existingClient = clientDao.selectByName(name);
+        if (existingClient != null && !existingClient.getClientId().equals(id)) {
+            throw new ApiException(ApiException.ErrorType.RESOURCE_ALREADY_EXISTS, 
+                "Client with name: " + name + " already exists.");
+        }
+
+        ClientPojo client = clientDao.selectById(id);
+        if (client == null) {
+            throw new ApiException(ApiException.ErrorType.ENTITY_NOT_FOUND, 
+                "Client with ID " + id + " not found.");
+        }
+
+        client.setName(name);
+        clientDao.update(client);
+        return client;
+    }
+
+    public void validateClientExists(Integer clientId) {
+        if (clientId == null || clientDao.selectById(clientId) == null) {
+            throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, 
+                "Invalid client id: " + clientId);
+        }
+    }
+
+    public void validateClientsExist(Set<Integer> clientIds) {
+        for (Integer clientId : clientIds) {
+            validateClientExists(clientId);
+        }
     }
 
     public List<ClientPojo> getAll() {
         return clientDao.selectAll();
-    }
-
-
-    public ClientPojo update(Integer clientId, String name) {
-        ClientPojo nameAlrExists = clientDao.selectByName(name);
-        if(nameAlrExists != null) {
-            throw new DuplicateEntityException("Client with name: " + name + " alr exists.");
-        }
-
-        ClientPojo pojo = getById(clientId);
-        pojo.setName(name);
-        clientDao.update(pojo);
-        return pojo;
-
-    }
-
-    public void validateClientExists(Integer clientId)  {
-        if(clientId == null || clientId <= 0) {
-            throw new ValidationException("Invalid client id: " + clientId);
-        } // move this to whoever calls it
-        getById(clientId);
-    }
-
-    public void validateClientsExist(Set<Integer> clientIds) {
-        for(Integer clientId: clientIds) {
-            validateClientExists(clientId);
-        }
     }
 
     public List<ClientPojo> searchByName(String name) {

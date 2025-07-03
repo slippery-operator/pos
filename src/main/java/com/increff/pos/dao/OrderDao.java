@@ -4,6 +4,7 @@ import com.increff.pos.entity.OrdersPojo;
 import org.springframework.stereotype.Repository;
 import javax.persistence.criteria.*;
 import javax.transaction.Transactional;
+import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +17,14 @@ public class OrderDao extends AbstractDao<OrdersPojo> {
         super(OrdersPojo.class);
     }
 
-    public List<OrdersPojo> findBySearchCriteria(ZonedDateTime startDate, ZonedDateTime endDate, Integer orderId) {
+    @Override
+    public void insert(OrdersPojo pojo) {
+        entityManager.persist(pojo);
+        entityManager.flush();
+        entityManager.refresh(pojo);
+    }
+
+    public List<OrdersPojo> findBySearchCriteria(Instant startDate, Instant endDate, Integer orderId) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<OrdersPojo> query = cb.createQuery(OrdersPojo.class);
         Root<OrdersPojo> root = query.from(OrdersPojo.class);
@@ -42,12 +50,6 @@ public class OrderDao extends AbstractDao<OrdersPojo> {
         query.orderBy(cb.desc(root.get("time")));
 
         return entityManager.createQuery(query).getResultList();
-//        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-//        CriteriaQuery<OrdersPojo> query = cb.createQuery(OrdersPojo.class);
-//        Root<OrdersPojo> root = query.from(OrdersPojo.class);
-//
-//        query.orderBy(cb.desc(root.get("time")));
-//        return entityManager.createQuery(query).getResultList();
     }
 
     public void updateInvoicePath(Integer orderId, String invoicePath) {

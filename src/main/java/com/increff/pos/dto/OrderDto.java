@@ -1,6 +1,7 @@
 package com.increff.pos.dto;
 
 import com.increff.pos.api.OrderApi;
+import com.increff.pos.api.OrderItemApi;
 import com.increff.pos.flow.OrderFlow;
 import com.increff.pos.entity.OrderItemsPojo;
 import com.increff.pos.entity.OrdersPojo;
@@ -12,7 +13,9 @@ import com.increff.pos.api.ProductApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,6 +31,9 @@ public class OrderDto extends AbstractDto<OrderItemForm> {
 
     @Autowired
     private OrderApi orderApi;
+
+    @Autowired
+    private OrderItemApi orderItemApi;
 
     @Autowired
     private ConvertUtil convertUtil;
@@ -49,42 +55,40 @@ public class OrderDto extends AbstractDto<OrderItemForm> {
                 .map(OrderItemForm::getMrp)
                 .collect(Collectors.toList());
 
-        // Call flow layer with extracted parameters
+        // Call flow layer with extracted parameters (complex orchestration)
         OrdersPojo createdOrder = orderFlow.createOrderFromBarcodes(barcodes, quantities, mrps);
 
         // Get order items and convert to response
-        List<OrderItemsPojo> orderItemPojos = orderFlow.getOrderItemsByOrderId(createdOrder.getId());
+        List<OrderItemsPojo> orderItemPojos = orderItemApi.getOrderItemsByOrderId(createdOrder.getId());
 
         return convertToOrderResponse(createdOrder, orderItemPojos);
     }
 
     public List<OrderResponse> searchOrders(String startDate, String endDate, Integer orderId) {
 
-        LocalDate parsedStartDate = null;
-        LocalDate parsedEndDate = null;
+        Instant parsedStartDate = null;
+        Instant parsedEndDate = null;
 
         if (startDate != null && !startDate.isEmpty()) {
-            parsedStartDate = LocalDate.parse(startDate);
+            parsedStartDate = LocalDate.parse(startDate)
+                    .atStartOfDay(ZoneOffset.UTC)
+                    .toInstant(); // 00:00 UTC
         }
+
         if (endDate != null && !endDate.isEmpty()) {
-            parsedEndDate = LocalDate.parse(endDate);
+            parsedEndDate = LocalDate.parse(endDate)
+                    .plusDays(1)                              // move to next day
+                    .atStartOfDay(ZoneOffset.UTC)             // at 00:00 UTC
+                    .toInstant()
+                    .minusMillis(1);                          // back to 23:59:59.999
         }
 
-        // Convert LocalDate to ZonedDateTime
-        ZonedDateTime startDateTime = parsedStartDate != null ?
-                parsedStartDate.atStartOfDay(java.time.ZoneOffset.UTC) : null;
-        ZonedDateTime endDateTime = parsedEndDate != null ?
-                parsedEndDate.plusDays(1).atStartOfDay(java.time.ZoneOffset.UTC) : null;
-
-        // Call flow layer with parameters
-        List<OrdersPojo> orders = orderFlow.searchOrders(startDateTime, endDateTime, orderId);
-
-        System.out.println(orders);
+        // Direct API call instead of using flow layer
+        List<OrdersPojo> orders = orderApi.searchOrders(parsedStartDate, parsedEndDate, orderId);
 
         List<OrderResponse> retrievedOrders = orders.stream()
-                .map(order -> convertToOrderResponse(order, orderFlow.getOrderItemsByOrderId(order.getId())))
+                .map(order -> convertToOrderResponse(order, orderItemApi.getOrderItemsByOrderId(order.getId())))
                 .collect(Collectors.toList());
-        System.out.println(retrievedOrders);
 
         return retrievedOrders;
     }
@@ -92,9 +96,9 @@ public class OrderDto extends AbstractDto<OrderItemForm> {
     public OrderResponse getOrderById(Integer orderId) {
         validateId(orderId, "order Id");
 
-        // Get order and items from flow
-        OrdersPojo order = orderFlow.getOrderWithItems(orderId);
-        List<OrderItemsPojo> orderItems = orderFlow.getOrderItemsByOrderId(orderId);
+        // Direct API calls instead of using flow layer
+        OrdersPojo order = orderApi.getOrderById(orderId);
+        List<OrderItemsPojo> orderItems = orderItemApi.getOrderItemsByOrderId(orderId);
 
         return convertToOrderResponse(order, orderItems);
     }

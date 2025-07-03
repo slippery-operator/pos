@@ -2,7 +2,6 @@ package com.increff.pos.dto;
 
 import com.increff.pos.api.InventoryApi;
 import com.increff.pos.entity.InventoryPojo;
-import com.increff.pos.flow.InventoryFlow;
 import com.increff.pos.model.form.InventoryUpdateForm;
 import com.increff.pos.model.response.InventoryResponse;
 import com.increff.pos.model.form.InventoryForm;
@@ -13,15 +12,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class InventoryDto extends AbstractDto<InventoryForm> {
 
     @Autowired
     private InventoryApi inventoryApi;
-
-    @Autowired
-    private InventoryFlow inventoryFlow;
 
     @Autowired
     private ConvertUtil convertUtil;
@@ -43,7 +40,10 @@ public class InventoryDto extends AbstractDto<InventoryForm> {
         // Convert forms to POJOs using ConvertUtil
         List<InventoryPojo> inventoryPojos = convertUtil.convertList(inventoryForms, InventoryPojo.class);
 
-        return inventoryFlow.processInventoryTsvUpload(inventoryPojos);
+        // Direct API call instead of using flow layer
+        return inventoryPojos.stream()
+                .map(pojo -> inventoryApi.updateInventoryByProductId(pojo.getProductId(), pojo.getQuantity()))
+                .collect(Collectors.toList());
     }
 
     public InventoryResponse updateInventoryByProductId(Integer productId, InventoryUpdateForm inventoryUpdateForm) {

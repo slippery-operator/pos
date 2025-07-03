@@ -5,7 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
-import java.time.ZonedDateTime;
+import java.time.Instant;
 
 @Entity
 @Getter
@@ -17,8 +17,9 @@ public class OrdersPojo extends AbstractPojo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(nullable = false)
-    private ZonedDateTime time;
+    @Column(name = "time", nullable = false, updatable = false, insertable = false)
+    @org.hibernate.annotations.Generated(org.hibernate.annotations.GenerationTime.ALWAYS)
+    private Instant time;
 
 
 //    @Column(name = "invoice_path")

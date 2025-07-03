@@ -7,12 +7,11 @@ import com.increff.pos.api.ProductApi;
 import com.increff.pos.entity.OrderItemsPojo;
 import com.increff.pos.entity.OrdersPojo;
 import com.increff.pos.entity.ProductPojo;
-import com.increff.pos.exception.EntityNotFoundException;
+import com.increff.pos.exception.ApiException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +39,8 @@ public class OrderFlow {
         // Validate that all barcodes were found
         for (String barcode : barcodes) {
             if (!productMap.containsKey(barcode)) {
-                throw new EntityNotFoundException("Product with barcode " + barcode + " not found");
+                throw new ApiException(ApiException.ErrorType.ENTITY_NOT_FOUND, 
+                    "Product with barcode " + barcode + " not found");
             }
         }
 
@@ -75,17 +75,5 @@ public class OrderFlow {
         orderItemApi.bulkCreateOrderItems(orderItemsToCreate);
 
         return createdOrder;
-    }
-
-    public List<OrdersPojo> searchOrders(ZonedDateTime startDate, ZonedDateTime endDate, Integer orderId) {
-        return orderApi.searchOrders(startDate, endDate, orderId);
-    }
-
-    public OrdersPojo getOrderWithItems(Integer orderId) {
-        return orderApi.getOrderById(orderId);
-    }
-
-    public List<OrderItemsPojo> getOrderItemsByOrderId(Integer orderId) {
-        return orderItemApi.getOrderItemsByOrderId(orderId);
     }
 }

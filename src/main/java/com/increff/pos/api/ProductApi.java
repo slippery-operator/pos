@@ -2,9 +2,7 @@ package com.increff.pos.api;
 
 import com.increff.pos.dao.ProductDao;
 import com.increff.pos.entity.ProductPojo;
-import com.increff.pos.exception.DuplicateEntityException;
-import com.increff.pos.exception.EntityNotFoundException;
-import com.increff.pos.model.response.ProductResponse;
+import com.increff.pos.exception.ApiException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -41,7 +39,8 @@ public class ProductApi {
     public ProductPojo getProductById(Integer id) {
         ProductPojo product = productDao.selectById(id);
         if (product == null) {
-            throw new EntityNotFoundException("Product not found with id: " + id);
+            throw new ApiException(ApiException.ErrorType.ENTITY_NOT_FOUND, 
+                "Product not found with id: " + id);
         }
         return product;
     }
@@ -54,7 +53,8 @@ public class ProductApi {
     public ProductPojo updateProduct(Integer id, String barcode, Integer clientId, String name, Double mrp, String imageUrl) {
         ProductPojo existingProduct = productDao.selectById(id);
         if (existingProduct == null) {
-            throw new EntityNotFoundException("Product not found with id: " + id);
+            throw new ApiException(ApiException.ErrorType.ENTITY_NOT_FOUND, 
+                "Product not found with id: " + id);
         }
 
         existingProduct.setBarcode(barcode);
@@ -70,14 +70,16 @@ public class ProductApi {
     public void validateBarcodeUniqueness(String barcode, Integer excludeId) {
         ProductPojo existingProduct = productDao.selectByBarcode(barcode);
         if (existingProduct != null && !existingProduct.getId().equals(excludeId)) {
-            throw new DuplicateEntityException("Product with barcode " + barcode + " already exists");
+            throw new ApiException(ApiException.ErrorType.RESOURCE_ALREADY_EXISTS, 
+                "Product with barcode " + barcode + " already exists");
         }
     }
 
     public void validateBarcodesUniqueness(List<String> barcodes) {
         Set<String> uniqueBarcodes = barcodes.stream().collect(Collectors.toSet());
         if (uniqueBarcodes.size() != barcodes.size()) {
-            throw new DuplicateEntityException("Duplicate barcodes found in upload data");
+            throw new ApiException(ApiException.ErrorType.RESOURCE_ALREADY_EXISTS, 
+                "Duplicate barcodes found in upload data");
         }
 
         List<ProductPojo> existingProducts = productDao.selectByBarcodes(uniqueBarcodes);
@@ -85,27 +87,13 @@ public class ProductApi {
             String conflictingBarcodes = existingProducts.stream()
                     .map(ProductPojo::getBarcode)
                     .collect(Collectors.joining(", "));
-            throw new DuplicateEntityException("Products already exist with barcodes: " + conflictingBarcodes);
+            throw new ApiException(ApiException.ErrorType.RESOURCE_ALREADY_EXISTS, 
+                "Products already exist with barcodes: " + conflictingBarcodes);
         }
     }
 
     public List<ProductPojo> bulkCreateProducts(List<ProductPojo> products) {
         productDao.bulkInsert(products);
-
         return products;
-    }
-
-    private ProductResponse convertToProductData(ProductPojo product) {
-        ProductResponse data = new ProductResponse();
-        data.setId(product.getId());
-        data.setBarcode(product.getBarcode());
-        data.setClientId(product.getClientId());
-        data.setName(product.getName());
-        data.setMrp(product.getMrp());
-        data.setImageUrl(product.getImageUrl());
-        data.setVersion(product.getVersion());
-        data.setCreatedAt(product.getCreatedAt());
-        data.setUpdatedAt(product.getUpdatedAt());
-        return data;
     }
 }

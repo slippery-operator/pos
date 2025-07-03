@@ -4,6 +4,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
@@ -28,17 +29,22 @@ import javax.validation.ValidatorFactory;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
-
-
-
+/**
+ * Web MVC configuration class that sets up controllers, Swagger documentation,
+ * CORS support, and Jackson object mapping.
+ * 
+ * This class consolidates all web-related configuration including:
+ * - Swagger API documentation
+ * - CORS configuration for cross-origin requests
+ * - Jackson JSON serialization configuration
+ * - Resource handlers for static content
+ */
 @Configuration
 @EnableWebMvc
 @EnableSwagger2
-public class
-ControllerConfig extends WebMvcConfigurerAdapter {
+public class ControllerConfig extends WebMvcConfigurerAdapter {
 
 	public static final String PACKAGE_CONTROLLER = "com.increff.pos.controller";
-
 
 	private ApplicationContext applicationContext;
 
@@ -46,6 +52,12 @@ ControllerConfig extends WebMvcConfigurerAdapter {
 		this.applicationContext = applicationContext;
 	}
 	
+	/**
+	 * Creates and configures the Swagger API documentation bean.
+	 * This bean generates API documentation for all controllers in the specified package.
+	 * 
+	 * @return Configured Docket bean for Swagger
+	 */
 	@Bean
 	public Docket api() {
 		return new Docket(DocumentationType.SWAGGER_2)
@@ -55,20 +67,40 @@ ControllerConfig extends WebMvcConfigurerAdapter {
 				.build();
 	}
 
-	// Add configuration for Swagger
+	/**
+	 * Configures resource handlers for Swagger UI and static content.
+	 * This method sets up the paths for accessing Swagger documentation and static resources.
+	 * 
+	 * @param registry The resource handler registry
+	 */
 	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry) {
 		registry.addResourceHandler("/swagger-ui.html").addResourceLocations("classpath:/META-INF/resources/");
 		registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
 		registry.addResourceHandler("/static/**").addResourceLocations("/static/");
 	}
-/*
-*	@Override
-*	public void configureDefaultServletHandling(DefaultServletHandlerConfigurer configurer) {
-*		configurer.enable();
-*	}
-*/
 
+	/**
+	 * Configures CORS (Cross-Origin Resource Sharing) support.
+	 * This allows the frontend application to make requests to this backend API.
+	 * 
+	 * @param registry The CORS registry
+	 */
+	@Override
+	public void addCorsMappings(CorsRegistry registry) {
+		registry.addMapping("/**")
+				.allowedOrigins("http://localhost:4200")
+				.allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+				.allowedHeaders("*")
+				.allowCredentials(true);
+	}
+
+	/**
+	 * Creates and configures the Jackson ObjectMapper bean for JSON serialization.
+	 * This bean handles the conversion of Java objects to JSON and vice versa.
+	 * 
+	 * @return Configured ObjectMapper bean
+	 */
 	@Bean
 	public ObjectMapper objectMapper() {
         	JavaTimeModule javaTimeModule = new JavaTimeModule();
@@ -80,6 +112,13 @@ ControllerConfig extends WebMvcConfigurerAdapter {
 					.build();
 	}
 
+	/**
+	 * Creates and configures the HandlerMappingIntrospector bean.
+	 * This bean is required for Spring MVC request mapping introspection.
+	 * 
+	 * @param context The application context
+	 * @return Configured HandlerMappingIntrospector bean
+	 */
 	@Bean
 	public HandlerMappingIntrospector mvcHandlerMappingIntrospector(ApplicationContext context) {
 		return new HandlerMappingIntrospector(context);
