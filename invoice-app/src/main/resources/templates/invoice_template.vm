@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fo:root xmlns:fo="http://www.w3.org/1999/XSL/Format">
+    <fo:layout-master-set>
+        <fo:simple-page-master master-name="invoice-page" page-height="29.7cm" page-width="21cm" margin="2cm">
+            <fo:region-body margin-top="4.5cm" margin-bottom="2cm"/>
+            <fo:region-before extent="4cm"/>
+            <fo:region-after extent="1.5cm"/>
+        </fo:simple-page-master>
+    </fo:layout-master-set>
+
+    <fo:page-sequence master-reference="invoice-page">
+        <!-- Header -->
+        <fo:static-content flow-name="xsl-region-before">
+            <fo:table width="100%" table-layout="fixed">
+                <fo:table-column column-width="4cm"/>
+                <fo:table-column column-width="13cm"/>
+                <fo:table-body>
+                    <fo:table-row>
+                        <fo:table-cell display-align="center">
+                            <fo:block text-align="center">
+                                <!-- Logo from resources folder -->
+                                <fo:external-graphic src="file:./src/main/resources/increff_logo.png" 
+                                                   content-width="6cm" 
+                                                   content-height="3cm"
+                                                   scaling="uniform"/>
+                            </fo:block>
+                        </fo:table-cell>
+                        <fo:table-cell display-align="center">
+                            <fo:block/>
+                        </fo:table-cell>
+                    </fo:table-row>
+                </fo:table-body>
+            </fo:table>
+            <fo:block text-align="center" font-size="16pt" font-weight="bold" color="#e74c3c" space-before="3mm" space-after="2mm">INVOICE</fo:block>
+            <fo:block text-align="center" font-size="10pt" color="#7f8c8d">Invoice Number: $invoiceNumber</fo:block>
+        </fo:static-content>
+
+        <!-- Footer -->
+        <fo:static-content flow-name="xsl-region-after">
+            <fo:block text-align="center" font-size="9pt" color="#7f8c8d">Generated on: $currentDate</fo:block>
+        </fo:static-content>
+
+        <!-- Body -->
+        <fo:flow flow-name="xsl-region-body">
+            <fo:block font-size="14pt" font-weight="bold" color="#2c3e50" space-after="2mm">POS System</fo:block>
+            <fo:block font-size="9pt" color="#7f8c8d" space-after="6mm">Point of Sale Management System</fo:block>
+
+            <!-- Client & Invoice Info -->
+            <fo:table width="100%" space-after="6mm" table-layout="fixed">
+                <fo:table-column column-width="8.5cm"/>
+                <fo:table-column column-width="8.5cm"/>
+                <fo:table-body>
+                    <fo:table-row>
+                        <fo:table-cell>
+                            <fo:block font-weight="bold" space-after="2mm">Bill To:</fo:block>
+                            <fo:block>$clientName</fo:block>
+                        </fo:table-cell>
+                        <fo:table-cell>
+                            <fo:block font-weight="bold" space-after="2mm">Invoice Details:</fo:block>
+                            <fo:block>Order ID: $orderId</fo:block>
+                            <fo:block>Order Date: $orderTime</fo:block>
+                            <fo:block>Invoice #: $invoiceNumber</fo:block>
+                        </fo:table-cell>
+                    </fo:table-row>
+                </fo:table-body>
+            </fo:table>
+
+            <!-- Item Table -->
+            <fo:block font-size="12pt" font-weight="bold" color="#2c3e50" space-after="3mm">Order Items</fo:block>
+            <fo:table width="100%" space-after="6mm" table-layout="fixed">
+                <fo:table-column column-width="6cm"/>
+                <fo:table-column column-width="3cm"/>
+                <fo:table-column column-width="2cm"/>
+                <fo:table-column column-width="2.5cm"/>
+                <fo:table-column column-width="2.5cm"/>
+                <fo:table-header>
+                    <fo:table-row background-color="#e74c3c">
+                        <fo:table-cell padding="2mm" border="1pt solid #e74c3c">
+                            <fo:block font-weight="bold" color="#ffffff" font-size="9pt">Product Name</fo:block>
+                        </fo:table-cell>
+                        <fo:table-cell padding="2mm" border="1pt solid #e74c3c">
+                            <fo:block font-weight="bold" color="#ffffff" font-size="9pt">Barcode</fo:block>
+                        </fo:table-cell>
+                        <fo:table-cell padding="2mm" border="1pt solid #e74c3c">
+                            <fo:block font-weight="bold" color="#ffffff" font-size="9pt">Qty</fo:block>
+                        </fo:table-cell>
+                        <fo:table-cell padding="2mm" border="1pt solid #e74c3c">
+                            <fo:block font-weight="bold" color="#ffffff" font-size="9pt">MRP</fo:block>
+                        </fo:table-cell>
+                        <fo:table-cell padding="2mm" border="1pt solid #e74c3c">
+                            <fo:block font-weight="bold" color="#ffffff" font-size="9pt">Total</fo:block>
+                        </fo:table-cell>
+                    </fo:table-row>
+                </fo:table-header>
+                <fo:table-body>
+                    #foreach($item in $orderItems)
+                    <fo:table-row>
+                        <fo:table-cell padding="2mm" border="1pt solid #bdc3c7">
+                            <fo:block font-size="8pt" wrap-option="wrap">$item.productName</fo:block>
+                        </fo:table-cell>
+                        <fo:table-cell padding="2mm" border="1pt solid #bdc3c7">
+                            <fo:block font-size="8pt">$item.barcode</fo:block>
+                        </fo:table-cell>
+                        <fo:table-cell padding="2mm" border="1pt solid #bdc3c7">
+                            <fo:block font-size="8pt">$item.quantity</fo:block>
+                        </fo:table-cell>
+                        <fo:table-cell padding="2mm" border="1pt solid #bdc3c7">
+                            <fo:block font-size="8pt">Rs. $item.mrp</fo:block>
+                        </fo:table-cell>
+                        <fo:table-cell padding="2mm" border="1pt solid #bdc3c7">
+                            <fo:block font-size="8pt">Rs. $item.totalAmount</fo:block>
+                        </fo:table-cell>
+                    </fo:table-row>
+                    #end
+                </fo:table-body>
+            </fo:table>
+
+            <!-- Totals -->
+            <fo:table width="100%" space-after="4mm" table-layout="fixed">
+                <fo:table-column column-width="11cm"/>
+                <fo:table-column column-width="6cm"/>
+                <fo:table-body>
+                    <fo:table-row>
+                        <fo:table-cell><fo:block/></fo:table-cell>
+                        <fo:table-cell>
+                            <fo:table width="100%" table-layout="fixed">
+                                <fo:table-column column-width="3cm"/>
+                                <fo:table-column column-width="3cm"/>
+                                <fo:table-body>
+                                    <fo:table-row background-color="#ecf0f1">
+                                        <fo:table-cell padding="3mm" border="1pt solid #2c3e50">
+                                            <fo:block font-weight="bold" font-size="10pt">Total Amount:</fo:block>
+                                        </fo:table-cell>
+                                        <fo:table-cell padding="3mm" border="1pt solid #2c3e50">
+                                            <fo:block font-weight="bold" color="#e74c3c" font-size="10pt">Rs. $totalRevenue</fo:block>
+                                        </fo:table-cell>
+                                    </fo:table-row>
+                                </fo:table-body>
+                            </fo:table>
+                        </fo:table-cell>
+                    </fo:table-row>
+                </fo:table-body>
+            </fo:table>
+
+            <!-- Footer Message -->
+            <fo:block text-align="center" font-size="11pt" space-before="8mm" color="#7f8c8d">Thank you for your business!</fo:block>
+        </fo:flow>
+    </fo:page-sequence>
+</fo:root>
