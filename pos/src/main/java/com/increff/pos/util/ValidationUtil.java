@@ -169,4 +169,30 @@ public class ValidationUtil {
         // Implementation depends on specific business rules
         // Currently no validation is performed as parameters can be null
     }
+
+    /**
+     * Validate quantity range parameters for inventory search.
+     * Ensures that if both minQty and maxQty are provided, minQty is less than or equal to maxQty.
+     * Also ensures that quantities are non-negative if provided.
+     * 
+     * @param minQty The minimum quantity (can be null)
+     * @param maxQty The maximum quantity (can be null)
+     * @throws ApiException with VALIDATION_ERROR type if validation fails
+     */
+    public void validateQuantityRange(Integer minQty, Integer maxQty) {
+        if (minQty != null && minQty < 0) {
+            throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, 
+                "Minimum quantity cannot be negative: " + minQty);
+        }
+        
+        if (maxQty != null && maxQty < 0) {
+            throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, 
+                "Maximum quantity cannot be negative: " + maxQty);
+        }
+        
+        if (minQty != null && maxQty != null && minQty > maxQty) {
+            throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, 
+                "Minimum quantity (" + minQty + ") cannot be greater than maximum quantity (" + maxQty + ")");
+        }
+    }
 }

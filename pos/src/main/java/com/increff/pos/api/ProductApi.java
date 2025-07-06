@@ -50,6 +50,32 @@ public class ProductApi {
         return product;
     }
 
+    /**
+     * Updates a product with the provided information.
+     * Only allows updating name, mrp, and imageUrl fields.
+     * Barcode and clientId cannot be changed after product creation.
+     */
+    public ProductPojo updateProduct(Integer id, String name, Double mrp, String imageUrl) {
+        ProductPojo existingProduct = productDao.selectById(id);
+        if (existingProduct == null) {
+            throw new ApiException(ApiException.ErrorType.ENTITY_NOT_FOUND, 
+                "Product not found with id: " + id);
+        }
+
+        // Update only the allowed fields
+        existingProduct.setName(name);
+        existingProduct.setMrp(mrp);
+        existingProduct.setImageUrl(imageUrl);
+
+        productDao.update(existingProduct);
+        return existingProduct;
+    }
+
+    /**
+     * Legacy method for backward compatibility.
+     * @deprecated Use updateProduct(Integer id, String name, Double mrp, String imageUrl) instead
+     */
+    @Deprecated
     public ProductPojo updateProduct(Integer id, String barcode, Integer clientId, String name, Double mrp, String imageUrl) {
         ProductPojo existingProduct = productDao.selectById(id);
         if (existingProduct == null) {

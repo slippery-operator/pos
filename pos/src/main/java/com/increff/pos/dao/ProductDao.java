@@ -40,7 +40,7 @@ public class ProductDao extends AbstractDao<ProductPojo> {
         List<Predicate> predicates = new ArrayList<>();
 
         if (barcode != null && !barcode.trim().isEmpty()) {
-            predicates.add(cb.equal(root.get("barcode"), barcode.trim()));
+            predicates.add(cb.like(cb.lower(root.get("barcode")), barcode.trim().toLowerCase() + "%"));
         }
 
         if (clientId != null) {

@@ -23,9 +23,9 @@ public class InventoryDto extends AbstractDto<InventoryForm> {
     @Autowired
     private ConvertUtil convertUtil;
 
-    public List<InventoryResponse> searchInventory(Integer productId, Integer inventoryId) {
-        validationUtil.validateSearchParams(productId, inventoryId);
-        return inventoryApi.searchInventory(productId, inventoryId);
+    public List<InventoryResponse> searchInventory(Integer minQty, Integer maxQty) {
+        validationUtil.validateQuantityRange(minQty, maxQty);
+        return inventoryApi.searchInventory(minQty, maxQty);
     }
 
     public List<InventoryResponse> uploadInventoryTsv(MultipartFile file) {

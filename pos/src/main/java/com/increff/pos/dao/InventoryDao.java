@@ -50,6 +50,28 @@ public class InventoryDao extends AbstractDao<InventoryPojo> {
         return entityManager.createQuery(query).getResultList();
     }
 
+    public List<InventoryPojo> findByQuantityRange(Integer minQty, Integer maxQty) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<InventoryPojo> query = cb.createQuery(InventoryPojo.class);
+        Root<InventoryPojo> root = query.from(InventoryPojo.class);
+
+        List<Predicate> predicates = new ArrayList<>();
+
+        if (minQty != null) {
+            predicates.add(cb.greaterThanOrEqualTo(root.get("quantity"), minQty));
+        }
+
+        if (maxQty != null) {
+            predicates.add(cb.lessThanOrEqualTo(root.get("quantity"), maxQty));
+        }
+
+        if (!predicates.isEmpty()) {
+            query.where(cb.and(predicates.toArray(new Predicate[0])));
+        }
+
+        return entityManager.createQuery(query).getResultList();
+    }
+
     public void bulkInsert(List<InventoryPojo> inventories) {
         for (int i = 0; i < inventories.size(); i++) {
             entityManager.persist(inventories.get(i));

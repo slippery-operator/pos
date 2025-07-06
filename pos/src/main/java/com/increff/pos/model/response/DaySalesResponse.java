@@ -9,8 +9,6 @@ import java.time.LocalDate;
 /**
  * Response class for day sales data
  * Used for day-on-day sales reporting
- * 
- * TEMPORARILY DISABLED - DaySales functionality disabled
  */
 @Getter
 @Setter
@@ -21,7 +19,4 @@ public class DaySalesResponse {
     private Integer invoicedOrdersCount;
     private Integer invoicedItemsCount;
     private Double totalRevenue;
-
-    // All constructors and methods temporarily disabled
-    // TODO: Re-enable when DaySales functionality is needed
 } 

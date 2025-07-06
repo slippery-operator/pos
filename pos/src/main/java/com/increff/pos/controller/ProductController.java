@@ -4,6 +4,7 @@ import com.increff.pos.dto.ProductDto;
 import com.increff.pos.model.form.ProductSearchForm;
 import com.increff.pos.model.response.ProductResponse;
 import com.increff.pos.model.form.ProductForm;
+import com.increff.pos.model.form.ProductUpdateForm;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -41,8 +42,13 @@ public class ProductController {
         return productDto.uploadProductsTsv(file);
     }
 
+    /**
+     * Updates a product with the provided information.
+     * Only allows updating name, mrp, and imageUrl fields.
+     * Barcode and clientId cannot be changed after product creation.
+     */
     @PutMapping("/{id}")
-    public ProductResponse updateProduct(@PathVariable Integer id, @Valid @RequestBody ProductForm productForm) {
-        return productDto.updateProduct(id, productForm);
+    public ProductResponse updateProduct(@PathVariable Integer id, @Valid @RequestBody ProductUpdateForm productUpdateForm) {
+        return productDto.updateProduct(id, productUpdateForm);
     }
 }

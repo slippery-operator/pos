@@ -18,8 +18,8 @@ public class InventoryApi {
     @Autowired
     private InventoryDao inventoryDao;
 
-    public List<InventoryResponse> searchInventory(Integer productId, Integer inventoryId) {
-        List<InventoryPojo> inventories = inventoryDao.findByProductIdOrInventoryId(productId, inventoryId);
+    public List<InventoryResponse> searchInventory(Integer minQty, Integer maxQty) {
+        List<InventoryPojo> inventories = inventoryDao.findByQuantityRange(minQty, maxQty);
         return inventories.stream()
                 .map(this::convertToInventoryData)
                 .collect(Collectors.toList());
@@ -102,6 +102,7 @@ public class InventoryApi {
 
     private InventoryResponse convertToInventoryData(InventoryPojo inventory) {
         InventoryResponse data = new InventoryResponse();
+        
         data.setId(inventory.getId());
         data.setProductId(inventory.getProductId());
         data.setQuantity(inventory.getQuantity());

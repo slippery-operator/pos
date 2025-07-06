@@ -23,9 +23,9 @@ public class InventoryController {
 
     @GetMapping
     public List<InventoryResponse> searchInventory(
-            @RequestParam(required = false, name = "product-id") Integer productId,
-            @RequestParam(required = false, name = "inventory-id") Integer inventoryId) {
-        return inventoryDto.searchInventory(productId, inventoryId);
+            @RequestParam(required = false, name = "minQty") Integer minQty,
+            @RequestParam(required = false, name = "maxQty") Integer maxQty) {
+        return inventoryDto.searchInventory(minQty, maxQty);
     }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

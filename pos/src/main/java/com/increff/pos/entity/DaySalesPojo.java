@@ -10,8 +10,6 @@ import java.time.LocalDate;
 /**
  * Entity class for daily sales reporting
  * Stores aggregated daily sales data for reporting
- * 
- * TEMPORARILY DISABLED - DaySales functionality disabled
  */
 @Entity
 @Table(name = "pos_day_sales")
@@ -35,7 +33,4 @@ public class DaySalesPojo extends AbstractPojo {
 
     @Column(name = "total_revenue", nullable = false)
     private Double totalRevenue = 0.0;
-
-    // All constructors and methods temporarily disabled
-    // TODO: Re-enable when DaySales functionality is needed
 } 

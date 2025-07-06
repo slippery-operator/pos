@@ -43,13 +43,9 @@ public class OrderDto extends AbstractDto<OrderItemForm> {
         validationUtil.validateForms(orderItems);
 
         // Extract data from forms
-        List<String> barcodes = orderItems.stream()
-                .map(OrderItemForm::getBarcode)
-                .collect(Collectors.toList());
+        List<String> barcodes = orderItems.stream().map(OrderItemForm::getBarcode).collect(Collectors.toList());
 
-        List<Integer> quantities = orderItems.stream()
-                .map(OrderItemForm::getQuantity)
-                .collect(Collectors.toList());
+        List<Integer> quantities = orderItems.stream().map(OrderItemForm::getQuantity).collect(Collectors.toList());
 
         List<Double> mrps = orderItems.stream()
                 .map(OrderItemForm::getMrp)

@@ -32,7 +32,7 @@ public class ClientDao extends AbstractDao<ClientPojo> {
         Root<ClientPojo> root = query.from(ClientPojo.class);
 
         query.select(root)
-                .where(cb.like(cb.lower(root.get("name")), "%" + name.toLowerCase() + "%"))
+                .where(cb.like(cb.lower(root.get("name")), name.toLowerCase() + "%"))
                 .orderBy(cb.asc(root.get("name")));
 
         return entityManager.createQuery(query).getResultList();

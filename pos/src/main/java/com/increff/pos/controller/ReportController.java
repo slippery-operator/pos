@@ -1,15 +1,14 @@
 package com.increff.pos.controller;
 
 import com.increff.pos.dto.ReportDto;
-import com.increff.pos.model.form.ReportFilterForm;
 import com.increff.pos.model.response.DaySalesResponse;
-import com.increff.pos.model.response.SalesReportResponse;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
@@ -55,4 +54,31 @@ public class ReportController {
         return reportDto.calculateDaySales(date);
     }
 }
-*/ 
+*/
+
+/**
+ * Controller for reporting operations
+ * Handles day-on-day sales endpoints
+ */
+@RestController
+@RequestMapping("/reports")
+public class ReportController {
+
+    @Autowired
+    private ReportDto reportDto;
+
+    @GetMapping("/day-sales")
+    @ApiOperation(value = "Get day-on-day sales report")
+    public List<DaySalesResponse> getDaySalesReport(
+            @ApiParam(value = "Start date (YYYY-MM-DD)", required = true)
+            @RequestParam String startDate,
+            @ApiParam(value = "End date (YYYY-MM-DD)", required = true)
+            @RequestParam String endDate) {
+        
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate start = LocalDate.parse(startDate, formatter);
+        LocalDate end = LocalDate.parse(endDate, formatter);
+        
+        return reportDto.getDaySalesByDateRange(start, end);
+    }
+} 

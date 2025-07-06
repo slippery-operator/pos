@@ -6,6 +6,7 @@ import com.increff.pos.flow.ProductFlow;
 import com.increff.pos.model.response.ProductResponse;
 import com.increff.pos.model.form.ProductForm;
 import com.increff.pos.model.form.ProductSearchForm;
+import com.increff.pos.model.form.ProductUpdateForm;
 import com.increff.pos.util.ConvertUtil;
 import com.increff.pos.util.TsvParserUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,6 +59,26 @@ public class ProductDto extends AbstractDto<ProductForm> {
         return convertUtil.convertList(createdProducts, ProductResponse.class);
     }
 
+    /**
+     * Updates a product using the ProductUpdateForm.
+     * Only allows updating name, mrp, and imageUrl fields.
+     * Barcode and clientId cannot be changed after product creation.
+     */
+    public ProductResponse updateProduct(Integer id, ProductUpdateForm productUpdateForm) {
+        validateId(id, "product Id");
+        validateUpdateForm(productUpdateForm);
+
+        // No need to validate barcode uniqueness since barcode cannot be changed
+        ProductPojo product = productApi.updateProduct(id, productUpdateForm.getName(), 
+                productUpdateForm.getMrp(), productUpdateForm.getImageUrl());
+        return convertUtil.convert(product, ProductResponse.class);
+    }
+
+    /**
+     * Legacy method for backward compatibility.
+     * @deprecated Use updateProduct(Integer id, ProductUpdateForm productUpdateForm) instead
+     */
+    @Deprecated
     public ProductResponse updateProduct(Integer id, ProductForm productForm) {
         validateId(id, "product Id");
         validateForm(productForm);
@@ -70,6 +91,14 @@ public class ProductDto extends AbstractDto<ProductForm> {
 
     @Override
     protected void validateForm(ProductForm form) {
+        validationUtil.validateForm(form);
+    }
+
+    /**
+     * Validates the ProductUpdateForm using the validation utility.
+     * Ensures all required fields are present and valid.
+     */
+    protected void validateUpdateForm(ProductUpdateForm form) {
         validationUtil.validateForm(form);
     }
 }
