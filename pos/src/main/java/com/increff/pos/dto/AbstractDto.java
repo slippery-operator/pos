@@ -8,10 +8,10 @@ public abstract class AbstractDto<T> {
     @Autowired
     protected ValidationUtil validationUtil;
 
-    /**
-     * Template method for form validation - each DTO implements specific validation logic
-     */
-    protected abstract void validateForm(T form);
+    protected <U> void validateForm(U form) {
+        validationUtil.validateForm(form);
+    }
+
 
     /**
      * Common method to validate ID parameters

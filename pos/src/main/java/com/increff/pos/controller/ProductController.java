@@ -3,11 +3,10 @@ package com.increff.pos.controller;
 import com.increff.pos.dto.ProductDto;
 import com.increff.pos.model.form.ProductSearchForm;
 import com.increff.pos.model.response.ProductResponse;
+import com.increff.pos.model.response.TsvUploadResponse;
 import com.increff.pos.model.form.ProductForm;
 import com.increff.pos.model.form.ProductUpdateForm;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +17,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/products")
-@Api
 public class ProductController {
 
     @Autowired
@@ -35,18 +33,10 @@ public class ProductController {
     }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @ApiOperation(value = "Upload products from TSV file", consumes = "multipart/form-data")
-    public List<ProductResponse> uploadProductsTsv(
-            @ApiParam(value = "TSV file containing product data", required = true)
-            @RequestPart(value = "file") MultipartFile file) {
+    public TsvUploadResponse<ProductResponse> uploadProductsTsv(@RequestPart(value = "file") MultipartFile file) {
         return productDto.uploadProductsTsv(file);
     }
 
-    /**
-     * Updates a product with the provided information.
-     * Only allows updating name, mrp, and imageUrl fields.
-     * Barcode and clientId cannot be changed after product creation.
-     */
     @PutMapping("/{id}")
     public ProductResponse updateProduct(@PathVariable Integer id, @Valid @RequestBody ProductUpdateForm productUpdateForm) {
         return productDto.updateProduct(id, productUpdateForm);

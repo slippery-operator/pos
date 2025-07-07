@@ -5,14 +5,21 @@ import com.increff.pos.entity.InventoryPojo;
 import com.increff.pos.model.form.InventoryUpdateForm;
 import com.increff.pos.model.response.InventoryResponse;
 import com.increff.pos.model.form.InventoryForm;
+import com.increff.pos.model.form.InventoryFormWithRow;
+import com.increff.pos.model.response.TsvUploadResponse;
+import com.increff.pos.model.response.TsvValidationError;
 import com.increff.pos.util.ConvertUtil;
 import com.increff.pos.util.TsvParserUtil;
+import com.increff.pos.util.ResponseUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.ArrayList;
+
+import static com.increff.pos.util.StringUtil.toLowerCase;
 
 @Service
 public class InventoryDto extends AbstractDto<InventoryForm> {
@@ -23,41 +30,42 @@ public class InventoryDto extends AbstractDto<InventoryForm> {
     @Autowired
     private ConvertUtil convertUtil;
 
-    public List<InventoryResponse> searchInventory(Integer minQty, Integer maxQty) {
-        validationUtil.validateQuantityRange(minQty, maxQty);
-        return inventoryApi.searchInventory(minQty, maxQty);
+    public List<InventoryResponse> searchInventory(String productName) {
+        List<InventoryPojo> inventoryPojos = inventoryApi.searchInventory(toLowerCase(productName));
+        return convertUtil.convertList(inventoryPojos, InventoryResponse.class);
     }
 
-    public List<InventoryResponse> uploadInventoryTsv(MultipartFile file) {
+    /**
+     * Upload inventory from TSV file with partial failure handling and row-wise validation.
+     * Processes valid rows and returns detailed error information for invalid rows.
+     */
+    public TsvUploadResponse<InventoryResponse> uploadInventoryTsv(MultipartFile file) {
         validationUtil.validateTsvFile(file);
-
-        // Parse and validate TSV file to InventoryForm list
-        List<InventoryForm> inventoryForms = TsvParserUtil.parseInventoryTsv(file);
-
-        // Validate all forms
-        validationUtil.validateForms(inventoryForms);
-
-        // Convert forms to POJOs using ConvertUtil
-        List<InventoryPojo> inventoryPojos = convertUtil.convertList(inventoryForms, InventoryPojo.class);
-
-        // Direct API call instead of using flow layer
-        return inventoryPojos.stream()
-                .map(pojo -> inventoryApi.updateInventoryByProductId(pojo.getProductId(), pojo.getQuantity()))
-                .collect(Collectors.toList());
+        List<InventoryFormWithRow> inventoryFormsWithRow = TsvParserUtil.parseInventoryTsvWithRow(file);
+        List<TsvValidationError> formValidationErrors = validationUtil.validateInventoryFormsWithRow(inventoryFormsWithRow);
+        List<InventoryFormWithRow> validForms = new ArrayList<>();
+        for (InventoryFormWithRow inventoryWithRow : inventoryFormsWithRow) {
+            boolean hasError = formValidationErrors.stream().anyMatch(error -> error.getRowNumber() == inventoryWithRow.getRowNumber());
+            if (!hasError) {
+                validForms.add(inventoryWithRow);
+            }
+        }
+        List<InventoryPojo> validInventoryPojos = new ArrayList<>();
+        for (InventoryFormWithRow validForm : validForms) {
+            validInventoryPojos.add(convertUtil.convert(validForm.getForm(), InventoryPojo.class));
+        }
+        InventoryApi.InventoryTsvUploadResult apiResult = inventoryApi.bulkCreateOrUpdateInventoryWithResult(validInventoryPojos, validForms);
+        List<InventoryResponse> successfulResponses = convertUtil.convertList(apiResult.getSuccessfulItems(), InventoryResponse.class);
+        List<TsvValidationError> allErrors = new ArrayList<>();
+        allErrors.addAll(formValidationErrors);
+        allErrors.addAll(apiResult.getApiErrors());
+        return ResponseUtil.buildTsvUploadResponse(inventoryFormsWithRow, successfulResponses, allErrors);
     }
 
     public InventoryResponse updateInventoryByProductId(Integer productId, InventoryUpdateForm inventoryUpdateForm) {
         validateId(productId, "product Id");
-        validateInventoryUpdateForm(inventoryUpdateForm);
-        return inventoryApi.updateInventoryByProductId(productId, inventoryUpdateForm.getQuantity());
-    }
-
-    @Override
-    protected void validateForm(InventoryForm form) {
-        validationUtil.validateForm(form);
-    }
-
-    private void validateInventoryUpdateForm(InventoryUpdateForm form) {
-        validationUtil.validateForm(form);
+        validateForm(inventoryUpdateForm);
+        InventoryPojo updated = inventoryApi.updateInventoryByProductId(productId, inventoryUpdateForm.getQuantity());
+        return convertUtil.convert(updated, InventoryResponse.class);
     }
 }

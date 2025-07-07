@@ -64,13 +64,9 @@ public class OrderDto extends AbstractDto<OrderItemForm> {
 
         Instant parsedStartDate = null;
         Instant parsedEndDate = null;
-
         if (startDate != null && !startDate.isEmpty()) {
-            parsedStartDate = LocalDate.parse(startDate)
-                    .atStartOfDay(ZoneOffset.UTC)
-                    .toInstant(); // 00:00 UTC
+            parsedStartDate = LocalDate.parse(startDate).atStartOfDay(ZoneOffset.UTC).toInstant(); // 00:00 UTC
         }
-
         if (endDate != null && !endDate.isEmpty()) {
             parsedEndDate = LocalDate.parse(endDate)
                     .plusDays(1)                              // move to next day
@@ -97,11 +93,6 @@ public class OrderDto extends AbstractDto<OrderItemForm> {
         List<OrderItemsPojo> orderItems = orderItemApi.getOrderItemsByOrderId(orderId);
 
         return convertToOrderResponse(order, orderItems);
-    }
-
-    @Override
-    protected void validateForm(OrderItemForm form) {
-        validationUtil.validateForm(form);
     }
 
     private OrderResponse convertToOrderResponse(OrdersPojo order, List<OrderItemsPojo> orderItems) {

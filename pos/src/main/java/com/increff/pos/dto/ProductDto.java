@@ -4,16 +4,27 @@ import com.increff.pos.api.ProductApi;
 import com.increff.pos.entity.ProductPojo;
 import com.increff.pos.flow.ProductFlow;
 import com.increff.pos.model.response.ProductResponse;
+import com.increff.pos.model.response.TsvUploadResponse;
+import com.increff.pos.model.response.TsvValidationError;
 import com.increff.pos.model.form.ProductForm;
+import com.increff.pos.model.form.ProductFormWithRow;
 import com.increff.pos.model.form.ProductSearchForm;
 import com.increff.pos.model.form.ProductUpdateForm;
 import com.increff.pos.util.ConvertUtil;
 import com.increff.pos.util.TsvParserUtil;
+import com.increff.pos.exception.ApiException;
+import com.increff.pos.util.StringUtil;
+import com.increff.pos.util.ValidationUtil;
+import com.increff.pos.util.ResponseUtil;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import static com.increff.pos.util.StringUtil.toLowerCase;
 
 @Service
 public class ProductDto extends AbstractDto<ProductForm> {
@@ -28,35 +39,41 @@ public class ProductDto extends AbstractDto<ProductForm> {
     private ConvertUtil convertUtil;
 
     public List<ProductResponse> searchProducts(ProductSearchForm searchRequest) {
-        List<ProductPojo> products = productApi.searchProducts(searchRequest.getBarcode(),
-                searchRequest.getClientId(),
-                searchRequest.getProductName());
+        List<ProductPojo> products = productApi.searchProducts(toLowerCase(searchRequest.getBarcode()), toLowerCase(searchRequest.getProductName()));
         return convertUtil.convertList(products, ProductResponse.class);
     }
 
     public ProductResponse createProduct(ProductForm productForm) {
         validateForm(productForm);
         ProductPojo productPojo = convertUtil.convert(productForm, ProductPojo.class);
-
         ProductPojo createdProduct = productFlow.validateAndCreateProduct(productPojo);
-
         return convertUtil.convert(createdProduct, ProductResponse.class);
     }
 
-    public List<ProductResponse> uploadProductsTsv(MultipartFile file) {
+    /**
+     * Upload products from TSV file with partial failure handling.
+     * Processes valid rows and returns detailed error information for invalid rows.
+     * 
+     * @param file The TSV file to upload
+     * @return TsvUploadResponse containing successful products and validation errors
+     */
+    public TsvUploadResponse<ProductResponse> uploadProductsTsv(MultipartFile file) {
         validationUtil.validateTsvFile(file);
-
-        // Parse and validate TSV file to ProductForm list
-        List<ProductForm> productForms = TsvParserUtil.parseProductTsv(file);
-
-        // Validate all forms
-        validationUtil.validateForms(productForms);
-
-        // Convert forms to POJOs using ConvertUtil
-        List<ProductPojo> productPojos = convertUtil.convertList(productForms, ProductPojo.class);
-
-        List<ProductPojo> createdProducts = productFlow.processProductTsvUpload(productPojos);
-        return convertUtil.convertList(createdProducts, ProductResponse.class);
+        List<ProductFormWithRow> productFormsWithRow = TsvParserUtil.parseProductTsv(file);
+        List<TsvValidationError> formValidationErrors = validationUtil.validateFormsWithRow(productFormsWithRow);
+        List<ProductFormWithRow> validForms = new ArrayList<>();
+        for (ProductFormWithRow productWithRow : productFormsWithRow) {
+            boolean hasError = formValidationErrors.stream().anyMatch(error -> error.getRowNumber() == productWithRow.getRowNumber());
+            if (!hasError) {
+                validForms.add(productWithRow);
+            }
+        }
+        ProductFlow.ProductTsvUploadResult flowResult = productFlow.processProductTsvUpload(validForms);
+        List<ProductResponse> successfulResponses = convertUtil.convertList(flowResult.getSuccessfulProducts(), ProductResponse.class);
+        List<TsvValidationError> allErrors = new ArrayList<>();
+        allErrors.addAll(formValidationErrors);
+        allErrors.addAll(flowResult.getValidationErrors());
+        return ResponseUtil.buildTsvUploadResponse(productFormsWithRow, successfulResponses, allErrors);
     }
 
     /**
@@ -65,40 +82,15 @@ public class ProductDto extends AbstractDto<ProductForm> {
      * Barcode and clientId cannot be changed after product creation.
      */
     public ProductResponse updateProduct(Integer id, ProductUpdateForm productUpdateForm) {
-        validateId(id, "product Id");
-        validateUpdateForm(productUpdateForm);
+        validateUpdateInput(id, productUpdateForm);
 
-        // No need to validate barcode uniqueness since barcode cannot be changed
-        ProductPojo product = productApi.updateProduct(id, productUpdateForm.getName(), 
-                productUpdateForm.getMrp(), productUpdateForm.getImageUrl());
+        ProductPojo product = productApi.updateProduct(id, productUpdateForm.getName(), productUpdateForm.getMrp(),
+                productUpdateForm.getImageUrl());
         return convertUtil.convert(product, ProductResponse.class);
     }
 
-    /**
-     * Legacy method for backward compatibility.
-     * @deprecated Use updateProduct(Integer id, ProductUpdateForm productUpdateForm) instead
-     */
-    @Deprecated
-    public ProductResponse updateProduct(Integer id, ProductForm productForm) {
-        validateId(id, "product Id");
-        validateForm(productForm);
-
-        productApi.validateBarcodeUniqueness(productForm.getBarcode(), id);
-        ProductPojo product = productApi.updateProduct(id, productForm.getBarcode(), productForm.getClientId(),
-                productForm.getName(), productForm.getMrp(), productForm.getImageUrl());
-        return convertUtil.convert(product, ProductResponse.class);
-    }
-
-    @Override
-    protected void validateForm(ProductForm form) {
-        validationUtil.validateForm(form);
-    }
-
-    /**
-     * Validates the ProductUpdateForm using the validation utility.
-     * Ensures all required fields are present and valid.
-     */
-    protected void validateUpdateForm(ProductUpdateForm form) {
-        validationUtil.validateForm(form);
+    private void validateUpdateInput(Integer id, ProductUpdateForm productUpdateForm) {
+        validateId(id, "Product id");
+        validateForm(productUpdateForm);
     }
 }

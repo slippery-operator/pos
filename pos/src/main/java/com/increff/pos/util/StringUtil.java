@@ -16,4 +16,12 @@ public class StringUtil {
 		}
 		return input.trim();
 	}
+
+	public static String extractFieldFromValidationError(String errorMessage) {
+		if (errorMessage.contains("Barcode")) return "barcode";
+		if (errorMessage.contains("Client ID") || errorMessage.contains("Client id")) return "client_id";
+		if (errorMessage.contains("Product name") || errorMessage.contains("name")) return "name";
+		if (errorMessage.contains("MRP") || errorMessage.contains("mrp")) return "mrp";
+		return "general";
+	}
 }

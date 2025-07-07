@@ -4,8 +4,7 @@ import com.increff.pos.dto.InventoryDto;
 import com.increff.pos.model.form.InventoryUpdateForm;
 import com.increff.pos.model.response.InventoryResponse;
 
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import com.increff.pos.model.response.TsvUploadResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -22,16 +21,12 @@ public class InventoryController {
     private InventoryDto inventoryDto;
 
     @GetMapping
-    public List<InventoryResponse> searchInventory(
-            @RequestParam(required = false, name = "minQty") Integer minQty,
-            @RequestParam(required = false, name = "maxQty") Integer maxQty) {
-        return inventoryDto.searchInventory(minQty, maxQty);
+    public List<InventoryResponse> searchInventory(@RequestParam String productName) {
+        return inventoryDto.searchInventory(productName);
     }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @ApiOperation(value = "Upload inventory from TSV file", consumes = "multipart/form-data")
-    public List<InventoryResponse> uploadInventoryTsv(
-            @ApiParam(value = "TSV file containing inventory data", required = true)
+    public TsvUploadResponse<InventoryResponse> uploadInventoryTsv(
             @RequestPart(value = "file") MultipartFile file) {
         return inventoryDto.uploadInventoryTsv(file);
     }

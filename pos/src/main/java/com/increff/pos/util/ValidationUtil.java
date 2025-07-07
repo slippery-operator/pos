@@ -10,6 +10,9 @@ import javax.validation.Validator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.ArrayList;
+import com.increff.pos.model.form.InventoryFormWithRow;
+import com.increff.pos.model.response.TsvValidationError;
 
 /**
  * Utility class for validation operations across the application.
@@ -37,7 +40,7 @@ public class ValidationUtil {
             String errorMessage = violations.stream()
                     .map(ConstraintViolation::getMessage)
                     .collect(Collectors.joining("; "));
-            throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, 
+            throw new ApiException(ApiException.ErrorType.BAD_REQUEST,
                 "Validation failed: " + errorMessage);
         }
     }
@@ -52,7 +55,7 @@ public class ValidationUtil {
      */
     public <T> void validateForms(List<T> forms) {
         if (forms == null || forms.isEmpty()) {
-            throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, 
+            throw new ApiException(ApiException.ErrorType.BAD_REQUEST, 
                 "Form list cannot be empty");
         }
 
@@ -71,7 +74,7 @@ public class ValidationUtil {
      */
     public void validateId(Integer id, String fieldName) {
         if (id == null || id <= 0) {
-            throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, 
+            throw new ApiException(ApiException.ErrorType.BAD_REQUEST,
                 "Invalid " + fieldName + ": " + id);
         }
     }
@@ -100,15 +103,11 @@ public class ValidationUtil {
      */
     public void validateTsvFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, 
-                "TSV file is required");
+            throw new ApiException(ApiException.ErrorType.BAD_REQUEST, "TSV file is required");
         }
         if (!file.getOriginalFilename().endsWith(".tsv")) {
-            throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, 
-                "File must be in TSV format");
+            throw new ApiException(ApiException.ErrorType.BAD_REQUEST, "File must be in TSV format");
         }
-        
-        // Validate that the TSV file does not exceed maximum allowed rows (5000)
         validateTsvRowCount(file);
     }
     
@@ -138,22 +137,20 @@ public class ValidationUtil {
             // Check if row count exceeds the maximum allowed limit
             final int MAX_ROWS = 5000;
             if (rowCount > MAX_ROWS) {
-                throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, 
+                throw new ApiException(ApiException.ErrorType.BAD_REQUEST,
                     "TSV file contains " + rowCount + " rows, which exceeds the maximum allowed limit of " + MAX_ROWS + " rows");
             }
-            
+
         } catch (java.io.IOException e) {
             // Handle IOException specifically for file reading issues
-            throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, 
-                "Unable to read TSV file content: " + e.getMessage());
+            throw new ApiException(ApiException.ErrorType.BAD_REQUEST, "Unable to read TSV file content: " + e.getMessage());
         } catch (Exception e) {
             // If we can't read the file content, throw a generic error
             // This handles cases where the file might be corrupted or unreadable
             if (e instanceof ApiException) {
                 throw e; // Re-throw ApiException as-is
             }
-            throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, 
-                "Unable to validate TSV file content: " + e.getMessage());
+            throw new ApiException(ApiException.ErrorType.BAD_REQUEST, "Unable to validate TSV file content: " + e.getMessage());
         }
     }
 
@@ -194,5 +191,52 @@ public class ValidationUtil {
             throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, 
                 "Minimum quantity (" + minQty + ") cannot be greater than maximum quantity (" + maxQty + ")");
         }
+    }
+
+    /**
+     * Validates individual forms and returns validation errors with row information.
+     *
+     * @param productFormsWithRow List of product forms with row information
+     * @return List of validation errors
+     */
+    public List<com.increff.pos.model.response.TsvValidationError> validateFormsWithRow(List<com.increff.pos.model.form.ProductFormWithRow> productFormsWithRow) {
+        List<com.increff.pos.model.response.TsvValidationError> errors = new java.util.ArrayList<>();
+        for (com.increff.pos.model.form.ProductFormWithRow productWithRow : productFormsWithRow) {
+            try {
+                validateForm(productWithRow.getForm());
+            } catch (com.increff.pos.exception.ApiException e) {
+                String field = com.increff.pos.util.StringUtil.extractFieldFromValidationError(e.getMessage());
+                errors.add(new com.increff.pos.model.response.TsvValidationError(
+                    productWithRow.getRowNumber(),
+                    field,
+                    e.getMessage(),
+                    productWithRow.getOriginalData()
+                ));
+            }
+        }
+        return errors;
+    }
+
+    /**
+     * Validates individual inventory forms and returns validation errors with row information.
+     *
+     * @param formsWithRow List of inventory forms with row information
+     * @return List of validation errors
+     */
+    public List<TsvValidationError> validateInventoryFormsWithRow(List<InventoryFormWithRow> formsWithRow) {
+        List<TsvValidationError> errors = new ArrayList<>();
+        for (InventoryFormWithRow formWithRow : formsWithRow) {
+            try {
+                validateForm(formWithRow.getForm());
+            } catch (Exception e) {
+                errors.add(new TsvValidationError(
+                    formWithRow.getRowNumber(),
+                    "form",
+                    e.getMessage(),
+                    formWithRow.toString()
+                ));
+            }
+        }
+        return errors;
     }
 }

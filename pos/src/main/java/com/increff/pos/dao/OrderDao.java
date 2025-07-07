@@ -7,6 +7,7 @@ import javax.transaction.Transactional;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Repository
@@ -28,27 +29,20 @@ public class OrderDao extends AbstractDao<OrdersPojo> {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<OrdersPojo> query = cb.createQuery(OrdersPojo.class);
         Root<OrdersPojo> root = query.from(OrdersPojo.class);
-
         List<Predicate> predicates = new ArrayList<>();
-
         if (startDate != null) {
             predicates.add(cb.greaterThanOrEqualTo(root.get("time"), startDate));
         }
-
         if (endDate != null) {
             predicates.add(cb.lessThanOrEqualTo(root.get("time"), endDate));
         }
-
         if (orderId != null) {
             predicates.add(cb.equal(root.get("id"), orderId));
         }
-
         if (!predicates.isEmpty()) {
             query.where(cb.and(predicates.toArray(new Predicate[0])));
         }
-
         query.orderBy(cb.desc(root.get("time")));
-
         return entityManager.createQuery(query).getResultList();
     }
 

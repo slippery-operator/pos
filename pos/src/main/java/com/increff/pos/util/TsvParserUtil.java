@@ -2,8 +2,10 @@ package com.increff.pos.util;
 
 import com.increff.pos.exception.ApiException;
 import com.increff.pos.model.form.InventoryForm;
+import com.increff.pos.model.form.InventoryFormWithRow;
 import com.increff.pos.model.form.OrderItemForm;
 import com.increff.pos.model.form.ProductForm;
+import com.increff.pos.model.form.ProductFormWithRow;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
@@ -24,19 +26,26 @@ public class TsvParserUtil {
     /**
      * Parses a TSV file containing product data and converts it to a list of ProductForm objects.
      * Expected format: barcode, client_id, name, mrp, imageUrl (optional)
+     * Validates headers and handles parsing errors gracefully.
      * 
      * @param file The TSV file to parse
-     * @return List of ProductForm objects
+     * @return List of ProductForm objects with row numbers for error tracking
      * @throws ApiException with INTERNAL_SERVER_ERROR type if parsing fails
      */
-    public static List<ProductForm> parseProductTsv(MultipartFile file) {
-        List<ProductForm> productForms = new ArrayList<>();
+    public static List<ProductFormWithRow> parseProductTsv(MultipartFile file) {
+        List<ProductFormWithRow> productForms = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
             String line;
             boolean isFirstLine = true;
+            String[] expectedHeaders = {"barcode", "client_id", "name", "mrp", "imageUrl"};
+            int rowNumber = 0;
 
             while ((line = reader.readLine()) != null) {
+                rowNumber++;
+                
                 if (isFirstLine) {
+                    // Validate headers
+                    validateHeaders(line, expectedHeaders);
                     isFirstLine = false;
                     continue; // Skip header
                 }
@@ -53,7 +62,7 @@ public class TsvParserUtil {
                     if (fields.length > 4 && !fields[4].trim().isEmpty()) {
                         form.setImageUrl(fields[4].trim());
                     }
-                    productForms.add(form);
+                    productForms.add(new ProductFormWithRow(form, rowNumber, line));
                 }
             }
         } catch (Exception e) {
@@ -62,6 +71,30 @@ public class TsvParserUtil {
         }
 
         return productForms;
+    }
+
+    /**
+     * Validates that the TSV headers match the expected format.
+     * 
+     * @param headerLine The header line from the TSV file
+     * @param expectedHeaders Array of expected header names
+     * @throws ApiException with BAD_REQUEST type if headers don't match
+     */
+    private static void validateHeaders(String headerLine, String[] expectedHeaders) {
+        String[] actualHeaders = parseTabDelimitedLine(headerLine);
+        
+        if (actualHeaders.length < 4) {
+            throw new ApiException(ApiException.ErrorType.BAD_REQUEST, 
+                "Invalid TSV format: Expected at least 4 columns (barcode, client_id, name, mrp), got " + actualHeaders.length);
+        }
+        
+        // Check if required headers are present (case-insensitive)
+        for (int i = 0; i < Math.min(actualHeaders.length, expectedHeaders.length); i++) {
+            if (!actualHeaders[i].trim().toLowerCase().equals(expectedHeaders[i].toLowerCase())) {
+                throw new ApiException(ApiException.ErrorType.BAD_REQUEST, 
+                    "Invalid header at column " + (i + 1) + ": Expected '" + expectedHeaders[i] + "', got '" + actualHeaders[i] + "'");
+            }
+        }
     }
 
     /**
@@ -204,5 +237,15 @@ public class TsvParserUtil {
         }
 
         return orderItems;
+    }
+
+    public static List<InventoryFormWithRow> parseInventoryTsvWithRow(MultipartFile file) {
+        List<InventoryFormWithRow> result = new ArrayList<>();
+        List<InventoryForm> forms = parseInventoryTsv(file);
+        int rowNumber = 1; // Assuming header is skipped in parseInventoryTsv
+        for (InventoryForm form : forms) {
+            result.add(new InventoryFormWithRow(rowNumber++, form));
+        }
+        return result;
     }
 }

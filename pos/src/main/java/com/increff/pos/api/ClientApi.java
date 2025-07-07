@@ -7,8 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -18,58 +21,27 @@ public class ClientApi {
     private ClientDao clientDao;
 
     public ClientPojo add(String name) {
-        // Check if client with same name already exists
         ClientPojo existingClient = clientDao.selectByName(name);
         if (existingClient != null) {
-            throw new ApiException(ApiException.ErrorType.RESOURCE_ALREADY_EXISTS,
-                    "Client with name: " + name + " already exists.");
+            throw new ApiException(ApiException.ErrorType.CONFLICT, "Client with name: " + name + " already exists.");
         }
-
-        ClientPojo client = new ClientPojo();
-        client.setName(name);
+        ClientPojo client = new ClientPojo(name);
         clientDao.insert(client);
         return client;
     }
 
-    public ClientPojo getById(Integer id) {
-        ClientPojo client = clientDao.selectById(id);
-        if (client == null) {
-            throw new ApiException(ApiException.ErrorType.ENTITY_NOT_FOUND,
-                    "Client with ID " + id + " not found.");
-        }
-        return client;
-    }
-
     public ClientPojo update(Integer id, String name) {
-        // Check if client with same name already exists (excluding current client)
         ClientPojo existingClient = clientDao.selectByName(name);
         if (existingClient != null && !existingClient.getClientId().equals(id)) {
-            throw new ApiException(ApiException.ErrorType.RESOURCE_ALREADY_EXISTS,
-                    "Client with name: " + name + " already exists.");
+            throw new ApiException(ApiException.ErrorType.CONFLICT, "Client with name: " + name + " already exists");
         }
 
         ClientPojo client = clientDao.selectById(id);
         if (client == null) {
-            throw new ApiException(ApiException.ErrorType.ENTITY_NOT_FOUND,
-                    "Client with ID " + id + " not found.");
+            throw new ApiException(ApiException.ErrorType.NOT_FOUND, "Client not found");
         }
-
         client.setName(name);
-        clientDao.update(client);
         return client;
-    }
-
-    public void validateClientExists(Integer clientId) {
-        if (clientId == null || clientDao.selectById(clientId) == null) {
-            throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR,
-                    "Invalid client id: " + clientId);
-        }
-    }
-
-    public void validateClientsExist(Set<Integer> clientIds) {
-        for (Integer clientId : clientIds) {
-            validateClientExists(clientId);
-        }
     }
 
     public List<ClientPojo> getAll() {
@@ -78,5 +50,33 @@ public class ClientApi {
 
     public List<ClientPojo> searchByName(String name) {
         return clientDao.selectByNameContaining(name);
+    }
+
+    /**
+     * Validates that all clients exist and returns a map of client ID to validation status.
+     * This method performs batch validation for better performance.
+     * 
+     * @param clientIds Set of client IDs to validate
+     * @return Map of client ID to boolean (true if client exists, false otherwise)
+     */
+    public Map<Integer, Boolean> validateClientsExistBatch(Set<Integer> clientIds) {
+        Map<Integer, Boolean> result = new HashMap<>();
+        
+        if (clientIds == null || clientIds.isEmpty()) {
+            return result;
+        }
+        
+        // Get all existing clients in one query
+        List<ClientPojo> existingClients = clientDao.selectByIds(clientIds);
+        Set<Integer> existingClientIds = existingClients.stream()
+                .map(ClientPojo::getClientId)
+                .collect(Collectors.toSet());
+        
+        // Create result map
+        for (Integer clientId : clientIds) {
+            result.put(clientId, existingClientIds.contains(clientId));
+        }
+        
+        return result;
     }
 }
