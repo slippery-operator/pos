@@ -6,15 +6,8 @@ import com.increff.pos.model.response.DaySalesResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-
-/**
- * Controller for reporting operations
- * Handles day-on-day sales endpoints
- */
 @RestController
 @RequestMapping("/reports")
 public class ReportController {
