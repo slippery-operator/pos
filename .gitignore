@@ -55,7 +55,8 @@ Thumbs.db
 
 # Application specific
 logs/
-*.sh
+# Keep important scripts, ignore temporary ones
+# *.sh
 .cursor/
 .todo/
 
@@ -71,7 +72,15 @@ logs/
 *.swo
 *~
 
-# Application logs
-pos-app.log
-invoice-app.log
-jetty.log
+# Environment files
+*.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Node modules (if adding frontend later)
+node_modules/
+
+# Application-specific properties
+application-*.properties
