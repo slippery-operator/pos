@@ -9,10 +9,6 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.List;
 
-/**
- * Form class for order request from POS application
- * Contains order details and items for invoice generation
- */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -36,9 +32,6 @@ public class OrderRequest {
     @NotNull(message = "Total revenue cannot be null")
     private Double totalRevenue;
 
-    /**
-     * Inner class for order item details
-     */
     @Getter
     @Setter
     @NoArgsConstructor

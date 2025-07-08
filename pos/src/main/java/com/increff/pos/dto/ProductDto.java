@@ -31,7 +31,7 @@ public class ProductDto extends AbstractDto<ProductForm> {
 
     @Autowired
     private ProductApi productApi;
-
+    
     @Autowired
     private ProductFlow productFlow;
 

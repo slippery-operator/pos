@@ -69,12 +69,12 @@ public class AppRestControllerAdvice {
                 .orElse("Invalid input");
 
         ErrorResponse errorResponse = new ErrorResponse(
-                ApiException.ErrorType.INVALID_FORM.getErrorCode(),
+                ApiException.ErrorType.BAD_REQUEST.getErrorCode(),
                 errorMessage,
                 request.getDescription(false).replace("uri=", "")
         );
 
-        return ResponseEntity.status(ApiException.ErrorType.INVALID_FORM.getHttpStatus()).body(errorResponse);
+        return ResponseEntity.status(ApiException.ErrorType.BAD_REQUEST.getHttpStatus()).body(errorResponse);
     }
 
     /**

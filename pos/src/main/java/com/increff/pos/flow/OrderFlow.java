@@ -52,8 +52,7 @@ public class OrderFlow {
         // Validate that all barcodes were found
         for (OrderItemModel orderItem : orderItems) {
             if (!productBarcodeToId.containsKey(orderItem.getBarcode())) {
-                throw new ApiException(ApiException.ErrorType.ENTITY_NOT_FOUND, 
-                    "Product with barcode " + orderItem.getBarcode() + " not found");
+                throw new ApiException(ApiException.ErrorType.NOT_FOUND, "Product not found");
             }
         }
 

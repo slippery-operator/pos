@@ -17,6 +17,7 @@ import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.stream.StreamSource;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.HashMap;
@@ -31,7 +32,8 @@ public class PdfGeneratorUtil {
 
     private static final String INVOICE_TEMPLATE_PATH = "templates/invoice_template.vm";
     private static final String FOP_CONFIG_PATH = "fop-config.xml";
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
+    private static final ZoneId IST_ZONE = ZoneId.of("Asia/Kolkata");
 
     private VelocityEngine velocityEngine;
     private FopFactory fopFactory;
@@ -76,18 +78,33 @@ public class PdfGeneratorUtil {
         
         // Add order details
         context.put("orderId", orderRequest.getOrderId());
-        context.put("orderTime", orderRequest.getOrderTime());
+        
+        // Convert UTC Instant to IST and format
+        String formattedOrderTime = formatInstantToIST(Instant.parse(orderRequest.getOrderTime()));
+        context.put("orderTime", formattedOrderTime);
+        
         context.put("clientName", orderRequest.getClientName());
         context.put("totalRevenue", String.format("%.2f", orderRequest.getTotalRevenue()));
         
         // Add order items
         context.put("orderItems", orderRequest.getOrderItems());
-        
-        // Add invoice details
-        context.put("invoiceNumber", generateInvoiceNumber(orderRequest.getOrderId()));
-        context.put("currentDate", java.time.LocalDateTime.now().format(DATE_FORMATTER));
+
+        // Current date in IST
+        String currentDateIST = ZonedDateTime.now(IST_ZONE).format(DATE_FORMATTER);
+        context.put("currentDate", currentDateIST);
         
         return context;
+    }
+
+    /**
+     * Convert UTC Instant to IST and format as HH:mm dd/MM/yyyy
+     */
+    private String formatInstantToIST(Instant instant) {
+        if (instant == null) {
+            return "N/A";
+        }
+        ZonedDateTime istTime = instant.atZone(IST_ZONE);
+        return istTime.format(DATE_FORMATTER);
     }
 
     /**
@@ -115,14 +132,6 @@ public class PdfGeneratorUtil {
         transformer.transform(source, result);
         
         return outputStream.toByteArray();
-    }
-
-    /**
-     * Generate unique invoice number
-     */
-    private String generateInvoiceNumber(Integer orderId) {
-        return "INV-" + String.format("%06d", orderId) + "-" + 
-               System.currentTimeMillis() % 10000;
     }
 
     /**

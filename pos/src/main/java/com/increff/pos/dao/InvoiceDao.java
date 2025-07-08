@@ -41,41 +41,6 @@ public class InvoiceDao extends AbstractDao<InvoicePojo> {
     }
 
     /**
-     * Get invoice by invoice number using CriteriaBuilder
-     * Provides type-safe query construction
-     */
-    public InvoicePojo selectByInvoiceNumber(String invoiceNumber) {
-        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        CriteriaQuery<InvoicePojo> cq = cb.createQuery(InvoicePojo.class);
-        Root<InvoicePojo> root = cq.from(InvoicePojo.class);
-        
-        // Build predicate for invoice number match
-        Predicate invoiceNumberPredicate = cb.equal(root.get("invoiceNumber"), invoiceNumber);
-        cq.where(invoiceNumberPredicate);
-        
-        TypedQuery<InvoicePojo> query = entityManager.createQuery(cq);
-        List<InvoicePojo> results = query.getResultList();
-        return results.isEmpty() ? null : results.get(0);
-    }
-
-    /**
-     * Get all invoices ordered by timestamp descending using CriteriaBuilder
-     * Provides type-safe query construction with ordering
-     */
-    @Override
-    public List<InvoicePojo> selectAll() {
-        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        CriteriaQuery<InvoicePojo> cq = cb.createQuery(InvoicePojo.class);
-        Root<InvoicePojo> root = cq.from(InvoicePojo.class);
-        
-        // Order by timestamp descending
-        cq.orderBy(cb.desc(root.get("timeStamp")));
-        
-        TypedQuery<InvoicePojo> query = entityManager.createQuery(cq);
-        return query.getResultList();
-    }
-
-    /**
      * Get invoices by date range using CriteriaBuilder
      * Provides type-safe query construction with date range filtering
      */
@@ -97,23 +62,5 @@ public class InvoiceDao extends AbstractDao<InvoicePojo> {
         
         TypedQuery<InvoicePojo> query = entityManager.createQuery(cq);
         return query.getResultList();
-    }
-
-    /**
-     * Insert new invoice
-     * Persists the invoice entity to the database
-     */
-    @Override
-    public void insert(InvoicePojo invoice) {
-        entityManager.persist(invoice);
-    }
-
-    /**
-     * Update existing invoice
-     * Merges the invoice entity with the database
-     */
-    @Override
-    public void update(InvoicePojo invoice) {
-        entityManager.merge(invoice);
     }
 } 

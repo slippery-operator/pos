@@ -16,7 +16,6 @@ import lombok.Setter;
 public class InvoiceGenerationResponse {
 
     private Integer orderId;
-    private String invoiceNumber;
     private String base64Pdf;
     private String message;
     private boolean success;

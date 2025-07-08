@@ -32,7 +32,6 @@
                 </fo:table-body>
             </fo:table>
             <fo:block text-align="center" font-size="16pt" font-weight="bold" color="#e74c3c" space-before="3mm" space-after="2mm">INVOICE</fo:block>
-            <fo:block text-align="center" font-size="10pt" color="#7f8c8d">Invoice Number: $invoiceNumber</fo:block>
         </fo:static-content>
 
         <!-- Footer -->
@@ -47,8 +46,8 @@
 
             <!-- Client & Invoice Info -->
             <fo:table width="100%" space-after="6mm" table-layout="fixed">
-                <fo:table-column column-width="8.5cm"/>
-                <fo:table-column column-width="8.5cm"/>
+                <fo:table-column column-width="9cm"/>
+                <fo:table-column column-width="8cm"/>
                 <fo:table-body>
                     <fo:table-row>
                         <fo:table-cell>
@@ -59,7 +58,6 @@
                             <fo:block font-weight="bold" space-after="2mm">Invoice Details:</fo:block>
                             <fo:block>Order ID: $orderId</fo:block>
                             <fo:block>Order Date: $orderTime</fo:block>
-                            <fo:block>Invoice #: $invoiceNumber</fo:block>
                         </fo:table-cell>
                     </fo:table-row>
                 </fo:table-body>
@@ -71,8 +69,8 @@
                 <fo:table-column column-width="6cm"/>
                 <fo:table-column column-width="3cm"/>
                 <fo:table-column column-width="2cm"/>
-                <fo:table-column column-width="2.5cm"/>
-                <fo:table-column column-width="2.5cm"/>
+                <fo:table-column column-width="3cm"/>
+                <fo:table-column column-width="3cm"/>
                 <fo:table-header>
                     <fo:table-row background-color="#e74c3c">
                         <fo:table-cell padding="2mm" border="1pt solid #e74c3c">
@@ -117,19 +115,19 @@
 
             <!-- Totals -->
             <fo:table width="100%" space-after="4mm" table-layout="fixed">
-                <fo:table-column column-width="11cm"/>
-                <fo:table-column column-width="6cm"/>
+                <fo:table-column column-width="9cm"/>
+                <fo:table-column column-width="8cm"/>
                 <fo:table-body>
                     <fo:table-row>
                         <fo:table-cell><fo:block/></fo:table-cell>
                         <fo:table-cell>
                             <fo:table width="100%" table-layout="fixed">
-                                <fo:table-column column-width="3cm"/>
-                                <fo:table-column column-width="3cm"/>
+                                <fo:table-column column-width="4cm"/>
+                                <fo:table-column column-width="4cm"/>
                                 <fo:table-body>
                                     <fo:table-row background-color="#ecf0f1">
                                         <fo:table-cell padding="3mm" border="1pt solid #2c3e50">
-                                            <fo:block font-weight="bold" font-size="10pt">Total Amount:</fo:block>
+                                            <fo:block font-weight="bold" font-size="10pt" white-space-treatment="preserve">Total Amount:</fo:block>
                                         </fo:table-cell>
                                         <fo:table-cell padding="3mm" border="1pt solid #2c3e50">
                                             <fo:block font-weight="bold" color="#e74c3c" font-size="10pt">Rs. $totalRevenue</fo:block>

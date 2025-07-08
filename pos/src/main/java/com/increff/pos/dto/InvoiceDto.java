@@ -7,94 +7,62 @@ import com.increff.pos.model.form.InvoiceItemForm;
 import com.increff.pos.model.response.InvoiceGenerationResponse;
 import com.increff.pos.model.response.OrderItemInvoiceResponse;
 import com.increff.pos.model.response.OrderWithInvoiceResponse;
+import com.increff.pos.spring.ApplicationProperties;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.File;
 import java.util.List;
 
-/**
- * DTO layer for Invoice operations in POS app
- * Handles external layer responsibilities: validation, conversion, external service calls, and communication
- * 
- * This DTO follows the layering convention by:
- * - Performing external validation (null checks, data type checks)
- * - Converting external requests to internal format using manual conversion
- * - Making calls to external systems/APIs (invoice-app service)
- * - Calling the appropriate Flow layer for business logic
- * - Converting internal responses to external format
- */
 @Service
-public class InvoiceDto {
+public class InvoiceDto extends AbstractDto<InvoiceGenerationForm>{
 
     @Autowired
     private InvoiceFlow invoiceFlow;
 
-    @Value("${invoice.app.url:http://localhost:9001}")
-    private String invoiceAppUrl;
+    @Autowired
+    private ApplicationProperties applicationProperties;
 
     private RestTemplate restTemplate = new RestTemplate();
 
-    /**
-     * Generate invoice for order and store locally
-     * Handles external validation, external service calls, and delegates to Flow layer for business logic
-     * 
-     * External Layer Responsibilities:
-     * 1. Validate input parameters (null checks, data type validation)
-     * 2. Call external invoice service to generate PDF
-     * 3. Call Flow layer for business logic execution
-     * 4. Return result to controller
-     * 
-     * @param orderId The ID of the order to generate invoice for
-     * @return The file path where the PDF is stored locally
-     * @throws ApiException if external validation fails or external service is unavailable
-     */
     public String generateInvoice(Integer orderId) {
-        // External validation: Check for null and data type validation
-        validateOrderId(orderId);
+       validateId(orderId,"orderId");
+
         
         // Get order data from Flow layer for external service call
-        OrderWithInvoiceResponse orderData = invoiceFlow.getOrderDataForInvoice(orderId);
+        OrderWithInvoiceResponse orderDataWithInvoice = invoiceFlow.getOrderDataForInvoice(orderId);
+
+        // there should have beeen some validation for orderDataWithInvoice here
         
         // Call external invoice service to generate PDF (DTO responsibility)
-        String base64Pdf = callExternalInvoiceService(orderData);
+        String base64Pdf = callExternalInvoiceService(orderDataWithInvoice);
         
         // Call Flow layer for business logic execution (file saving, database operations)
-        return invoiceFlow.processInvoiceGeneration(orderId, base64Pdf, orderData);
+        return invoiceFlow.processInvoiceGeneration(orderId, base64Pdf, orderDataWithInvoice);
     }
 
-    /**
-     * Get invoice file path for order
-     * Handles external validation and delegates to Flow layer
-     * 
-     * @param orderId The ID of the order
-     * @return The file path where the invoice PDF is stored
-     * @throws ApiException if external validation fails
-     */
-    public String getInvoicePath(Integer orderId) {
-        // External validation: Check for null and data type validation
-        validateOrderId(orderId);
-        
-        // Call Flow layer for business logic execution
-        return invoiceFlow.getInvoicePath(orderId);
-    }
+    public ResponseEntity<Resource> getInvoiceFile(Integer orderId) {
+        validateId(orderId,"orderId");
 
-    /**
-     * External validation for order ID parameter
-     * Performs basic structural validation (null checks, data type validation)
-     * This is NOT business validation - that happens in Flow layer
-     */
-    private void validateOrderId(Integer orderId) {
-        if (orderId == null) {
-            throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, "Order ID cannot be null");
+        String path = invoiceFlow.getInvoicePath(orderId);
+        File file = new File(path);
+
+        if (!file.exists()) {
+            throw new ApiException(ApiException.ErrorType.NOT_FOUND, "Invoice file not found");
         }
-        if (orderId <= 0) {
-            throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, "Order ID must be positive");
-        }
+
+        Resource resource = new FileSystemResource(file);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=invoice_" + orderId + ".pdf")
+                .body(resource);
     }
 
     /**
@@ -117,25 +85,22 @@ public class InvoiceDto {
             // Make HTTP call to external invoice service
             HttpEntity<InvoiceGenerationForm> entity = new HttpEntity<>(request, headers);
             InvoiceGenerationResponse response = restTemplate.postForObject(
-                invoiceAppUrl + "/invoice/generate", 
+                applicationProperties.getInvoiceAppUrl() + "/invoice/generate",
                 entity, 
                 InvoiceGenerationResponse.class
             );
 
             // Validate response from external service
             if (response == null) {
-                throw new ApiException(ApiException.ErrorType.EXTERNAL_SERVICE_ERROR, 
-                    "No response received from invoice service");
+                throw new ApiException(ApiException.ErrorType.BAD_GATEWAY, "No response received from invoice service");
             }
 
             if (!response.isSuccess()) {
-                throw new ApiException(ApiException.ErrorType.EXTERNAL_SERVICE_ERROR, 
-                    "Failed to generate invoice: " + response.getMessage());
+                throw new ApiException(ApiException.ErrorType.BAD_GATEWAY, "Failed to generate invoice");
             }
 
             if (response.getBase64Pdf() == null || response.getBase64Pdf().trim().isEmpty()) {
-                throw new ApiException(ApiException.ErrorType.EXTERNAL_SERVICE_ERROR, 
-                    "Invoice service returned empty PDF data");
+                throw new ApiException(ApiException.ErrorType.BAD_GATEWAY, "Invoice service returned empty PDF data");
             }
 
             return response.getBase64Pdf();
@@ -147,8 +112,7 @@ public class InvoiceDto {
             }
             
             // Handle external service communication errors
-            throw new ApiException(ApiException.ErrorType.EXTERNAL_SERVICE_ERROR, 
-                "Error calling invoice service: " + e.getMessage());
+            throw new ApiException(ApiException.ErrorType.BAD_GATEWAY, "Error calling invoice service: " + e.getMessage());
         }
     }
 
@@ -171,7 +135,7 @@ public class InvoiceDto {
 
         return request;
     }
-
+ 
     /**
      * Convert internal order item to external service format
      * Maps internal data structure to external API requirements

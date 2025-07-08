@@ -53,7 +53,7 @@ public class ReportFlow {
         daySales.setDate(date);
         daySales.setInvoicedOrdersCount(daySalesInfo.getInvoicedOrdersCount());
         daySales.setInvoicedItemsCount(daySalesInfo.getInvoicedItemsCount());
-        daySales.setTotalRevenue(daySales.getTotalRevenue());
+        daySales.setTotalRevenue(daySalesInfo.getTotalRevenue());
 
         reportApi.saveDaySales(daySales);
     }

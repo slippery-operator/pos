@@ -28,9 +28,6 @@ public class InvoicePojo extends AbstractPojo {
     @Column(name = "order_id", nullable = false, unique = true)
     private Integer orderId;
 
-    @Column(name = "invoice_number", nullable = false, unique = true)
-    private String invoiceNumber;
-
     @Column(name = "time_stamp", nullable = false)
     private Instant timeStamp;
 
@@ -46,10 +43,9 @@ public class InvoicePojo extends AbstractPojo {
     /**
      * Constructor for creating invoice entity
      */
-    public InvoicePojo(Integer orderId, String invoiceNumber, Instant timeStamp, 
+    public InvoicePojo(Integer orderId, Instant timeStamp,
                       Integer countOfItems, String invoicePath, Double finalRevenue) {
         this.orderId = orderId;
-        this.invoiceNumber = invoiceNumber;
         this.timeStamp = timeStamp;
         this.countOfItems = countOfItems;
         this.invoicePath = invoicePath;

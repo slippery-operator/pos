@@ -19,30 +19,14 @@ public class ApiException extends RuntimeException {
      * This eliminates the need for multiple exception classes.
      */
     public enum ErrorType {
-//        VALIDATION_ERROR(400, "VALIDATION_ERROR"),
-//        ENTITY_NOT_FOUND(404, "ENTITY_NOT_FOUND"),
-//        RESOURCE_ALREADY_EXISTS(409, "RESOURCE_ALREADY_EXISTS"),
-//        DUPLICATE_ENTRY(409, "DUPLICATE_ENTRY"),
-//        FILE_SIZE_EXCEEDED(400, "FILE_SIZE_EXCEEDED"),
-//        INVALID_FORM(400, "INVALID_FORM"),
-//        EXTERNAL_SERVICE_ERROR(502, "EXTERNAL_SERVICE_ERROR"),
-//        INTERNAL_ERROR(500, "INTERNAL_ERROR"),
-//        INTERNAL_SERVER_ERROR(500, "INTERNAL_SERVER_ERROR");
 
         VALIDATION_ERROR(400, "Validation Error"),
-        ENTITY_NOT_FOUND(404, "Entity Not Found"),
-        DUPLICATE_ENTRY(409, "Duplicate Entry"),
         FILE_SIZE_EXCEEDED(413, "File Size Exceeded"),
-        INVALID_FORM(400, "Invalid Form"),
-        EXTERNAL_SERVICE_ERROR(502, "External Service Error"),
-        INTERNAL_ERROR(500, "Internal Error"),
         BAD_REQUEST(400, "Bad Request"),
         NOT_FOUND(404, "Not Found"),
         CONFLICT(409, "Conflict"),
-        PAYLOAD_TOO_LARGE(413, "Payload Too Large"),
         BAD_GATEWAY(502, "Bad Gateway"),
         INTERNAL_SERVER_ERROR(500, "Internal Server Error");
-
 
         private final int httpStatus;
         private final String errorCode;

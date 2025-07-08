@@ -35,9 +35,6 @@ public class ControllerConfig extends WebMvcConfigurerAdapter {
 
     public static final String PACKAGE_CONTROLLER = "com.increff.invoice.controller";
 
-    /**
-     * Swagger API documentation bean
-     */
     @Bean
     public Docket api() {
         return new Docket(DocumentationType.SWAGGER_2)
@@ -47,18 +44,12 @@ public class ControllerConfig extends WebMvcConfigurerAdapter {
                 .build();
     }
 
-    /**
-     * Resource handlers for Swagger UI and static content
-     */
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/swagger-ui.html").addResourceLocations("classpath:/META-INF/resources/");
         registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
     }
 
-    /**
-     * CORS configuration
-     */
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
@@ -67,9 +58,6 @@ public class ControllerConfig extends WebMvcConfigurerAdapter {
                 .allowedHeaders("*");
     }
 
-    /**
-     * Jackson ObjectMapper bean for JSON serialization
-     */
     @Bean
     public ObjectMapper objectMapper() {
         JavaTimeModule javaTimeModule = new JavaTimeModule();
@@ -81,9 +69,6 @@ public class ControllerConfig extends WebMvcConfigurerAdapter {
                 .build();
     }
 
-    /**
-     * HandlerMappingIntrospector bean for Spring MVC
-     */
     @Bean
     public HandlerMappingIntrospector mvcHandlerMappingIntrospector(ApplicationContext context) {
         return new HandlerMappingIntrospector(context);

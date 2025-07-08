@@ -4,12 +4,15 @@ import com.increff.pos.api.InvoiceApi;
 import com.increff.pos.api.OrderApi;
 import com.increff.pos.api.OrderItemApi;
 import com.increff.pos.api.ProductApi;
+import com.increff.pos.entity.InvoicePojo;
 import com.increff.pos.entity.OrderItemsPojo;
 import com.increff.pos.entity.OrdersPojo;
 import com.increff.pos.entity.ProductPojo;
 import com.increff.pos.exception.ApiException;
 import com.increff.pos.model.response.OrderItemInvoiceResponse;
 import com.increff.pos.model.response.OrderWithInvoiceResponse;
+import com.increff.pos.spring.ApplicationProperties;
+import com.increff.pos.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -35,8 +38,11 @@ import java.util.List;
  * Note: Business logic is concentrated in API layer for reusability
  */
 @Service
-@Transactional(rollbackOn = Exception.class)
+@Transactional
 public class InvoiceFlow {
+
+    @Autowired
+    private ApplicationProperties applicationProperties;
 
     @Autowired
     private InvoiceApi invoiceApi;
@@ -50,9 +56,6 @@ public class InvoiceFlow {
     @Autowired
     private ProductApi productApi;
 
-    @Value("${invoice.storage.path:invoices}")
-    private String invoiceStoragePath;
-
     /**
      * Get order data needed for invoice generation
      * Orchestrates data retrieval from multiple APIs for external service call
@@ -64,8 +67,7 @@ public class InvoiceFlow {
     public OrderWithInvoiceResponse getOrderDataForInvoice(Integer orderId) {
         // Check if invoice already exists (business validation in API)
         if (invoiceApi.existsByOrderId(orderId)) {
-            throw new ApiException(ApiException.ErrorType.DUPLICATE_ENTRY, 
-                "Invoice already exists for order ID: " + orderId);
+            throw new ApiException(ApiException.ErrorType.CONFLICT, "Invoice already exists for order");
         }
 
         // Get order details from Order API
@@ -74,8 +76,7 @@ public class InvoiceFlow {
 
         // Business validation: Ensure order has items
         if (orderItems == null || orderItems.isEmpty()) {
-            throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, 
-                "Order must have at least one item to generate invoice");
+            throw new ApiException(ApiException.ErrorType.INTERNAL_SERVER_ERROR, "");
         }
 
         // Calculate total revenue from order items
@@ -88,7 +89,7 @@ public class InvoiceFlow {
                 .map(this::convertToOrderItemInvoiceResponse)
                 .collect(java.util.stream.Collectors.toList());
 
-        return new OrderWithInvoiceResponse(orderId, order.getTime(), orderItemResponseList, totalRevenue);
+        return new OrderWithInvoiceResponse(orderId, order.getTime(), totalRevenue, orderItemResponseList);
     }
 
     /**
@@ -105,14 +106,12 @@ public class InvoiceFlow {
         // Save PDF locally and get file path
         String invoicePath = savePdfLocally(base64Pdf, orderId);
 
+        // Create invoice entity
+        InvoicePojo invoice = new InvoicePojo(orderId, orderData.getTime(),
+                orderData.getOrderItems().size(), invoicePath, orderData.getTotalRevenue());
+
         // Create invoice record in database using API
-        invoiceApi.createInvoiceWithGeneratedNumber(
-            orderData.getId(),
-            orderData.getTime(),
-            orderData.getOrderItems().size(),
-            invoicePath,
-            orderData.getTotalRevenue()
-        );
+        invoiceApi.createInvoice(invoice);
 
         return invoicePath;
     }
@@ -141,19 +140,18 @@ public class InvoiceFlow {
     private String savePdfLocally(String base64Pdf, Integer orderId) {
         try {
             // Create invoices directory if it doesn't exist
-            File invoicesDir = new File(invoiceStoragePath);
+            File invoicesDir = new File(applicationProperties.getInvoiceStoragePath());
             if (!invoicesDir.exists()) {
                 boolean created = invoicesDir.mkdirs();
                 if (!created) {
-                    throw new ApiException(ApiException.ErrorType.INTERNAL_ERROR, 
+                    throw new ApiException(ApiException.ErrorType.INTERNAL_SERVER_ERROR,
                         "Failed to create invoices directory");
                 }
             }
 
             // Generate unique file name with timestamp
-            String fileName = "invoice_" + orderId + "_" + 
-                            Instant.now().getEpochSecond() + ".pdf";
-            String filePath = invoiceStoragePath + File.separator + fileName;
+            String fileName = "invoice_" + orderId + "_" + Instant.now().getEpochSecond() + ".pdf";
+            String filePath = applicationProperties.getInvoiceStoragePath() + File.separator + fileName;
 
             // Decode base64 string to PDF bytes
             byte[] pdfBytes = Base64.getDecoder().decode(base64Pdf);
@@ -167,17 +165,17 @@ public class InvoiceFlow {
             // Verify file was created successfully
             File savedFile = new File(filePath);
             if (!savedFile.exists() || savedFile.length() == 0) {
-                throw new ApiException(ApiException.ErrorType.INTERNAL_ERROR, 
+                throw new ApiException(ApiException.ErrorType.INTERNAL_SERVER_ERROR,
                     "Failed to save PDF file or file is empty");
             }
 
             return filePath;
 
         } catch (IOException e) {
-            throw new ApiException(ApiException.ErrorType.INTERNAL_ERROR, 
+            throw new ApiException(ApiException.ErrorType.INTERNAL_SERVER_ERROR,
                 "Failed to save PDF file: " + e.getMessage());
         } catch (IllegalArgumentException e) {
-            throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, 
+            throw new ApiException(ApiException.ErrorType.BAD_REQUEST,
                 "Invalid base64 PDF data: " + e.getMessage());
         }
     }

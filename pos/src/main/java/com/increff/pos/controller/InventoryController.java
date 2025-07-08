@@ -21,7 +21,7 @@ public class InventoryController {
     private InventoryDto inventoryDto;
 
     @GetMapping
-    public List<InventoryResponse> searchInventory(@RequestParam String productName) {
+    public List<InventoryResponse> searchInventory(@RequestParam(required = false) String productName) {
         return inventoryDto.searchInventory(productName);
     }
 

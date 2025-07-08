@@ -22,14 +22,4 @@ public class OrderWithInvoiceResponse {
     private Instant time;
     private Double totalRevenue;
     private List<OrderItemInvoiceResponse> orderItems;
-
-    /**
-     * Constructor for order with invoice response
-     */
-    public OrderWithInvoiceResponse(Integer id, Instant time, List<OrderItemInvoiceResponse> orderItems, Double totalRevenue) {
-        this.id = id;
-        this.time = time;
-        this.orderItems = orderItems;
-        this.totalRevenue = totalRevenue;
-    }
 } 

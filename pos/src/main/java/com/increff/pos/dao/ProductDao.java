@@ -11,12 +11,8 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import javax.transaction.Transactional;
-
-import java.util.Set;
 
 @Repository
 @Transactional
@@ -40,10 +36,11 @@ public class ProductDao extends AbstractDao<ProductPojo> {
         CriteriaQuery<ProductPojo> query = cb.createQuery(ProductPojo.class);
         Root<ProductPojo> root = query.from(ProductPojo.class);
         List<Predicate> predicates = new ArrayList<>();
-        if (barcode != null && !barcode.isEmpty()) {
+        if (Objects.isNull(barcode) && !barcode.isEmpty()) {
             predicates.add(cb.like(cb.lower(root.get("barcode")), barcode + "%"));
         }
-        if (productName != null && !productName.isEmpty()) {
+        // TODO: confirm use of isNull()
+        if (Objects.isNull(productName) && !productName.isEmpty()) {
             predicates.add(cb.like(cb.lower(root.get("name")), productName + "%"));
         }
         if (!predicates.isEmpty()) {

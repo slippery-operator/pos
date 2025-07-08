@@ -29,37 +29,11 @@ public class InvoiceController {
 
     @GetMapping("/generate-invoice/{id}")
     public String generateInvoice( @PathVariable Integer id) {
-        // Delegate to DTO layer for business logic and validation
         return invoiceDto.generateInvoice(id);
     }
 
     @GetMapping("/get-invoice/{id}")
     public ResponseEntity<Resource> getInvoice( @PathVariable Integer id) {
-        
-        try {
-            // Get invoice file path from DTO layer
-            String invoicePath = invoiceDto.getInvoicePath(id);
-            
-            // Create file resource for serving
-            File file = new File(invoicePath);
-            if (!file.exists()) {
-                return ResponseEntity.notFound().build();
-            }
-            
-            Resource resource = new FileSystemResource(file);
-            
-            // Set headers for PDF download
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_PDF);
-            headers.setContentDispositionFormData("attachment", "invoice_" + id + ".pdf");
-            
-            return ResponseEntity.ok()
-                    .headers(headers)
-                    .body(resource);
-                    
-        } catch (Exception e) {
-            // Return 404 if invoice not found or any other error
-            return ResponseEntity.notFound().build();
-        }
+       return invoiceDto.getInvoiceFile(id);
     }
 } 
