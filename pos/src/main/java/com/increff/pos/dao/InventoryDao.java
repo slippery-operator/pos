@@ -59,17 +59,15 @@ public class InventoryDao extends AbstractDao<InventoryPojo> {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<InventoryPojo> query = cb.createQuery(InventoryPojo.class);
         Root<InventoryPojo> inventoryRoot = query.from(InventoryPojo.class);
-        
+        Join<Object, Object> productJoin = inventoryRoot.join("product");
         if (productName == null) {
             // If no search term provided, return all inventory items
             query.select(inventoryRoot);
         } else {
             // Join with product and search by name
-            Join<Object, Object> productJoin = inventoryRoot.join("product");
-            query.select(inventoryRoot)
-                .where(cb.like(cb.lower(productJoin.get("name")), productName.toLowerCase() + "%"));
+            query.select(inventoryRoot).where(cb.like(cb.lower(productJoin.get("name")), productName + "%"));
         }
-        
+        query.orderBy(cb.asc(productJoin.get("name")));
         return entityManager.createQuery(query).getResultList();
     }
 

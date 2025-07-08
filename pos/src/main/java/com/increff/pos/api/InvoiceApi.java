@@ -3,6 +3,7 @@ package com.increff.pos.api;
 import com.increff.pos.dao.InvoiceDao;
 import com.increff.pos.entity.InvoicePojo;
 import com.increff.pos.exception.ApiException;
+import com.increff.pos.model.DaySalesModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -69,8 +70,16 @@ public class InvoiceApi {
      * Get invoices by date range
      * Returns invoices within specified date range
      */
-    public List<InvoicePojo> getInvoicesByDateRange(Instant startDate, Instant endDate) {
-        return invoiceDao.selectByDateRange(startDate, endDate);
+    public DaySalesModel getInvoicesDataByDateRange(Instant startDate, Instant endDate) {
+        List<InvoicePojo> invoices = invoiceDao.selectByDateRange(startDate, endDate);
+        int invoicedOrdersCount = invoices.size();
+        int invoicedItemsCount = invoices.stream()
+                .mapToInt(InvoicePojo::getCountOfItems)
+                .sum();
+        double totalRevenue = invoices.stream()
+                .mapToDouble(InvoicePojo::getFinalRevenue)
+                .sum();
+        return new DaySalesModel(invoicedOrdersCount, invoicedItemsCount, totalRevenue);
     }
 
     /**

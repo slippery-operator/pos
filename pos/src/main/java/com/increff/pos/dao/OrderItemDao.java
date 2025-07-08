@@ -24,15 +24,7 @@ public class OrderItemDao extends AbstractDao<OrderItemsPojo> {
         return entityManager.createQuery(query).getResultList();
     }
 
-    public List<OrderItemsPojo> getOrderItemsByOrderId(Integer orderId) {
-        return selectByOrderId(orderId);
-    }
-
-    public void delete(OrderItemsPojo orderItem) {
-        entityManager.remove(orderItem);
-    }
-
-    public void bulkInsert(List<OrderItemsPojo> orderItems) {
+    public void insertGroup(List<OrderItemsPojo> orderItems) {
         for (int i = 0; i < orderItems.size(); i++) {
             entityManager.persist(orderItems.get(i));
             if (i % 50 == 0) { // Batch processing

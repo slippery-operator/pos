@@ -6,8 +6,8 @@ import com.increff.pos.api.OrderItemApi;
 import com.increff.pos.api.ProductApi;
 import com.increff.pos.entity.OrderItemsPojo;
 import com.increff.pos.entity.OrdersPojo;
-import com.increff.pos.entity.ProductPojo;
 import com.increff.pos.exception.ApiException;
+import com.increff.pos.model.OrderItemModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,48 +31,54 @@ public class OrderFlow {
     @Autowired
     private InventoryApi inventoryApi;
 
+    /**
+     * Creates an order from a list of OrderItemModel objects.
+     * This method provides better readability and reduces the risk of index mismatches
+     * by using a structured model instead of separate lists.
+     * 
+     * @param orderItems List of OrderItemModel containing barcode, quantity, and MRP
+     * @return Created OrdersPojo
+     */
     @Transactional
-    public OrdersPojo createOrderFromBarcodes(List<String> barcodes, List<Integer> quantities, List<Double> mrps) {
+    public OrdersPojo createOrder(List<OrderItemModel> orderItems) {
+        // Extract barcodes from OrderItemModel for product lookup
+        List<String> barcodes = orderItems.stream()
+                .map(OrderItemModel::getBarcode)
+                .collect(java.util.stream.Collectors.toList());
+
         // Look up products by their barcodes
-        Map<String, ProductPojo> productMap = productApi.findProductsByBarcodes(barcodes);
+        Map<String, Integer> productBarcodeToId = productApi.findProductsByBarcodes(barcodes);
 
         // Validate that all barcodes were found
-        for (String barcode : barcodes) {
-            if (!productMap.containsKey(barcode)) {
+        for (OrderItemModel orderItem : orderItems) {
+            if (!productBarcodeToId.containsKey(orderItem.getBarcode())) {
                 throw new ApiException(ApiException.ErrorType.ENTITY_NOT_FOUND, 
-                    "Product with barcode " + barcode + " not found");
+                    "Product with barcode " + orderItem.getBarcode() + " not found");
             }
         }
 
         // Validate inventory availability for each item
-        for (int i = 0; i < barcodes.size(); i++) {
-            ProductPojo product = productMap.get(barcodes.get(i));
-            inventoryApi.validateInventoryAvailability(product.getId(), quantities.get(i));
+        for (OrderItemModel orderItem : orderItems) {
+            Integer productId = productBarcodeToId.get(orderItem.getBarcode());
+            inventoryApi.validateInventoryAvailability(productId, orderItem.getQuantity());
         }
 
         // Create the main order record
         OrdersPojo createdOrder = orderApi.createOrder();
 
-        // Process each order item
+        // Process each order item using OrderItemModel for better readability
         List<OrderItemsPojo> orderItemsToCreate = new ArrayList<>();
-        for (int i = 0; i < barcodes.size(); i++) {
-            // Get the product for this barcode
-            ProductPojo product = productMap.get(barcodes.get(i));
+        for (OrderItemModel orderItem : orderItems) {
 
-            // Reduce inventory for this product
-            inventoryApi.reduceInventory(product.getId(), quantities.get(i));
+            Integer productId = productBarcodeToId.get(orderItem.getBarcode());
 
-            // Create order item pojo
-            OrderItemsPojo orderItem = new OrderItemsPojo();
-            orderItem.setOrderId(createdOrder.getId());
-            orderItem.setProductId(product.getId());
-            orderItem.setQuantity(quantities.get(i));
-            orderItem.setSellingPrice(mrps.get(i));
-            orderItemsToCreate.add(orderItem);
+            inventoryApi.reduceInventory(productId, orderItem.getQuantity());
+
+            OrderItemsPojo orderItemPojo = new OrderItemsPojo(createdOrder.getId(), productId, orderItem.getQuantity(), orderItem.getMrp());
+            orderItemsToCreate.add(orderItemPojo);
         }
-
         // Bulk create all order items
-        orderItemApi.bulkCreateOrderItems(orderItemsToCreate);
+         orderItemApi.createOrderItemsGroup(orderItemsToCreate);
 
         return createdOrder;
     }

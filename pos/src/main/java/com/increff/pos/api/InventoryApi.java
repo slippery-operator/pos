@@ -72,14 +72,7 @@ public class InventoryApi {
 
     public void reduceInventory(Integer productId, Integer quantity) {
         InventoryPojo inventory = inventoryDao.selectByProductId(productId);
-        if (inventory == null) {
-            throw new ApiException(ApiException.ErrorType.BAD_REQUEST, "No inventory found for product");
-        }
-
         int newQuantity = inventory.getQuantity() - quantity;
-        if (newQuantity < 0) {
-            throw new ApiException(ApiException.ErrorType.BAD_REQUEST, "Cannot fulfill required demand");
-        }
         inventory.setQuantity(newQuantity);
     }
 

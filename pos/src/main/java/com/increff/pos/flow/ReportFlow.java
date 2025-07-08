@@ -3,7 +3,7 @@ package com.increff.pos.flow;
 import com.increff.pos.api.InvoiceApi;
 import com.increff.pos.api.ReportApi;
 import com.increff.pos.entity.DaySalesPojo;
-import com.increff.pos.entity.InvoicePojo;
+import com.increff.pos.model.DaySalesModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -12,22 +12,15 @@ import javax.transaction.Transactional;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.util.List;
 
-/**
- * Flow layer for reporting operations
- * Orchestrates sales reports and day-on-day sales calculations
- * 
- * TEMPORARILY DISABLED - DaySales functionality disabled
- */
+import static com.increff.pos.util.DateUtil.calEndInstant;
+import static com.increff.pos.util.DateUtil.calStartInstant;
+
 @Service
 public class ReportFlow {
 
     @Autowired
     private InvoiceApi invoiceApi;
-
-
 
     @Autowired
     private ReportApi reportApi;
@@ -49,31 +42,18 @@ public class ReportFlow {
      */
     @Transactional
     public void calculateDailySalesForDate(LocalDate date) {
-        // Get start and end of the day in UTC
-        ZonedDateTime startOfDay = date.atStartOfDay(ZoneOffset.UTC);
-        ZonedDateTime endOfDay = date.atTime(23, 59, 59).atZone(ZoneOffset.UTC);
-        
-        Instant startInstant = startOfDay.toInstant();
-        Instant endInstant = endOfDay.toInstant();
+        Instant startInstant = calStartInstant(date);
+        Instant endInstant = calEndInstant(date);
 
         // Get all invoices for the day
-        List<InvoicePojo> invoices = invoiceApi.getInvoicesByDateRange(startInstant, endInstant);
-        
-        // Calculate totals
-        int invoicedOrdersCount = invoices.size();
-        int invoicedItemsCount = invoices.stream()
-                .mapToInt(InvoicePojo::getCountOfItems)
-                .sum();
-        double totalRevenue = invoices.stream()
-                .mapToDouble(InvoicePojo::getFinalRevenue)
-                .sum();
+        DaySalesModel daySalesInfo = invoiceApi.getInvoicesDataByDateRange(startInstant, endInstant);
 
         // Create or update day sales record
         DaySalesPojo daySales = new DaySalesPojo();
         daySales.setDate(date);
-        daySales.setInvoicedOrdersCount(invoicedOrdersCount);
-        daySales.setInvoicedItemsCount(invoicedItemsCount);
-        daySales.setTotalRevenue(totalRevenue);
+        daySales.setInvoicedOrdersCount(daySalesInfo.getInvoicedOrdersCount());
+        daySales.setInvoicedItemsCount(daySalesInfo.getInvoicedItemsCount());
+        daySales.setTotalRevenue(daySales.getTotalRevenue());
 
         reportApi.saveDaySales(daySales);
     }

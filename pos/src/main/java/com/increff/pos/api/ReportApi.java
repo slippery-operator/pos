@@ -23,37 +23,15 @@ public class ReportApi {
 
     public List<DaySalesPojo> getDaySalesByDateRange(LocalDate startDate, LocalDate endDate) {
         if (startDate == null || endDate == null) {
-            throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, "Start date and end date are required");
+            throw new ApiException(ApiException.ErrorType.BAD_REQUEST, "Start date and end date are required");
         }
         if (startDate.isAfter(endDate)) {
-            throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, "Start date cannot be after end date");
+            throw new ApiException(ApiException.ErrorType.BAD_REQUEST, "Start date cannot be after end date");
         }
         return reportDao.getDaySalesByDateRange(startDate, endDate);
     }
 
-    public DaySalesPojo getDaySalesByDate(LocalDate date) {
-        if (date == null) {
-            throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, "Date is required");
-        }
-        return reportDao.getDaySalesByDate(date);
-    }
-
     public void saveDaySales(DaySalesPojo daySales) {
-        if (daySales == null) {
-            throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, "Day sales data is required");
-        }
-        if (daySales.getDate() == null) {
-            throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, "Date is required");
-        }
-        
-        DaySalesPojo existing = reportDao.getDaySalesByDate(daySales.getDate());
-        if (existing != null) {
-            existing.setInvoicedOrdersCount(daySales.getInvoicedOrdersCount());
-            existing.setInvoicedItemsCount(daySales.getInvoicedItemsCount());
-            existing.setTotalRevenue(daySales.getTotalRevenue());
-            reportDao.updateDaySales(existing);
-        } else {
-            reportDao.insertDaySales(daySales);
-        }
+        reportDao.insert(daySales);
     }
 } 

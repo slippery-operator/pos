@@ -5,18 +5,17 @@ import com.increff.pos.api.OrderItemApi;
 import com.increff.pos.flow.OrderFlow;
 import com.increff.pos.entity.OrderItemsPojo;
 import com.increff.pos.entity.OrdersPojo;
+import com.increff.pos.model.OrderItemModel;
 import com.increff.pos.model.form.OrderItemForm;
 import com.increff.pos.model.response.OrderItemResponse;
 import com.increff.pos.model.response.OrderResponse;
 import com.increff.pos.util.ConvertUtil;
+import com.increff.pos.util.DateUtil;
 import com.increff.pos.api.ProductApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,17 +41,14 @@ public class OrderDto extends AbstractDto<OrderItemForm> {
         // Validate all order items
         validationUtil.validateForms(orderItems);
 
-        // Extract data from forms
-        List<String> barcodes = orderItems.stream().map(OrderItemForm::getBarcode).collect(Collectors.toList());
-
-        List<Integer> quantities = orderItems.stream().map(OrderItemForm::getQuantity).collect(Collectors.toList());
-
-        List<Double> mrps = orderItems.stream()
-                .map(OrderItemForm::getMrp)
+        // Convert forms to OrderItemModel for better readability and to avoid index mismatches
+        // This ensures that barcode, quantity, and MRP stay together as a unit
+        List<OrderItemModel> orderItemModels = orderItems.stream()
+                .map(form -> new OrderItemModel(form.getBarcode(), form.getQuantity(), form.getMrp()))
                 .collect(Collectors.toList());
 
-        // Call flow layer with extracted parameters (complex orchestration)
-        OrdersPojo createdOrder = orderFlow.createOrderFromBarcodes(barcodes, quantities, mrps);
+        // Call flow layer with OrderItemModel list (complex orchestration)
+        OrdersPojo createdOrder = orderFlow.createOrder(orderItemModels);
 
         // Get order items and convert to response
         List<OrderItemsPojo> orderItemPojos = orderItemApi.getOrderItemsByOrderId(createdOrder.getId());
@@ -62,18 +58,9 @@ public class OrderDto extends AbstractDto<OrderItemForm> {
 
     public List<OrderResponse> searchOrders(String startDate, String endDate, Integer orderId) {
 
-        Instant parsedStartDate = null;
-        Instant parsedEndDate = null;
-        if (startDate != null && !startDate.isEmpty()) {
-            parsedStartDate = LocalDate.parse(startDate).atStartOfDay(ZoneOffset.UTC).toInstant(); // 00:00 UTC
-        }
-        if (endDate != null && !endDate.isEmpty()) {
-            parsedEndDate = LocalDate.parse(endDate)
-                    .plusDays(1)                              // move to next day
-                    .atStartOfDay(ZoneOffset.UTC)             // at 00:00 UTC
-                    .toInstant()
-                    .minusMillis(1);                          // back to 23:59:59.999
-        }
+        // Parse date strings using DateUtil for better organization and reusability
+        Instant parsedStartDate = DateUtil.parseStartDate(startDate);
+        Instant parsedEndDate = DateUtil.parseEndDate(endDate);
 
         // Direct API call instead of using flow layer
         List<OrdersPojo> orders = orderApi.searchOrders(parsedStartDate, parsedEndDate, orderId);
@@ -95,6 +82,15 @@ public class OrderDto extends AbstractDto<OrderItemForm> {
         return convertToOrderResponse(order, orderItems);
     }
 
+    /**
+     * Converts OrdersPojo and its associated OrderItemsPojo list to OrderResponse.
+     * This method is kept in the DTO layer as it requires access to ConvertUtil dependency
+     * and is specific to the order domain conversion logic.
+     * 
+     * @param order The order entity to convert
+     * @param orderItems The list of order items associated with the order
+     * @return OrderResponse containing the converted order and its items
+     */
     private OrderResponse convertToOrderResponse(OrdersPojo order, List<OrderItemsPojo> orderItems) {
         // Convert base order using ConvertUtil
         OrderResponse response = convertUtil.convert(order, OrderResponse.class);

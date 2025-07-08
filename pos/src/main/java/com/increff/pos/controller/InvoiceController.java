@@ -28,20 +28,13 @@ public class InvoiceController {
     private InvoiceDto invoiceDto;
 
     @GetMapping("/generate-invoice/{id}")
-    @ApiOperation(value = "Generate invoice PDF for order")
-    public String generateInvoice(
-            @ApiParam(value = "Order ID", required = true)
-            @PathVariable Integer id) {
-        
+    public String generateInvoice( @PathVariable Integer id) {
         // Delegate to DTO layer for business logic and validation
         return invoiceDto.generateInvoice(id);
     }
 
     @GetMapping("/get-invoice/{id}")
-    @ApiOperation(value = "Get invoice PDF file for order")
-    public ResponseEntity<Resource> getInvoice(
-            @ApiParam(value = "Order ID", required = true)
-            @PathVariable Integer id) {
+    public ResponseEntity<Resource> getInvoice( @PathVariable Integer id) {
         
         try {
             // Get invoice file path from DTO layer

@@ -30,4 +30,10 @@ public class OrderItemsPojo extends AbstractPojo {
     @Column(nullable = false)
     private Double sellingPrice;
 
+    public OrderItemsPojo(Integer orderId, Integer productId, Integer quantity, Double sellingPrice) {
+        this.orderId = orderId;
+        this.productId = productId;
+        this.quantity = quantity;
+        this.sellingPrice = sellingPrice;
+    }
 }

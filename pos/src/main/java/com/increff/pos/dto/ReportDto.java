@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,8 +21,12 @@ public class ReportDto {
     @Autowired
     private ReportApi reportApi;
 
-    public List<DaySalesResponse> getDaySalesByDateRange(LocalDate startDate, LocalDate endDate) {
-        List<DaySalesPojo> daySalesList = reportApi.getDaySalesByDateRange(startDate, endDate);
+    public List<DaySalesResponse> getDaySalesByDateRange(String startDate, String endDate) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate parsedStart = LocalDate.parse(startDate, formatter);
+        LocalDate parsedEnd = LocalDate.parse(endDate, formatter);
+        
+        List<DaySalesPojo> daySalesList = reportApi.getDaySalesByDateRange(parsedStart, parsedEnd);
         return daySalesList.stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());

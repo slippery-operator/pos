@@ -49,6 +49,7 @@ public class ProductDao extends AbstractDao<ProductPojo> {
         if (!predicates.isEmpty()) {
             query.where(cb.and(predicates.toArray(new Predicate[0])));
         }
+        query.orderBy(cb.asc(root.get("name")));
         return entityManager.createQuery(query).getResultList();
     }
 

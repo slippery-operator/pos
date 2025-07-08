@@ -21,11 +21,11 @@ public class ProductApi {
     @Autowired
     private ProductDao productDao;
 
-    public Map<String, ProductPojo> findProductsByBarcodes(List<String> barcodes) {
+    public Map<String, Integer> findProductsByBarcodes(List<String> barcodes) {
         Set<String> uniqueBarcodes = barcodes.stream().collect(Collectors.toSet());
         List<ProductPojo> products = productDao.selectByBarcodes(uniqueBarcodes);
 
-        return products.stream().collect(Collectors.toMap(ProductPojo::getBarcode, Function.identity()));
+        return products.stream().collect(Collectors.toMap(ProductPojo::getBarcode, ProductPojo::getId));
     }
 
     public List<ProductPojo> searchProducts(String barcode, String productName) {
