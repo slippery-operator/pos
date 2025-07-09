@@ -18,23 +18,23 @@ import java.util.List;
 public class InventoryController {
 
     @Autowired
-    private InventoryDto inventoryDto;
+    private InventoryDto dto;
 
     @GetMapping
     public List<InventoryResponse> searchInventory(@RequestParam(required = false) String productName) {
-        return inventoryDto.searchInventory(productName);
+        return dto.searchInventory(productName);
     }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public TsvUploadResponse<InventoryResponse> uploadInventoryTsv(
             @RequestPart(value = "file") MultipartFile file) {
-        return inventoryDto.uploadInventoryTsv(file);
+        return dto.uploadInventoryTsv(file);
     }
 
     @PutMapping("/{product-id}")
     public InventoryResponse updateInventoryByProductId(
             @PathVariable("product-id") Integer productId,
             @Valid @RequestBody InventoryUpdateForm inventoryUpdateForm) {
-        return inventoryDto.updateInventoryByProductId(productId, inventoryUpdateForm);
+        return dto.updateInventoryByProductId(productId, inventoryUpdateForm);
     }
 }

@@ -17,29 +17,29 @@ import java.util.List;
 public class ClientController {
 
     @Autowired
-    private ClientDto clientDto;
+    private ClientDto dto;
 
     @GetMapping
     public List<ClientResponse> getAll() {
 
-        return clientDto.getAll();
+        return  dto.getAll();
     }
 
     @GetMapping("/search")
     public List<ClientResponse> searchByName(@RequestParam String name) {
 
-        return clientDto.searchByName(name);
+        return dto.searchByName(name);
     }
 
     @PostMapping
     public ClientResponse add(@Valid @RequestBody ClientForm form) {
 
-        return clientDto.add(form);
+        return dto.add(form);
     }
 
     @PutMapping("/{id}")
     public ClientResponse update(@PathVariable @Min(1) Integer id, @Valid @RequestBody ClientForm form) {
 
-        return clientDto.update(id, form);
+        return dto.update(id, form);
     }
 }

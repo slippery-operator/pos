@@ -14,23 +14,23 @@ import java.util.List;
 public class OrderController {
 
     @Autowired
-    private OrderDto orderDto;
+    private OrderDto dto;
 
     @GetMapping
     public List<OrderResponse> searchOrders(
             @RequestParam(required = false, name = "start-date") String startDate,
             @RequestParam(required = false, name = "end-date") String endDate,
             @RequestParam(required = false, name = "order-id") Integer orderId) {
-        return orderDto.searchOrders(startDate, endDate, orderId);
+        return dto.searchOrders(startDate, endDate, orderId);
     }
 
     @PostMapping
     public OrderResponse createOrders(@Valid @RequestBody List<OrderItemForm> orderItems) {
-        return orderDto.createOrders(orderItems);
+        return dto.createOrders(orderItems);
     }
 
     @GetMapping("/{id}/order-items")
     public OrderResponse getOrderById(@PathVariable Integer id) {
-        return orderDto.getOrderById(id);
+        return dto.getOrderById(id);
     }
 }

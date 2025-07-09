@@ -34,8 +34,7 @@ public class InventoryApi {
         // Check if inventory already exists for this product
         InventoryPojo existingInventory = inventoryDao.selectByProductId(productId);
         if (existingInventory != null) {
-            throw new ApiException(ApiException.ErrorType.CONFLICT, 
-                "Inventory already exists for product id: " + productId);
+            throw new ApiException(ApiException.ErrorType.CONFLICT, "Inventory already exists for product id: " + productId);
         }
 
         InventoryPojo inventory = new InventoryPojo();

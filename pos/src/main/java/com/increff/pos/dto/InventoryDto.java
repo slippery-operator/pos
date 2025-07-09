@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.ArrayList;
 
 import static com.increff.pos.util.StringUtil.toLowerCase;
@@ -35,10 +34,6 @@ public class InventoryDto extends AbstractDto<InventoryForm> {
         return convertUtil.convertList(inventoryPojos, InventoryResponse.class);
     }
 
-    /**
-     * Upload inventory from TSV file with partial failure handling and row-wise validation.
-     * Processes valid rows and returns detailed error information for invalid rows.
-     */
     public TsvUploadResponse<InventoryResponse> uploadInventoryTsv(MultipartFile file) {
         validationUtil.validateTsvFile(file);
         List<InventoryFormWithRow> inventoryFormsWithRow = TsvParserUtil.parseInventoryTsvWithRow(file);

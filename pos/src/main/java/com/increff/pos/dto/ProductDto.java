@@ -12,9 +12,6 @@ import com.increff.pos.model.form.ProductSearchForm;
 import com.increff.pos.model.form.ProductUpdateForm;
 import com.increff.pos.util.ConvertUtil;
 import com.increff.pos.util.TsvParserUtil;
-import com.increff.pos.exception.ApiException;
-import com.increff.pos.util.StringUtil;
-import com.increff.pos.util.ValidationUtil;
 import com.increff.pos.util.ResponseUtil;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +28,7 @@ public class ProductDto extends AbstractDto<ProductForm> {
 
     @Autowired
     private ProductApi productApi;
-    
+
     @Autowired
     private ProductFlow productFlow;
 
@@ -59,6 +56,7 @@ public class ProductDto extends AbstractDto<ProductForm> {
      */
     public TsvUploadResponse<ProductResponse> uploadProductsTsv(MultipartFile file) {
         validationUtil.validateTsvFile(file);
+//        TODO: reject tsv in case of any error
         List<ProductFormWithRow> productFormsWithRow = TsvParserUtil.parseProductTsv(file);
         List<TsvValidationError> formValidationErrors = validationUtil.validateFormsWithRow(productFormsWithRow);
         List<ProductFormWithRow> validForms = new ArrayList<>();

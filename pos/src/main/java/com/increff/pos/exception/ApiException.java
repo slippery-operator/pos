@@ -18,9 +18,11 @@ public class ApiException extends RuntimeException {
      * Each enum value maps to a specific HTTP status code and error type.
      * This eliminates the need for multiple exception classes.
      */
+//    TODO: create package called constants in model, define enums there
     public enum ErrorType {
 
         VALIDATION_ERROR(400, "Validation Error"),
+
         FILE_SIZE_EXCEEDED(413, "File Size Exceeded"),
         BAD_REQUEST(400, "Bad Request"),
         NOT_FOUND(404, "Not Found"),

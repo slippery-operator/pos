@@ -16,6 +16,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	private static Logger logger = Logger.getLogger(SecurityConfig.class);
 
 	//TODO: to check authentication
+//	TODO: move constants
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
 

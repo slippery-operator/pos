@@ -29,6 +29,7 @@ public class TsvUploadResponse<T> {
      * Total number of rows processed
      */
     private int totalRows;
+
     
     /**
      * Number of successful rows

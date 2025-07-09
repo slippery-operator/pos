@@ -43,6 +43,8 @@ public class ClientDao extends AbstractDao<ClientPojo> {
      * @param ids Set of client IDs to select
      * @return List of existing clients
      */
+//    TODO: move to abstractdao
+//    selectByKeys(fieldName: ids, values: , sortFun: )
     public List<ClientPojo> selectByIds(Set<Integer> ids) {
         if (ids == null || ids.isEmpty()) {
             return Collections.emptyList();

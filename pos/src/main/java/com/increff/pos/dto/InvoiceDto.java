@@ -8,6 +8,7 @@ import com.increff.pos.model.response.InvoiceGenerationResponse;
 import com.increff.pos.model.response.OrderItemInvoiceResponse;
 import com.increff.pos.model.response.OrderWithInvoiceResponse;
 import com.increff.pos.spring.ApplicationProperties;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -34,7 +35,6 @@ public class InvoiceDto extends AbstractDto<InvoiceGenerationForm>{
 
     public String generateInvoice(Integer orderId) {
        validateId(orderId,"orderId");
-
         
         // Get order data from Flow layer for external service call
         OrderWithInvoiceResponse orderDataWithInvoice = invoiceFlow.getOrderDataForInvoice(orderId);

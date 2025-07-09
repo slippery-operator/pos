@@ -8,12 +8,9 @@ import lombok.Setter;
 import javax.persistence.*;
 import java.time.LocalDate;
 
-/**
- * Entity class for daily sales reporting
- * Stores aggregated daily sales data for reporting
- */
 @Entity
-@Table(name = "pos_day_sales")
+// TODO: Remove table and column namijng
+//@Table(name = "pos_day_sales")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -26,6 +23,7 @@ public class DaySalesPojo extends AbstractPojo {
 
     @Column(name = "date", nullable = false, unique = true)
     private LocalDate date;
+//     TODO: use ZonedDT here
 
     @Column(name = "invoiced_orders_count", nullable = false)
     private Integer invoicedOrdersCount = 0;

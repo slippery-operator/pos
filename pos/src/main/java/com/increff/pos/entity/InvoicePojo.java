@@ -8,17 +8,13 @@ import lombok.Setter;
 import javax.persistence.*;
 import java.time.Instant;
 
-/**
- * Entity class for Invoice table in POS app
- * Tracks generated invoices and their local storage paths
- * invoice_path field determines if invoice has been generated for an order
- */
 @Entity
 @Table(name = "invoice")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+// TODO: remove redundant table
 public class InvoicePojo extends AbstractPojo {
 
     @Id
@@ -40,9 +36,6 @@ public class InvoicePojo extends AbstractPojo {
     @Column(name = "final_revenue", nullable = false)
     private Double finalRevenue;
 
-    /**
-     * Constructor for creating invoice entity
-     */
     public InvoicePojo(Integer orderId, Instant timeStamp,
                       Integer countOfItems, String invoicePath, Double finalRevenue) {
         this.orderId = orderId;

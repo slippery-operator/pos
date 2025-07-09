@@ -11,6 +11,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  */
 @Configuration
 @EnableScheduling
+// TODO: move anno to springcnfig
 public class SchedulerConfig {
 
     @Autowired

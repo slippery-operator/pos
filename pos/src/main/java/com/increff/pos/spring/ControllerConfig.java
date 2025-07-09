@@ -44,6 +44,7 @@ import java.time.format.DateTimeFormatter;
 @EnableSwagger2
 public class ControllerConfig extends WebMvcConfigurerAdapter {
 
+//	TODO: create another class constants in util
 	public static final String PACKAGE_CONTROLLER = "com.increff.pos.controller";
 
 	private ApplicationContext applicationContext;

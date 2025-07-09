@@ -38,6 +38,7 @@ public class ClientApi {
 
         ClientPojo client = clientDao.selectById(id);
         if (client == null) {
+            // TODO: add id info to error
             throw new ApiException(ApiException.ErrorType.NOT_FOUND, "Client not found");
         }
         client.setName(name);

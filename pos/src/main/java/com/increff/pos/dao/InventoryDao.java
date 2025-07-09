@@ -29,6 +29,7 @@ public class InventoryDao extends AbstractDao<InventoryPojo> {
         return results.isEmpty() ? null : results.get(0);
     }
 
+//    TODO: remove
     public List<InventoryPojo> bulkInsert(List<Integer> productIds) {
         List<InventoryPojo> createdInventories = new ArrayList<>();
         
@@ -56,9 +57,11 @@ public class InventoryDao extends AbstractDao<InventoryPojo> {
     }
 
     public List<InventoryPojo> findByProductNameLike(String productName) {
+//        TODO: remove use of criteriBuilder and join wihrt product table using raw query, no join on POJOs
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<InventoryPojo> query = cb.createQuery(InventoryPojo.class);
         Root<InventoryPojo> inventoryRoot = query.from(InventoryPojo.class);
+
         Join<Object, Object> productJoin = inventoryRoot.join("product");
         if (productName == null) {
             // If no search term provided, return all inventory items

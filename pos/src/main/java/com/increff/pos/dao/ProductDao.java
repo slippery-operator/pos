@@ -36,11 +36,10 @@ public class ProductDao extends AbstractDao<ProductPojo> {
         CriteriaQuery<ProductPojo> query = cb.createQuery(ProductPojo.class);
         Root<ProductPojo> root = query.from(ProductPojo.class);
         List<Predicate> predicates = new ArrayList<>();
-        if (Objects.isNull(barcode) && !barcode.isEmpty()) {
+        if (!Objects.isNull(barcode) && !barcode.isEmpty()) {
             predicates.add(cb.like(cb.lower(root.get("barcode")), barcode + "%"));
         }
-        // TODO: confirm use of isNull()
-        if (Objects.isNull(productName) && !productName.isEmpty()) {
+        if (!Objects.isNull(productName) && !productName.isEmpty()) {
             predicates.add(cb.like(cb.lower(root.get("name")), productName + "%"));
         }
         if (!predicates.isEmpty()) {
@@ -50,6 +49,7 @@ public class ProductDao extends AbstractDao<ProductPojo> {
         return entityManager.createQuery(query).getResultList();
     }
 
+//     TODO: move to abstract
     public List<ProductPojo> selectByBarcodes(Set<String> barcodes) {
         if (barcodes == null || barcodes.isEmpty()) {
             return Collections.emptyList();
@@ -75,6 +75,7 @@ public class ProductDao extends AbstractDao<ProductPojo> {
         }
 
         // Get the underlying JDBC connection for batch processing
+
         Session session = entityManager.unwrap(Session.class);
         session.doWork(connection -> {
             String sql = "INSERT INTO product (barcode, client_id, name, mrp, image_url) VALUES (?, ?, ?, ?, ?)";

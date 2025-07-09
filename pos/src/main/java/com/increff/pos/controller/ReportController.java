@@ -13,18 +13,18 @@ import java.util.List;
 public class ReportController {
 
     @Autowired
-    private ReportDto reportDto;
+    private ReportDto dto;
 
     @Autowired
-    private ReportFlow reportFlow;
+    private ReportFlow flow;
 
     @GetMapping("/day-sales")
     public List<DaySalesResponse> getDaySalesReport(@RequestParam String startDate, @RequestParam String endDate) {
         
-        return reportDto.getDaySalesByDateRange(startDate, endDate);
+        return dto.getDaySalesByDateRange(startDate, endDate);
     }
     @PostMapping("/run-daily-sales")
     public void runDailySalesNow() {
-        reportFlow.calculateDailySales();
+        flow.calculateDailySales();
     }
 } 

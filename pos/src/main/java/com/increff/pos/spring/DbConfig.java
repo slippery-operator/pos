@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @Configuration
 public class DbConfig {
 
+	// TODO: same as cont
 	public static final String PACKAGE_POJO = "com.increff.pos.entity";
 
 	@Autowired
@@ -42,7 +43,8 @@ public class DbConfig {
 		bean.setUrl(applicationProperties.getJdbcUrl());
 		bean.setUsername(applicationProperties.getJdbcUsername());
 		bean.setPassword(applicationProperties.getJdbcPassword());
-		bean.setInitialSize(2);
+		// TODO: move to constants util
+		bean.setInitialSize(2); //
 		bean.setDefaultAutoCommit(false);
 		//bean.setMaxTotal(10);
 		bean.setMinIdle(2);

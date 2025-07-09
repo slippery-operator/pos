@@ -12,18 +12,10 @@ public abstract class AbstractDto<T> {
         validationUtil.validateForm(form);
     }
 
-
     /**
      * Common method to validate ID parameters
      */
     protected void validateId(Integer id, String fieldName) {
         validationUtil.validateId(id, fieldName);
-    }
-
-    /**
-     * Common method to validate search parameters
-     */
-    protected void validateSearchName(String name) {
-        validationUtil.validateSearchName(name);
     }
 }

@@ -20,7 +20,6 @@ public class InvoiceDto {
     private PdfGeneratorUtil pdfGeneratorUtil;
 
     public InvoiceResponse generateInvoice(@Valid OrderRequest orderRequest) {
-
         try {
             String base64Pdf = pdfGeneratorUtil.generatePdfAsBase64(orderRequest);
             return new InvoiceResponse(orderRequest.getOrderId(), base64Pdf, true);

@@ -50,4 +50,5 @@ public class DateUtil {
         Instant endInstant = endOfDay.toInstant();
         return endInstant;
     }
-} 
+}
+//TODO: @Jackson

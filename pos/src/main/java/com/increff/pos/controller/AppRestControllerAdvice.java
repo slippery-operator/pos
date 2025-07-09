@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
-
+// invocie_path -> null
 /**
  * Global exception handler for REST controllers.
  * This class centralizes error handling and provides consistent error responses.

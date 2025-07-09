@@ -22,8 +22,5 @@ public class OrdersPojo extends AbstractPojo {
     @Column(name = "time", nullable = false, updatable = false, insertable = false)
     @org.hibernate.annotations.Generated(org.hibernate.annotations.GenerationTime.ALWAYS)
     private Instant time;
-
-
-//    @Column(name = "invoice_path")
-//    private String invoicePath;
+//    TODO: sue zonedDate
 }

@@ -20,25 +20,25 @@ import java.util.List;
 public class ProductController {
 
     @Autowired
-    private ProductDto productDto;
+    private ProductDto dto;
 
     @PostMapping("/search")
     public List<ProductResponse> searchProducts(@RequestBody(required = false) ProductSearchForm searchRequest) {
-        return productDto.searchProducts(searchRequest);
+        return dto.searchProducts(searchRequest);
     }
 
     @PostMapping
     public ProductResponse createProduct(@Valid @RequestBody ProductForm productForm) {
-        return productDto.createProduct(productForm);
+        return dto.createProduct(productForm);
     }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public TsvUploadResponse<ProductResponse> uploadProductsTsv(@RequestPart(value = "file") MultipartFile file) {
-        return productDto.uploadProductsTsv(file);
+        return dto.uploadProductsTsv(file);
     }
-
+    
     @PutMapping("/{id}")
     public ProductResponse updateProduct(@PathVariable Integer id, @Valid @RequestBody ProductUpdateForm productUpdateForm) {
-        return productDto.updateProduct(id, productUpdateForm);
+        return dto.updateProduct(id, productUpdateForm);
     }
 }
