@@ -5,6 +5,7 @@ import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
@@ -54,6 +55,17 @@ public abstract class AbstractDao<T extends AbstractPojo> {
 		List<T> results = entityManager.createQuery(query).getResultList();
 		return results.isEmpty() ? null : results.get(0);
 	}
+
+	/**
+	 * Create a typed query for custom JPQL queries
+	 * @param jpql JPQL query string
+	 * @param resultClass result class type
+	 * @return TypedQuery instance
+	 */
+	protected <R> TypedQuery<R> getQuery(String jpql, Class<R> resultClass) {
+		return entityManager.createQuery(jpql, resultClass);
+	}
+
 //	TODO: general method for sorting:
 
 }

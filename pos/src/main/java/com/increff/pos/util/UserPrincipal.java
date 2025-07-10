@@ -1,24 +1,14 @@
-//package com.increff.pos.util;
-//
-//public classUserPrincipal {
-//
-//	private int id;
-//	private String email;
-//
-//	public String getEmail() {
-//		return email;
-//	}
-//
-//	public int getId() {
-//		return id;
-//	}
-//
-//	public void setId(int id) {
-//		this.id = id;
-//	}
-//
-//	public void setEmail(String email) {
-//		this.email = email;
-//	}
-//
-//}
+package com.increff.pos.util;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+@AllArgsConstructor
+public class UserPrincipal {
+    private Long userId;
+    private String role;
+
+}

@@ -21,25 +21,21 @@ public class ClientController {
 
     @GetMapping
     public List<ClientResponse> getAll() {
-
         return  dto.getAll();
     }
 
     @GetMapping("/search")
     public List<ClientResponse> searchByName(@RequestParam String name) {
-
         return dto.searchByName(name);
     }
 
     @PostMapping
     public ClientResponse add(@Valid @RequestBody ClientForm form) {
-
         return dto.add(form);
     }
 
     @PutMapping("/{id}")
     public ClientResponse update(@PathVariable @Min(1) Integer id, @Valid @RequestBody ClientForm form) {
-
         return dto.update(id, form);
     }
 }
