@@ -24,10 +24,7 @@ public class ClientDto extends AbstractDto<ClientForm> {
 
     public ClientResponse add(ClientForm form) {
         validateForm(form);
-        String normalizedName = normalize(form.getName());
-
-        ClientPojo pojo = clientApi.add(normalizedName);
-
+        ClientPojo pojo = clientApi.add(normalize(form.getName()));
         return convertUtil.convert(pojo, ClientResponse.class);
     }
 
@@ -44,8 +41,7 @@ public class ClientDto extends AbstractDto<ClientForm> {
 
     public ClientResponse update(Integer clientId, ClientForm form) {
         validateUpdateInput(clientId, form);
-        String normalizedName = normalize(form.getName());
-        ClientPojo pojo = clientApi.update(clientId, normalizedName);
+        ClientPojo pojo = clientApi.update(clientId, normalize(form.getName()));
         return convertUtil.convert(pojo, ClientResponse.class);
     }
 

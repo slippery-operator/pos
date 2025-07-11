@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Service
@@ -22,7 +22,7 @@ public class OrderApi {
     @Autowired
     private OrderItemDao orderItemDao;
 
-    public List<OrdersPojo> searchOrders(Instant startDate, Instant endDate, Integer orderId) {
+    public List<OrdersPojo> searchOrders(ZonedDateTime startDate, ZonedDateTime endDate, Integer orderId) {
         return orderDao.findBySearchCriteria(startDate, endDate, orderId);
     }
 

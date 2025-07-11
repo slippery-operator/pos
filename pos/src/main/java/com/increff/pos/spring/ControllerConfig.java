@@ -82,8 +82,8 @@ public class ControllerConfig extends WebMvcConfigurerAdapter {
 	}
 
 	/**
-	 * Configures CORS (Cross-Origin Resource Sharing) support.
-	 * This allows the frontend application to make requests to this backend API.
+	 * Configures CORS (Cross-Origin Resource Sharing) support at the MVC level.
+	 * This provides a fallback CORS configuration, but Spring Security CORS takes precedence.
 	 * 
 	 * @param registry The CORS registry
 	 */
@@ -91,7 +91,7 @@ public class ControllerConfig extends WebMvcConfigurerAdapter {
 	public void addCorsMappings(CorsRegistry registry) {
 		registry.addMapping("/**")
 				.allowedOrigins("http://localhost:4200")
-				.allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+				.allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD")
 				.allowedHeaders("*")
 				.allowCredentials(true)
 				.maxAge(3600);
@@ -126,12 +126,7 @@ public class ControllerConfig extends WebMvcConfigurerAdapter {
 		return new HandlerMappingIntrospector(context);
 	}
 
-	//TODO: to move this to spring config file
-	@Bean
-	public Validator validator() {
-		ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-		return factory.getValidator();
-	}
+
 
 	//TODO: to move this to spring config file
 	@Bean

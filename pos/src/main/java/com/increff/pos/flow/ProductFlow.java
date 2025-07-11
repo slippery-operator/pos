@@ -4,6 +4,7 @@ import com.increff.pos.api.ClientApi;
 import com.increff.pos.api.InventoryApi;
 import com.increff.pos.api.ProductApi;
 import com.increff.pos.entity.ProductPojo;
+import com.increff.pos.exception.ApiException;
 import com.increff.pos.model.form.ProductFormWithRow;
 import com.increff.pos.model.response.ProductResponse;
 import com.increff.pos.model.response.TsvUploadResponse;
@@ -48,9 +49,46 @@ public class ProductFlow {
     }
 
     /**
+     * Validates that a client exists by ID.
+     * This method is used for simplified TSV validation.
+     * 
+     * @param clientId The client ID to validate
+     * @throws ApiException if client doesn't exist
+     */
+    public void validateClientExists(Integer clientId) {
+        Map<Integer, Boolean> validation = clientApi.validateClientsExistBatch(java.util.Set.of(clientId));
+        if (!validation.getOrDefault(clientId, false)) {
+            throw new ApiException(ApiException.ErrorType.NOT_FOUND, "Client not found: " + clientId);
+        }
+    }
+
+    /**
+     * Creates multiple products with inventory using simplified all-or-nothing approach.
+     * All products are created in a single transaction - if any fails, all fail.
+     * 
+     * @param productPojos List of products to create
+     * @return List of created products
+     */
+    public List<ProductPojo> createProductsWithInventory(List<ProductPojo> productPojos) {
+        // Create all products in bulk
+        List<ProductPojo> createdProducts = productApi.bulkCreateProducts(productPojos);
+        
+        // Create inventory for all products
+        List<Integer> productIds = createdProducts.stream()
+                .map(ProductPojo::getId)
+                .collect(Collectors.toList());
+        inventoryApi.bulkCreateInventory(productIds);
+        
+        return createdProducts;
+    }
+
+    /**
      * Orchestrates TSV upload process by coordinating multiple APIs.
      * Only contains orchestration logic, no business logic.
+     * 
+     * @deprecated Use the simplified all-or-nothing approach instead
      */
+    @Deprecated
     public ProductTsvUploadResult processProductTsvUpload(List<ProductFormWithRow> productFormsWithRow) {
         List<TsvValidationError> validationErrors = new ArrayList<>();
 

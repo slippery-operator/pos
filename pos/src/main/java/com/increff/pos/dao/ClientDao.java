@@ -3,10 +3,6 @@ package com.increff.pos.dao;
 import com.increff.pos.entity.ClientPojo;
 import org.springframework.stereotype.Repository;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -17,43 +13,24 @@ public class ClientDao extends AbstractDao<ClientPojo> {
         super(ClientPojo.class);
     }
 
-    // Overriden to sort client by NAME
+    // Override to sort clients by NAME using the new generic method from AbstractDao
     @Override
     public List<ClientPojo> selectAll() {
-        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        CriteriaQuery<ClientPojo> query = cb.createQuery(ClientPojo.class);
-        Root<ClientPojo> root = query.from(ClientPojo.class);
-        query.select(root).orderBy(cb.asc(root.get("name")));
-        return entityManager.createQuery(query).getResultList();
+        return selectAllSortedBy("name", true); // Sort by name in ascending order
     }
 
     public List<ClientPojo> selectByNameContaining(String name) {
-        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        CriteriaQuery<ClientPojo> query = cb.createQuery(ClientPojo.class);
-        Root<ClientPojo> root = query.from(ClientPojo.class);
-        query.select(root).where(cb.like(cb.lower(root.get("name")), name + "%"))
-                .orderBy(cb.asc(root.get("name")));
-        return entityManager.createQuery(query).getResultList();
+        return selectByNamePatternSortedBy(name.toLowerCase(), "name", true); // Sort by name in ascending order
     }
 
     /**
-     * Select clients by a set of IDs.
+     * Select clients by a set of IDs using the generic method from AbstractDao.
      * This method is used for batch validation of client existence.
      * 
      * @param ids Set of client IDs to select
      * @return List of existing clients
      */
-//    TODO: move to abstractdao
-//    selectByKeys(fieldName: ids, values: , sortFun: )
     public List<ClientPojo> selectByIds(Set<Integer> ids) {
-        if (ids == null || ids.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        CriteriaQuery<ClientPojo> query = cb.createQuery(ClientPojo.class);
-        Root<ClientPojo> root = query.from(ClientPojo.class);
-        query.select(root).where(root.get("id").in(ids));
-        return entityManager.createQuery(query).getResultList();
+        return super.selectByIds(ids, "clientId"); // Use the parent class method with correct field name
     }
 }

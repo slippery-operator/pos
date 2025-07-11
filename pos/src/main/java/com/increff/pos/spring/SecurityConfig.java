@@ -14,6 +14,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -35,6 +36,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private CustomAuthenticationFilter customAuthFilter;
 
+    @Autowired
+    private CorsSessionFilter corsSessionFilter;
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
@@ -53,32 +57,35 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .hasAnyRole("SUPERVISOR", "OPERATOR")
                 .anyRequest().authenticated()
                 .and()
+                .addFilterBefore(corsSessionFilter, BasicAuthenticationFilter.class)
                 .addFilterBefore(customAuthFilter, UsernamePasswordAuthenticationFilter.class);
-        logger.info("API Configuration complete");
+        logger.info("Spring Security Configuration complete - CORS enabled for localhost:4200");
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Allow specific origin
+        // Allow specific origin - must match exactly
         configuration.setAllowedOrigins(Collections.singletonList("http://localhost:4200"));
 
-        // Allow specific methods
+        // Allow specific methods including OPTIONS for preflight
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
 
-        // Allow all headers
+        // Allow all headers including custom ones
         configuration.setAllowedHeaders(Arrays.asList("*"));
 
-        // Allow credentials (cookies, authorization headers)
+        // Allow credentials (cookies, authorization headers, sessions)
         configuration.setAllowCredentials(true);
 
         // Cache preflight response for 1 hour
         configuration.setMaxAge(3600L);
 
+        // Enable CORS for all paths
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
 
+        logger.info("CORS Configuration: Origin=http://localhost:4200, Methods=GET,POST,PUT,DELETE,OPTIONS,HEAD, Credentials=true");
         return source;
     }
 

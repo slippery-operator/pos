@@ -20,8 +20,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 import static com.increff.pos.util.StringUtil.toLowerCase;
+import com.increff.pos.exception.ApiException;
 
 @Service
 public class ProductDto extends AbstractDto<ProductForm> {
@@ -48,30 +51,80 @@ public class ProductDto extends AbstractDto<ProductForm> {
     }
 
     /**
-     * Upload products from TSV file with partial failure handling.
-     * Processes valid rows and returns detailed error information for invalid rows.
+     * Upload products from TSV file with all-or-nothing validation.
+     * If any row has invalid client ID or other validation errors, the entire TSV file is rejected.
+     * This simplifies the flow by removing complex partial success handling.
      * 
      * @param file The TSV file to upload
-     * @return TsvUploadResponse containing successful products and validation errors
+     * @return List of ProductResponse containing all successfully created products
+     * @throws ApiException if any validation error occurs in any row
      */
-    public TsvUploadResponse<ProductResponse> uploadProductsTsv(MultipartFile file) {
+    public List<ProductResponse> uploadProductsTsv(MultipartFile file) {
+        // Step 1: Validate file format and structure
         validationUtil.validateTsvFile(file);
-//        TODO: reject tsv in case of any error
+        
+        // Step 2: Parse TSV file into forms
         List<ProductFormWithRow> productFormsWithRow = TsvParserUtil.parseProductTsv(file);
+        
+        // Step 3: Validate all forms - if any form is invalid, reject entire file
         List<TsvValidationError> formValidationErrors = validationUtil.validateFormsWithRow(productFormsWithRow);
-        List<ProductFormWithRow> validForms = new ArrayList<>();
+        if (!formValidationErrors.isEmpty()) {
+            // Build error message from first validation error
+            TsvValidationError firstError = formValidationErrors.get(0);
+            throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, 
+                "TSV file rejected - Row " + firstError.getRowNumber() + ": " + firstError.getErrorMessage());
+        }
+        
+        // Step 4: Convert to simple ProductForm list (no need for complex row tracking)
+        List<ProductForm> productForms = new ArrayList<>();
         for (ProductFormWithRow productWithRow : productFormsWithRow) {
-            boolean hasError = formValidationErrors.stream().anyMatch(error -> error.getRowNumber() == productWithRow.getRowNumber());
-            if (!hasError) {
-                validForms.add(productWithRow);
+            productForms.add(productWithRow.getForm());
+        }
+        
+        // Step 5: Validate all clients exist - if any client is invalid, reject entire file
+        List<Integer> clientIds = productForms.stream()
+            .map(ProductForm::getClientId)
+            .distinct()
+            .collect(java.util.stream.Collectors.toList());
+        
+        for (Integer clientId : clientIds) {
+            try {
+                // This will throw exception if client doesn't exist
+                productFlow.validateClientExists(clientId);
+            } catch (ApiException e) {
+                throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, 
+                    "TSV file rejected - Invalid client ID: " + clientId);
             }
         }
-        ProductFlow.ProductTsvUploadResult flowResult = productFlow.processProductTsvUpload(validForms);
-        List<ProductResponse> successfulResponses = convertUtil.convertList(flowResult.getSuccessfulProducts(), ProductResponse.class);
-        List<TsvValidationError> allErrors = new ArrayList<>();
-        allErrors.addAll(formValidationErrors);
-        allErrors.addAll(flowResult.getValidationErrors());
-        return ResponseUtil.buildTsvUploadResponse(productFormsWithRow, successfulResponses, allErrors);
+        
+        // Step 6: Validate all barcodes are unique - if any barcode is duplicate, reject entire file
+        List<String> barcodes = productForms.stream()
+            .map(ProductForm::getBarcode)
+            .collect(java.util.stream.Collectors.toList());
+        
+        // Check for duplicates within file
+        Set<String> uniqueBarcodes = new HashSet<>(barcodes);
+        if (uniqueBarcodes.size() != barcodes.size()) {
+            throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, 
+                "TSV file rejected - Duplicate barcodes found in file");
+        }
+        
+        // Check for duplicates with existing database records
+        for (String barcode : barcodes) {
+            try {
+                productApi.validateBarcodeUniqueness(barcode, null);
+            } catch (ApiException e) {
+                throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, 
+                    "TSV file rejected - Barcode already exists: " + barcode);
+            }
+        }
+        
+        // Step 7: All validations passed - create all products
+        List<ProductPojo> productPojos = convertUtil.convertList(productForms, ProductPojo.class);
+        List<ProductPojo> createdProducts = productFlow.createProductsWithInventory(productPojos);
+        
+        // Step 8: Return all successful products
+        return convertUtil.convertList(createdProducts, ProductResponse.class);
     }
 
     /**

@@ -4,7 +4,10 @@ import org.springframework.web.WebApplicationInitializer;
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
 import javax.servlet.MultipartConfigElement;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration;
+import javax.servlet.SessionTrackingMode;
 
 /**
  * This class is a hook for <b>Servlet 3.0</b> specification, to initialize
@@ -41,6 +44,16 @@ public class WebInitializer extends AbstractAnnotationConfigDispatcherServletIni
 				10_000_000, // max request size (10MB)
 				1_000_000  // file size threshold (1MB)
 		));
+	}
+
+	@Override
+	public void onStartup(ServletContext servletContext) throws ServletException {
+		super.onStartup(servletContext);
+		
+		// Configure session tracking modes to ensure proper session handling
+		servletContext.setSessionTrackingModes(
+				java.util.EnumSet.of(SessionTrackingMode.COOKIE)
+		);
 	}
 
 }

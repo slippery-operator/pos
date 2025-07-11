@@ -181,6 +181,48 @@ public class InventoryApi {
         return inventoryDao.validateProductsExist(productIds);
     }
 
+    /**
+     * Validates that a product exists by ID.
+     * This method is used for simplified TSV validation.
+     * 
+     * @param productId The product ID to validate
+     * @throws ApiException if product doesn't exist
+     */
+    public void validateProductExists(Integer productId) {
+        Map<Integer, Boolean> validation = validateProductsExistBatch(java.util.List.of(productId), false);
+        if (!validation.getOrDefault(productId, false)) {
+            throw new ApiException(ApiException.ErrorType.NOT_FOUND, "Product not found: " + productId);
+        }
+    }
+
+    /**
+     * Bulk update inventory using simplified all-or-nothing approach.
+     * All inventory updates are processed in a single transaction - if any fails, all fail.
+     * 
+     * @param inventoryPojos List of inventory items to update
+     * @return List of updated inventory items
+     */
+    public List<InventoryPojo> bulkUpdateInventory(List<InventoryPojo> inventoryPojos) {
+        // Validate all products exist before updating
+        List<Integer> productIds = inventoryPojos.stream()
+                .map(InventoryPojo::getProductId)
+                .collect(Collectors.toList());
+        validateProductsExistBatch(productIds);
+        
+        // Perform bulk upsert
+        inventoryDao.bulkUpsert(inventoryPojos);
+        
+        // Return updated inventory items
+        List<InventoryPojo> result = new ArrayList<>();
+        for (InventoryPojo pojo : inventoryPojos) {
+            InventoryPojo updated = inventoryDao.selectByProductId(pojo.getProductId());
+            if (updated != null) {
+                result.add(updated);
+            }
+        }
+        return result;
+    }
+
 
     @Data
     @AllArgsConstructor

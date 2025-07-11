@@ -15,7 +15,7 @@ import com.increff.pos.api.ProductApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -59,8 +59,9 @@ public class OrderDto extends AbstractDto<OrderItemForm> {
     public List<OrderResponse> searchOrders(String startDate, String endDate, Integer orderId) {
 
         // Parse date strings using DateUtil for better organization and reusability
-        Instant parsedStartDate = DateUtil.parseStartDate(startDate);
-        Instant parsedEndDate = DateUtil.parseEndDate(endDate);
+        // Now returns ZonedDateTime instead of Instant to leverage Jackson's JSR-310 support
+        ZonedDateTime parsedStartDate = DateUtil.parseStartDate(startDate);
+        ZonedDateTime parsedEndDate = DateUtil.parseEndDate(endDate);
 
         // Direct API call instead of using flow layer
         List<OrdersPojo> orders = orderApi.searchOrders(parsedStartDate, parsedEndDate, orderId);

@@ -4,10 +4,8 @@ import com.increff.pos.entity.OrdersPojo;
 import org.springframework.stereotype.Repository;
 import javax.persistence.criteria.*;
 import javax.transaction.Transactional;
-import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Repository
@@ -25,7 +23,7 @@ public class OrderDao extends AbstractDao<OrdersPojo> {
         entityManager.refresh(pojo);
     }
 
-    public List<OrdersPojo> findBySearchCriteria(Instant startDate, Instant endDate, Integer orderId) {
+    public List<OrdersPojo> findBySearchCriteria(ZonedDateTime startDate, ZonedDateTime endDate, Integer orderId) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<OrdersPojo> query = cb.createQuery(OrdersPojo.class);
         Root<OrdersPojo> root = query.from(OrdersPojo.class);
@@ -42,6 +40,7 @@ public class OrderDao extends AbstractDao<OrdersPojo> {
         if (!predicates.isEmpty()) {
             query.where(cb.and(predicates.toArray(new Predicate[0])));
         }
+        // Use descending order for time - more recent orders first
         query.orderBy(cb.desc(root.get("time")));
         return entityManager.createQuery(query).getResultList();
     }

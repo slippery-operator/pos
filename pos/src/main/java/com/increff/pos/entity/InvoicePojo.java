@@ -9,31 +9,29 @@ import javax.persistence.*;
 import java.time.Instant;
 
 @Entity
-@Table(name = "invoice")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-// TODO: remove redundant table
 public class InvoicePojo extends AbstractPojo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "order_id", nullable = false, unique = true)
+    @Column(nullable = false, unique = true)
     private Integer orderId;
 
-    @Column(name = "time_stamp", nullable = false)
+    @Column(nullable = false)
     private Instant timeStamp;
 
-    @Column(name = "count_of_items", nullable = false)
+    @Column(nullable = false)
     private Integer countOfItems;
 
-    @Column(name = "invoice_path", nullable = false)
+    @Column(nullable = false)
     private String invoicePath;
 
-    @Column(name = "final_revenue", nullable = false)
+    @Column(nullable = false)
     private Double finalRevenue;
 
     public InvoicePojo(Integer orderId, Instant timeStamp,

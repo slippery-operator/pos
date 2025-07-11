@@ -26,8 +26,7 @@ public class InventoryController {
     }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public TsvUploadResponse<InventoryResponse> uploadInventoryTsv(
-            @RequestPart(value = "file") MultipartFile file) {
+    public TsvUploadResponse<InventoryResponse> uploadInventoryTsv(@RequestPart(value = "file") MultipartFile file) {
         return dto.uploadInventoryTsv(file);
     }
 

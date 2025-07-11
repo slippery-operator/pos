@@ -6,11 +6,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
-import java.time.LocalDate;
+import java.time.ZonedDateTime;
 
 @Entity
-// TODO: Remove table and column namijng
-//@Table(name = "pos_day_sales")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -21,16 +19,15 @@ public class DaySalesPojo extends AbstractPojo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "date", nullable = false, unique = true)
-    private LocalDate date;
-//     TODO: use ZonedDT here
+    @Column(nullable = false, unique = true)
+    private ZonedDateTime date;
 
-    @Column(name = "invoiced_orders_count", nullable = false)
+    @Column(nullable = false)
     private Integer invoicedOrdersCount = 0;
 
-    @Column(name = "invoiced_items_count", nullable = false)
+    @Column(nullable = false)
     private Integer invoicedItemsCount = 0;
 
-    @Column(name = "total_revenue", nullable = false)
+    @Column(nullable = false)
     private Double totalRevenue = 0.0;
-} 
+}
