@@ -135,6 +135,34 @@
 			<version>${swagger.version}</version>
 		</dependency>
 
+		<!-- Jetty Server Core -->
+		<dependency>
+			<groupId>org.eclipse.jetty</groupId>
+			<artifactId>jetty-server</artifactId>
+			<version>${jetty.version}</version>
+		</dependency>
+
+		<!-- Jetty Servlet support -->
+		<dependency>
+			<groupId>org.eclipse.jetty</groupId>
+			<artifactId>jetty-servlet</artifactId>
+			<version>${jetty.version}</version>
+		</dependency>
+
+		<!-- Jetty Session support -->
+		<dependency>
+			<groupId>org.eclipse.jetty</groupId>
+			<artifactId>jetty-server</artifactId>
+			<version>${jetty.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.eclipse.jetty</groupId>
+			<artifactId>jetty-servlets</artifactId>
+			<version>${jetty.version}</version>
+		</dependency>
+
+
 		<!-- ======================================== -->
 		<!-- JSON PROCESSING DEPENDENCIES -->
 		<!-- ======================================== -->
@@ -331,6 +359,14 @@
 							<name>log4j.configuration</name>
 							<value>file:./log4j.properties</value>
 						</systemProperty>
+						<systemProperty>
+							<name>org.eclipse.jetty.server.session.nodeIdInSessionId</name>
+							<value>false</value>
+						</systemProperty>
+						<systemProperty>
+							<name>jetty.sessionIdManager.workerName</name>
+							<value></value> <!-- empty disables .node0 -->
+						</systemProperty>
 					</systemProperties>
 					<httpConnector>
 						<port>${jetty.http.port}</port>
@@ -338,6 +374,7 @@
 					<webApp>
 						<contextPath>${jetty.context}</contextPath>
 					</webApp>
+
 				</configuration>
 			</plugin>
 

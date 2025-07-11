@@ -6,10 +6,7 @@ import com.increff.pos.model.form.SignupForm;
 import com.increff.pos.model.response.LoginResponse;
 import com.increff.pos.model.response.UserResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -71,4 +68,33 @@ public class AuthController {
         }
         return "Logout successful";
     }
+
+    @GetMapping("/session-info")
+    public String getSessionInfo(HttpServletRequest httpRequest) {
+        HttpSession session = httpRequest.getSession(false);
+
+        if (session != null) {
+            Integer userId = (Integer) session.getAttribute("userId");
+            String userRole = (String) session.getAttribute("userRole");
+            Long lastCheckedTime = (Long) session.getAttribute("lastCheckedTime");
+
+            if (userId != null && userRole != null && lastCheckedTime != null) {
+                // Check if session is still valid (within 5 minutes)
+                long currentTime = System.currentTimeMillis();
+                long timeDifference = currentTime - lastCheckedTime;
+
+                if (timeDifference < 300_000) { // 5 minutes
+                    // Update last checked time
+                    session.setAttribute("lastCheckedTime", currentTime);
+                    return "Session active for user: " + userId + " with role: " + userRole;
+                } else {
+                    session.invalidate();
+                    return "Session expired";
+                }
+            }
+        }
+
+        return "No active session";
+    }
+
 }

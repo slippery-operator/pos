@@ -26,9 +26,6 @@ public class AuthDto {
      * @param signupForm signup form data
      * @return UserResponse with user details
      */
-//    public UserResponse signup(SignupForm signupForm) {
-//        return api.signup(signupForm);
-//    }
 
     public UserResponse signup(SignupForm signupForm) {
         return api.signup(normalize(signupForm.getName()), toLowerCase(signupForm.getEmail()), signupForm.getPassword());
@@ -39,10 +36,6 @@ public class AuthDto {
      * @param loginForm login form data
      * @return LoginResponse with success message and user details
      */
-//    public LoginResponse login(LoginForm loginForm) {
-//        UserResponse user = api.login(loginForm);
-//        return new LoginResponse("Login successful", user);
-//    }
     public LoginResponse login(LoginForm loginForm) {
         UserResponse user = api.login(normalize(loginForm.getEmail()), loginForm.getPassword());
         return new LoginResponse("Login successful", user);
