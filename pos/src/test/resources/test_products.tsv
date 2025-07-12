@@ -1,0 +1,6 @@
+barcode	client_id	name	mrp	imageUrl
+TEST001	1	Test Product 1	100.0	
+TEST002	999	Test Product 2	200.0	http://example.com/image.jpg
+TEST003	1	Test Product 3	-50.0	
+DUPLICATE	1	Test Product 4	150.0	
+DUPLICATE	1	Test Product 5	250.0	

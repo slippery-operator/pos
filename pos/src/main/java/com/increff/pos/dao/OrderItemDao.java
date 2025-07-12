@@ -15,13 +15,7 @@ public class OrderItemDao extends AbstractDao<OrderItemsPojo> {
     }
 
     public List<OrderItemsPojo> selectByOrderId(Integer orderId) {
-        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        CriteriaQuery<OrderItemsPojo> query = cb.createQuery(OrderItemsPojo.class);
-        Root<OrderItemsPojo> root = query.from(OrderItemsPojo.class);
-
-        query.select(root).where(cb.equal(root.get("orderId"), orderId));
-
-        return entityManager.createQuery(query).getResultList();
+        return selectByFieldOrdered("orderId", orderId, null, SortOrder.ASC);
     }
 
     public void insertGroup(List<OrderItemsPojo> orderItems) {

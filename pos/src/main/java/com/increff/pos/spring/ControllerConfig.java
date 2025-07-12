@@ -1,5 +1,6 @@
 package com.increff.pos.spring;
 
+import com.increff.pos.model.Constants;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,9 +45,6 @@ import java.time.format.DateTimeFormatter;
 @EnableSwagger2
 public class ControllerConfig extends WebMvcConfigurerAdapter {
 
-//	TODO: create another class constants in util
-	public static final String PACKAGE_CONTROLLER = "com.increff.pos.controller";
-
 	private ApplicationContext applicationContext;
 
 	public void setApplicationContext(ApplicationContext applicationContext) {
@@ -63,7 +61,7 @@ public class ControllerConfig extends WebMvcConfigurerAdapter {
 	public Docket api() {
 		return new Docket(DocumentationType.SWAGGER_2)
 				.useDefaultResponseMessages(false)
-				.select().apis(RequestHandlerSelectors.basePackage(PACKAGE_CONTROLLER))
+				.select().apis(RequestHandlerSelectors.basePackage(Constants.PACKAGE_CONTROLLER))
 				.paths(PathSelectors.regex("/.*"))//
 				.build();
 	}
@@ -98,23 +96,6 @@ public class ControllerConfig extends WebMvcConfigurerAdapter {
 	}
 
 	/**
-	 * Creates and configures the Jackson ObjectMapper bean for JSON serialization.
-	 * This bean handles the conversion of Java objects to JSON and vice versa.
-	 * 
-	 * @return Configured ObjectMapper bean
-	 */
-	@Bean
-	public ObjectMapper objectMapper() {
-        	JavaTimeModule javaTimeModule = new JavaTimeModule();
-        	javaTimeModule.addSerializer(ZonedDateTime.class,
-                	new ZonedDateTimeSerializer(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")));
-        	return Jackson2ObjectMapperBuilder.json()
-					.featuresToDisable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS) // ISODate
-                	.modules(javaTimeModule)
-					.build();
-	}
-
-	/**
 	 * Creates and configures the HandlerMappingIntrospector bean.
 	 * This bean is required for Spring MVC request mapping introspection.
 	 * 
@@ -124,16 +105,5 @@ public class ControllerConfig extends WebMvcConfigurerAdapter {
 	@Bean
 	public HandlerMappingIntrospector mvcHandlerMappingIntrospector(ApplicationContext context) {
 		return new HandlerMappingIntrospector(context);
-	}
-
-
-
-	//TODO: to move this to spring config file
-	@Bean
-	public CommonsMultipartResolver multipartResolver() {
-		CommonsMultipartResolver resolver = new CommonsMultipartResolver();
-		resolver.setMaxUploadSize(10_000_000); // 10MB max file size
-		resolver.setMaxInMemorySize(1_000_000); // 1MB in memory buffer
-		return resolver;
 	}
 }

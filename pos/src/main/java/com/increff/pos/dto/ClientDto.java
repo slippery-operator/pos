@@ -28,16 +28,67 @@ public class ClientDto extends AbstractDto<ClientForm> {
         return convertUtil.convert(pojo, ClientResponse.class);
     }
 
-    public List<ClientResponse> getAll() {
-        List<ClientPojo> pojos = clientApi.getAll();
+    public List<ClientResponse> getAll(int page, int size) {
+        List<ClientPojo> pojos = clientApi.getAll(page, size);
         return convertUtil.convertList(pojos, ClientResponse.class);
     }
 
-    public List<ClientResponse> searchByName(String name) {
+    public List<ClientResponse> searchByName(String name, int page, int size) {
         String normalizedName = toLowerCase(name);
-        List<ClientPojo> pojos = clientApi.searchByName(normalizedName);
+        List<ClientPojo> pojos = clientApi.searchByName(normalizedName, page, size);
         return convertUtil.convertList(pojos, ClientResponse.class);
     }
+
+    // ======================== PAGINATION METHODS ========================
+
+//    /**
+//     * Get all clients with pagination support
+//     * @param page page number (0-based)
+//     * @param size number of items per page
+//     * @return paginated list of client responses ordered by name
+//     */
+//    public List<ClientResponse> getAllPaginated(int page, int size) {
+//        // Validate pagination parameters
+////        validatePaginationParams(page, size);
+//
+//        List<ClientPojo> pojos = clientApi.getAllPaginated(page, size);
+//        return convertUtil.convertList(pojos, ClientResponse.class);
+//    }
+
+    /**
+     * Search clients by name with pagination support
+     *  name search term for client name (case-insensitive, prefix match)
+     *  page page number (0-based)
+     *  size number of items per page
+     * @return paginated list of client responses matching the search criteria
+     */
+//    public List<ClientResponse> searchByNamePaginated(String name, int page, int size) {
+//        // Validate pagination parameters
+////        validatePaginationParams(page, size);
+//
+//        String normalizedName = toLowerCase(name);
+//        List<ClientPojo> pojos = clientApi.searchByNamePaginated(normalizedName, page, size);
+//        return convertUtil.convertList(pojos, ClientResponse.class);
+//    }
+//
+//    /**
+//     * Get total count of all clients (for pagination metadata)
+//     * @return total count of clients
+//     */
+//    public long getTotalClientCount() {
+//        return clientApi.getTotalClientCount();
+//    }
+//
+//    /**
+//     * Get count of clients matching name search criteria (for pagination metadata)
+//     * @param name search term for client name
+//     * @return count of clients matching the search criteria
+//     */
+//    public long getClientCountByName(String name) {
+//        String normalizedName = toLowerCase(name);
+//        return clientApi.getClientCountByName(normalizedName);
+//    }
+
 
     public ClientResponse update(Integer clientId, ClientForm form) {
         validateUpdateInput(clientId, form);

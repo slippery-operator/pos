@@ -1,4 +1,4 @@
-package com.increff.pos.entity;
+package com.increff.pos.model.enums;
 
 /**
  * User roles for role-based access control

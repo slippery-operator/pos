@@ -13,7 +13,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class TsvValidationError {
+public class ValidationError {
     
     /**
      * The row number in the TSV file (1-based, excluding header)
@@ -38,7 +38,7 @@ public class TsvValidationError {
     /**
      * Constructor for field-specific errors
      */
-    public TsvValidationError(int rowNumber, String field, String errorMessage) {
+    public ValidationError(int rowNumber, String field, String errorMessage) {
         this.rowNumber = rowNumber;
         this.field = field;
         this.errorMessage = errorMessage;

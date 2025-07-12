@@ -20,13 +20,25 @@ public class ClientController {
     private ClientDto dto;
 
     @GetMapping
-    public List<ClientResponse> getAll() {
-        return  dto.getAll();
+    public List<ClientResponse> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        // Use paginated version if pagination parameters are provided
+        // For backward compatibility, return all when default parameters are used
+        return dto.getAll(page, size);
     }
 
     @GetMapping("/search")
-    public List<ClientResponse> searchByName(@RequestParam String name) {
-        return dto.searchByName(name);
+    public List<ClientResponse> searchByName(
+            @RequestParam String name,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        // Use paginated version if pagination parameters are provided
+//        if (page > 0 || size != 10) {
+//            return dto.searchByNamePaginated(name, page, size);
+//        }
+        // For backward compatibility, return all when default parameters are used
+        return dto.searchByName(name, page, size);
     }
 
     @PostMapping

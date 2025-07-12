@@ -1,5 +1,6 @@
 package com.increff.pos.entity;
 
+import com.increff.pos.model.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

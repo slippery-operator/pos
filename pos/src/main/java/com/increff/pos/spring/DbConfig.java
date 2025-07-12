@@ -4,6 +4,7 @@ import java.util.Properties;
 
 import javax.sql.DataSource;
 
+import com.increff.pos.model.Constants;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -24,9 +25,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @Configuration
 public class DbConfig {
 
-	// TODO: same as cont
-	public static final String PACKAGE_POJO = "com.increff.pos.entity";
-
 	@Autowired
 	private ApplicationProperties applicationProperties;
 
@@ -43,14 +41,13 @@ public class DbConfig {
 		bean.setUrl(applicationProperties.getJdbcUrl());
 		bean.setUsername(applicationProperties.getJdbcUsername());
 		bean.setPassword(applicationProperties.getJdbcPassword());
-		// TODO: move to constants util
-		bean.setInitialSize(2); //
-		bean.setDefaultAutoCommit(false);
-		//bean.setMaxTotal(10);
-		bean.setMinIdle(2);
-		bean.setValidationQuery("Select 1");
-		bean.setTestWhileIdle(true);
-		bean.setTimeBetweenEvictionRunsMillis(10 * 60 * 100);
+
+		bean.setInitialSize(Constants.DB_INITIAL_SIZE); //
+		bean.setDefaultAutoCommit(Constants.DB_DEFAULT_AUTO_COMMIT);
+		bean.setMinIdle(Constants.DB_MIN_IDLE);
+		bean.setValidationQuery(Constants.DB_VALIDATION_QUERY);
+		bean.setTestWhileIdle(Constants.DB_TEST_WHILE_IDLE);
+		bean.setTimeBetweenEvictionRunsMillis(Constants.DB_EVICTION_RUN_INTERVAL_MS);
 		return bean;
 	}
 
@@ -66,7 +63,7 @@ public class DbConfig {
 	public LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource dataSource) {
 		LocalContainerEntityManagerFactoryBean bean = new LocalContainerEntityManagerFactoryBean();
 		bean.setDataSource(dataSource);
-		bean.setPackagesToScan(PACKAGE_POJO);
+		bean.setPackagesToScan(Constants.PACKAGE_POJO_LOCATION);
 		HibernateJpaVendorAdapter jpaAdapter = new HibernateJpaVendorAdapter();
 
 		bean.setJpaVendorAdapter(jpaAdapter);

@@ -1,6 +1,7 @@
 package com.increff.pos.util;
 
 import com.increff.pos.exception.ApiException;
+import com.increff.pos.model.enums.ErrorType;
 import com.increff.pos.model.form.InventoryForm;
 import com.increff.pos.model.form.InventoryFormWithRow;
 import com.increff.pos.model.form.OrderItemForm;
@@ -14,6 +15,8 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Utility class for parsing TSV (Tab-Separated Values) files.
@@ -66,10 +69,8 @@ public class TsvParserUtil {
                 }
             }
         } catch (Exception e) {
-            throw new ApiException(ApiException.ErrorType.INTERNAL_SERVER_ERROR, 
-                "Error parsing product TSV file: " + e.getMessage(), e);
+            throw new ApiException(ErrorType.INTERNAL_SERVER_ERROR, "Error parsing product TSV file");
         }
-
         return productForms;
     }
 
@@ -84,14 +85,14 @@ public class TsvParserUtil {
         String[] actualHeaders = parseTabDelimitedLine(headerLine);
         
         if (actualHeaders.length < 4) {
-            throw new ApiException(ApiException.ErrorType.BAD_REQUEST, 
+            throw new ApiException(ErrorType.BAD_REQUEST, 
                 "Invalid TSV format: Expected at least 4 columns (barcode, client_id, name, mrp), got " + actualHeaders.length);
         }
         
         // Check if required headers are present (case-insensitive)
         for (int i = 0; i < Math.min(actualHeaders.length, expectedHeaders.length); i++) {
             if (!actualHeaders[i].trim().toLowerCase().equals(expectedHeaders[i].toLowerCase())) {
-                throw new ApiException(ApiException.ErrorType.BAD_REQUEST, 
+                throw new ApiException(ErrorType.BAD_REQUEST, 
                     "Invalid header at column " + (i + 1) + ": Expected '" + expectedHeaders[i] + "', got '" + actualHeaders[i] + "'");
             }
         }
@@ -116,9 +117,7 @@ public class TsvParserUtil {
                     isFirstLine = false;
                     continue; // Skip header
                 }
-
               String[] fields = parseTabDelimitedLine(line);
-
                 if (fields.length >= 2) { // product_id, quantity
                     InventoryForm form = new InventoryForm();
                     form.setProductId(Integer.parseInt(fields[0].trim()));
@@ -127,8 +126,7 @@ public class TsvParserUtil {
                 }
             }
         } catch (Exception e) {
-            throw new ApiException(ApiException.ErrorType.INTERNAL_SERVER_ERROR, 
-                "Error parsing inventory TSV file: " + e.getMessage(), e);
+            throw new ApiException(ErrorType.INTERNAL_SERVER_ERROR, "Error parsing inventory TSV file");
         }
 
         return inventoryForms;
@@ -180,7 +178,7 @@ public class TsvParserUtil {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
             String headerLine = reader.readLine();
             if (headerLine == null) {
-                throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, "Empty TSV file");
+                throw new ApiException(ErrorType.VALIDATION_ERROR, "Empty TSV file");
             }
 
             // Validate header
@@ -189,7 +187,7 @@ public class TsvParserUtil {
                     !headers[0].trim().equalsIgnoreCase("barcode") ||
                     !headers[1].trim().equalsIgnoreCase("mrp") ||
                     !headers[2].trim().equalsIgnoreCase("quantity")) {
-                throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, 
+                throw new ApiException(ErrorType.VALIDATION_ERROR, 
                     "Invalid TSV format. Expected headers: barcode, mrp, quantity");
             }
 
@@ -198,7 +196,7 @@ public class TsvParserUtil {
             while ((line = reader.readLine()) != null) {
                 String[] values = line.split("\t");
                 if (values.length != 3) {
-                    throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, 
+                    throw new ApiException(ErrorType.VALIDATION_ERROR, 
                         "Invalid data format at line " + lineNumber);
                 }
 
@@ -209,17 +207,17 @@ public class TsvParserUtil {
                     orderItem.setQuantity(Integer.parseInt(values[2].trim()));
 
                     if (orderItem.getQuantity() <= 0) {
-                        throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, 
+                        throw new ApiException(ErrorType.VALIDATION_ERROR, 
                             "Quantity must be positive at line " + lineNumber);
                     }
                     if (orderItem.getMrp() <= 0) {
-                        throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, 
+                        throw new ApiException(ErrorType.VALIDATION_ERROR, 
                             "MRP must be positive at line " + lineNumber);
                     }
 
                     orderItems.add(orderItem);
                 } catch (NumberFormatException e) {
-                    throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, 
+                    throw new ApiException(ErrorType.VALIDATION_ERROR, 
                         "Invalid number format at line " + lineNumber);
                 }
 
@@ -227,12 +225,12 @@ public class TsvParserUtil {
             }
 
             if (orderItems.isEmpty()) {
-                throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, 
+                throw new ApiException(ErrorType.VALIDATION_ERROR, 
                     "No valid order items found in TSV file");
             }
 
         } catch (IOException e) {
-            throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, 
+            throw new ApiException(ErrorType.VALIDATION_ERROR, 
                 "Error reading TSV file: " + e.getMessage());
         }
 
@@ -240,12 +238,12 @@ public class TsvParserUtil {
     }
 
     public static List<InventoryFormWithRow> parseInventoryTsvWithRow(MultipartFile file) {
-        List<InventoryFormWithRow> result = new ArrayList<>();
         List<InventoryForm> forms = parseInventoryTsv(file);
-        int rowNumber = 1; // Assuming header is skipped in parseInventoryTsv
-        for (InventoryForm form : forms) {
-            result.add(new InventoryFormWithRow(rowNumber++, form));
-        }
+        List<InventoryFormWithRow> result =
+                IntStream.range(0, forms.size())
+                        .mapToObj(i -> new InventoryFormWithRow(i + 1, forms.get(i))) // +1 for row number
+                        .collect(Collectors.toList());
+
         return result;
     }
 }

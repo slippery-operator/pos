@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.time.Instant;
 import java.time.ZonedDateTime;
 
 @Entity
@@ -22,6 +23,5 @@ public class OrdersPojo extends AbstractPojo {
     @Column(name = "time", nullable = false, updatable = false, insertable = false)
     @org.hibernate.annotations.Generated(org.hibernate.annotations.GenerationTime.ALWAYS)
     private ZonedDateTime time;
-    // Using ZonedDateTime instead of Instant to leverage Jackson's JSR-310 support
-    // Jackson automatically handles serialization/deserialization of ZonedDateTime
+//    TODO: sue zonedDate
 }

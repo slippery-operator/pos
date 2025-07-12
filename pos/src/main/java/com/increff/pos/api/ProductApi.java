@@ -3,6 +3,7 @@ package com.increff.pos.api;
 import com.increff.pos.dao.ProductDao;
 import com.increff.pos.entity.ProductPojo;
 import com.increff.pos.exception.ApiException;
+import com.increff.pos.model.enums.ErrorType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,19 +25,18 @@ public class ProductApi {
     public Map<String, Integer> findProductsByBarcodes(List<String> barcodes) {
         Set<String> uniqueBarcodes = barcodes.stream().collect(Collectors.toSet());
         List<ProductPojo> products = productDao.selectByBarcodes(uniqueBarcodes);
-
         return products.stream().collect(Collectors.toMap(ProductPojo::getBarcode, ProductPojo::getId));
     }
 
-    public List<ProductPojo> searchProducts(String barcode, String productName) {
-        List<ProductPojo> products = productDao.findBySearchCriteria(barcode, productName);
+    public List<ProductPojo> searchProducts(String barcode, String productName, int page, int size) {
+        List<ProductPojo> products = productDao.findBySearchCriteria(barcode, productName, page, size);
         return products;
     }
 
     public ProductPojo getProductById(Integer id) {
         ProductPojo product = productDao.selectById(id);
         if (product == null) {
-            throw new ApiException(ApiException.ErrorType.NOT_FOUND, "Product not found");
+            throw new ApiException(ErrorType.NOT_FOUND, "Product not found");
         }
         return product;
     }
@@ -46,16 +46,10 @@ public class ProductApi {
         return product;
     }
 
-    /**
-     * Updates a product with the provided information.
-     * Only allows updating name, mrp, and imageUrl fields.
-     * Barcode and clientId cannot be changed after product creation.
-     */
     public ProductPojo updateProduct(Integer id, String name, Double mrp, String imageUrl) {
         ProductPojo existingProduct = productDao.selectById(id);
         if (existingProduct == null) {
-            throw new ApiException(ApiException.ErrorType.NOT_FOUND, 
-                "Product not found with id: " + id);
+            throw new ApiException(ErrorType.NOT_FOUND, "Product not found");
         }
         existingProduct.setName(name);
         existingProduct.setMrp(mrp);
@@ -66,8 +60,7 @@ public class ProductApi {
     public void validateBarcodeUniqueness(String barcode, Integer excludeId) {
         ProductPojo existingProduct = productDao.selectByBarcode(barcode);
         if (existingProduct != null && !existingProduct.getId().equals(excludeId)) {
-            throw new ApiException(ApiException.ErrorType.CONFLICT, 
-                "Product with barcode " + barcode + " already exists");
+            throw new ApiException(ErrorType.CONFLICT, "Product with barcode " + barcode + " already exists");
         }
     }
 
@@ -76,19 +69,8 @@ public class ProductApi {
         return products;
     }
 
-    /**
-     * Validates barcode uniqueness for a set of barcodes and returns a map of barcode to validation status.
-     * This method performs batch validation for better performance.
-     * 
-     * @param barcodes Set of barcodes to validate
-     * @return Map of barcode to boolean (true if unique, false if duplicate)
-     */
     public Map<String, Boolean> validateBarcodesUniquenessBatch(Set<String> barcodes) {
-        Map<String, Boolean> result = new HashMap<>();
-        
-        if (barcodes == null || barcodes.isEmpty()) {
-            return result;
-        }
+
         
         // Get all existing products with these barcodes in one query
         List<ProductPojo> existingProducts = productDao.selectByBarcodes(barcodes);
@@ -97,10 +79,16 @@ public class ProductApi {
                 .collect(Collectors.toSet());
         
         // Create result map (true if barcode is NOT in existing barcodes, i.e., unique)
-        for (String barcode : barcodes) {
-            result.put(barcode, !existingBarcodes.contains(barcode));
-        }
-        
+        Map<String, Boolean> result = barcodes.stream()
+                .collect(Collectors.toMap(
+                        barcode -> barcode,
+                        barcode -> !existingBarcodes.contains(barcode)
+                ));
         return result;
+    }
+
+    public boolean checkProductExists(String barcode) {
+        ProductPojo product = productDao.selectByBarcode(barcode);
+        return product != null;
     }
 }

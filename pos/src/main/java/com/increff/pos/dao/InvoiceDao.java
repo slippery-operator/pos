@@ -9,6 +9,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 /**
@@ -44,23 +45,24 @@ public class InvoiceDao extends AbstractDao<InvoicePojo> {
      * Get invoices by date range using CriteriaBuilder
      * Provides type-safe query construction with date range filtering
      */
-    public List<InvoicePojo> selectByDateRange(Instant startDate, Instant endDate) {
-        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        CriteriaQuery<InvoicePojo> cq = cb.createQuery(InvoicePojo.class);
-        Root<InvoicePojo> root = cq.from(InvoicePojo.class);
-        
-        // Build predicates for date range
-        Predicate startDatePredicate = cb.greaterThanOrEqualTo(root.get("timeStamp"), startDate);
-        Predicate endDatePredicate = cb.lessThanOrEqualTo(root.get("timeStamp"), endDate);
-        
-        // Combine predicates with AND
-        Predicate dateRangePredicate = cb.and(startDatePredicate, endDatePredicate);
-        cq.where(dateRangePredicate);
-        
-        // Order by timestamp descending
-        cq.orderBy(cb.desc(root.get("timeStamp")));
-        
-        TypedQuery<InvoicePojo> query = entityManager.createQuery(cq);
-        return query.getResultList();
+    public List<InvoicePojo> selectByDateRange(ZonedDateTime startDate, ZonedDateTime endDate) {
+//        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+//        CriteriaQuery<InvoicePojo> cq = cb.createQuery(InvoicePojo.class);
+//        Root<InvoicePojo> root = cq.from(InvoicePojo.class);
+//
+//        // Build predicates for date range
+//        Predicate startDatePredicate = cb.greaterThanOrEqualTo(root.get("timeStamp"), startDate);
+//        Predicate endDatePredicate = cb.lessThanOrEqualTo(root.get("timeStamp"), endDate);
+//
+//        // Combine predicates with AND
+//        Predicate dateRangePredicate = cb.and(startDatePredicate, endDatePredicate);
+//        cq.where(dateRangePredicate);
+//
+//        // Order by timestamp descending
+//        cq.orderBy(cb.desc(root.get("timeStamp")));
+//
+//        TypedQuery<InvoicePojo> query = entityManager.createQuery(cq);
+//        return query.getResultList();
+        return selectByFieldRange("timeStamp", startDate, endDate, "timeStamp", SortOrder.DESC);
     }
 } 

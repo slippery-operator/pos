@@ -2,11 +2,14 @@ package com.increff.pos.dao;
 
 import com.increff.pos.entity.InventoryPojo;
 import com.increff.pos.exception.ApiException;
+import com.increff.pos.model.enums.ErrorType;
 import org.hibernate.Session;
 import org.springframework.stereotype.Repository;
 
+import javax.persistence.Query;
 import javax.persistence.criteria.*;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -14,125 +17,116 @@ import java.util.stream.Collectors;
 @Repository
 public class InventoryDao extends AbstractDao<InventoryPojo> {
 
-    public InventoryDao() {
-        super(InventoryPojo.class);
-    }
+    public InventoryDao() {super(InventoryPojo.class);}
 
     public InventoryPojo selectByProductId(Integer productId) {
-        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        CriteriaQuery<InventoryPojo> query = cb.createQuery(InventoryPojo.class);
-        Root<InventoryPojo> root = query.from(InventoryPojo.class);
-
-        query.select(root).where(cb.equal(root.get("productId"), productId));
-
-        List<InventoryPojo> results = entityManager.createQuery(query).getResultList();
-        return results.isEmpty() ? null : results.get(0);
+        return selectByField("productId", productId);
     }
 
-//    TODO: remove
-    public List<InventoryPojo> bulkInsert(List<Integer> productIds) {
-        List<InventoryPojo> createdInventories = new ArrayList<>();
-        
-        for (Integer productId : productIds) {
-            InventoryPojo inventory = new InventoryPojo();
-            inventory.setProductId(productId);
-            inventory.setQuantity(0); // Default quantity for new inventory
-            
-            entityManager.persist(inventory);
-            createdInventories.add(inventory);
-            
-            // Batch processing for performance
-            if (createdInventories.size() % 50 == 0) {
-                entityManager.flush();
-                entityManager.clear();
+    public List<InventoryPojo> findByProductNameLike(String productName, int page, int size) {
+        String sql = "SELECT i.* FROM inventory i " +
+                "JOIN product p ON i.product_id = p.id ";
+
+        if (productName != null && !productName.trim().isEmpty()) {
+            sql += "WHERE LOWER(p.name) LIKE ? ";
+        }
+        sql += "ORDER BY p.name ASC LIMIT ? OFFSET ?";
+
+        Query nativeQuery = entityManager.createNativeQuery(sql, InventoryPojo.class);
+
+        int paramIndex = 1;
+        if (productName != null && !productName.trim().isEmpty()) {
+            nativeQuery.setParameter(paramIndex++, productName.toLowerCase() + "%");
+        }
+        nativeQuery.setParameter(paramIndex++, size);        // LIMIT
+        nativeQuery.setParameter(paramIndex, page * size);   // OFFSE
+        return nativeQuery.getResultList();
+    }
+
+//    public List<InventoryPojo> findByProductNameLikePaginated(String productName, int page, int size) {
+//        String sql = "SELECT i.* FROM inventory i " +
+//                "JOIN product p ON i.product_id = p.id ";
+//
+//        if (productName != null && !productName.trim().isEmpty()) {
+//            sql += "WHERE LOWER(p.name) LIKE ? ";
+//        }
+//        sql += "ORDER BY p.name ASC LIMIT ? OFFSET ?";
+//
+//        Query nativeQuery = entityManager.createNativeQuery(sql, InventoryPojo.class);
+//
+//        int paramIndex = 1;
+//        if (productName != null && !productName.trim().isEmpty()) {
+//            nativeQuery.setParameter(paramIndex++, productName.toLowerCase() + "%");
+//        }
+//        nativeQuery.setParameter(paramIndex++, size);        // LIMIT
+//        nativeQuery.setParameter(paramIndex, page * size);   // OFFSET
+//
+//        return nativeQuery.getResultList();
+//    }
+
+//    TODO: remove DONE
+    public void bulkInsert(List<Integer> productIds) {
+
+        Session session = entityManager.unwrap(Session.class);
+        session.doWork(connection -> {
+        String sql = "INSERT INTO inventory (product_id, quantity) VALUES (?, 0)";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            for (Integer productId : productIds) {
+                stmt.setInt(1, productId);
+                stmt.addBatch();
             }
+            stmt.executeBatch();
+        } catch (SQLException e) {
+            throw new ApiException(ErrorType.INTERNAL_SERVER_ERROR, "failed inserting inventory");
         }
-        
-        // Final flush for remaining items
-        if (!createdInventories.isEmpty()) {
-            entityManager.flush();
-        }
-        
-        return createdInventories;
-    }
-
-    public List<InventoryPojo> findByProductNameLike(String productName) {
-//        TODO: remove use of criteriBuilder and join wihrt product table using raw query, no join on POJOs
-        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        CriteriaQuery<InventoryPojo> query = cb.createQuery(InventoryPojo.class);
-        Root<InventoryPojo> inventoryRoot = query.from(InventoryPojo.class);
-
-        Join<Object, Object> productJoin = inventoryRoot.join("product");
-        if (productName == null) {
-            // If no search term provided, return all inventory items
-            query.select(inventoryRoot);
-        } else {
-            // Join with product and search by name
-            query.select(inventoryRoot).where(cb.like(cb.lower(productJoin.get("name")), productName + "%"));
-        }
-        query.orderBy(cb.asc(productJoin.get("name")));
-        return entityManager.createQuery(query).getResultList();
+        });
     }
 
     public void bulkUpsert(List<InventoryPojo> inventoryList) {
-        if (inventoryList == null || inventoryList.isEmpty()) {
-            return;
-        }
+
         Session session = entityManager.unwrap(Session.class);
         session.doWork(connection -> {
             String sql = "INSERT INTO inventory (product_id, quantity) VALUES (?, ?) ON DUPLICATE KEY UPDATE quantity = VALUES(quantity)";
             try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-                connection.setAutoCommit(false);
                 for (InventoryPojo pojo : inventoryList) {
                     stmt.setInt(1, pojo.getProductId());
                     stmt.setInt(2, pojo.getQuantity());
                     stmt.addBatch();
                 }
                 stmt.executeBatch();
-                connection.commit();
             } catch (SQLException e) {
-                connection.rollback();
-                throw new ApiException(ApiException.ErrorType.INTERNAL_SERVER_ERROR, "Error inserting/updating inventory TSV data: " + e.getMessage());
-            } finally {
-                connection.setAutoCommit(true);
+                throw new ApiException(ErrorType.INTERNAL_SERVER_ERROR, "Error inserting/updating inventory TSV data: " + e.getMessage());
             }
         });
     }
+
     public Map<Integer, Boolean> validateProductsExist(List<Integer> productIds) {
         Map<Integer, Boolean> result = new HashMap<>();
 
-        if (productIds == null || productIds.isEmpty()) {
-            return result;
-        }
-
-        // Query to check which product IDs exist
-        String sql = "SELECT id FROM product WHERE id IN (" +
-                productIds.stream().map(id -> "?").collect(Collectors.joining(",")) + ")";
-
-        try {
-            List<Integer> existingIds = entityManager.createNativeQuery(sql)
-                    .setParameter(1, productIds.get(0)) // This approach won't work for multiple parameters
-                    .getResultList();
-
-            // Better approach using JPQL
-            String jpql = "SELECT p.id FROM ProductPojo p WHERE p.id IN :productIds";
-            List<Integer> existingProductIds = entityManager.createQuery(jpql, Integer.class)
-                    .setParameter("productIds", productIds)
-                    .getResultList();
-
-            Set<Integer> existingSet = new HashSet<>(existingProductIds);
-
-            for (Integer productId : productIds) {
-                result.put(productId, existingSet.contains(productId));
+        Session session = entityManager.unwrap(Session.class);
+        session.doWork(connection -> {
+            String sql = "SELECT id FROM product WHERE id IN (" +
+                    productIds.stream().map(id -> "?").collect(Collectors.joining(",")) + ")";
+            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+                for (int i = 0; i < productIds.size(); i++) {
+                    stmt.setInt(i + 1, productIds.get(i));
+                }
+                try (ResultSet rs = stmt.executeQuery()) {
+                    Set<Integer> foundIds = new HashSet<>();
+                    while (rs.next()) {
+                        foundIds.add(rs.getInt(1));
+                    }
+                    for (Integer id : productIds) {
+                        result.put(id, foundIds.contains(id));
+                    }
+                }
             }
-
-        } catch (Exception e) {
-            // If query fails, assume all products don't exist
-            for (Integer productId : productIds) {
-                result.put(productId, false);
-            }
-        }
-
+        });
         return result;
+    }
+
+    public List<InventoryPojo> selectByProductIds(List<Integer> productIds) {
+        return selectByFieldValues("productId", productIds.stream().collect(Collectors.toSet()),
+                null, SortOrder.ASC );
     }
 }

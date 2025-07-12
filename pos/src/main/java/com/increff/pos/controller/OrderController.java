@@ -20,8 +20,10 @@ public class OrderController {
     public List<OrderResponse> searchOrders(
             @RequestParam(required = false, name = "start-date") String startDate,
             @RequestParam(required = false, name = "end-date") String endDate,
-            @RequestParam(required = false, name = "order-id") Integer orderId) {
-        return dto.searchOrders(startDate, endDate, orderId);
+            @RequestParam(required = false, name = "order-id") Integer orderId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return dto.searchOrders(startDate, endDate, orderId, page, size);
     }
 
     @PostMapping

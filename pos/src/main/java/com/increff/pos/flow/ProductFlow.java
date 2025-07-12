@@ -6,20 +6,13 @@ import com.increff.pos.api.ProductApi;
 import com.increff.pos.entity.ProductPojo;
 import com.increff.pos.exception.ApiException;
 import com.increff.pos.model.form.ProductFormWithRow;
-import com.increff.pos.model.response.ProductResponse;
-import com.increff.pos.model.response.TsvUploadResponse;
-import com.increff.pos.model.response.TsvValidationError;
-import com.increff.pos.util.CollectionUtil;
+import com.increff.pos.model.response.ValidationError;
 import com.increff.pos.util.ConvertUtil;
-import com.increff.pos.util.ResponseUtil;
-import com.increff.pos.util.TsvValidationUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -48,110 +41,45 @@ public class ProductFlow {
         return createdProduct;
     }
 
-    /**
-     * Validates that a client exists by ID.
-     * This method is used for simplified TSV validation.
-     * 
-     * @param clientId The client ID to validate
-     * @throws ApiException if client doesn't exist
-     */
-    public void validateClientExists(Integer clientId) {
-        Map<Integer, Boolean> validation = clientApi.validateClientsExistBatch(java.util.Set.of(clientId));
-        if (!validation.getOrDefault(clientId, false)) {
-            throw new ApiException(ApiException.ErrorType.NOT_FOUND, "Client not found: " + clientId);
-        }
-    }
+    public List<ProductPojo> processProductTsvUpload(List<ProductPojo> products) {
 
-    /**
-     * Creates multiple products with inventory using simplified all-or-nothing approach.
-     * All products are created in a single transaction - if any fails, all fail.
-     * 
-     * @param productPojos List of products to create
-     * @return List of created products
-     */
-    public List<ProductPojo> createProductsWithInventory(List<ProductPojo> productPojos) {
-        // Create all products in bulk
-        List<ProductPojo> createdProducts = productApi.bulkCreateProducts(productPojos);
-        
-        // Create inventory for all products
-        List<Integer> productIds = createdProducts.stream()
-                .map(ProductPojo::getId)
-                .collect(Collectors.toList());
-        inventoryApi.bulkCreateInventory(productIds);
-        
-        return createdProducts;
-    }
-
-    /**
-     * Orchestrates TSV upload process by coordinating multiple APIs.
-     * Only contains orchestration logic, no business logic.
-     * 
-     * @deprecated Use the simplified all-or-nothing approach instead
-     */
-    @Deprecated
-    public ProductTsvUploadResult processProductTsvUpload(List<ProductFormWithRow> productFormsWithRow) {
-        List<TsvValidationError> validationErrors = new ArrayList<>();
-
-        // Step 1: Group products for efficient batch validation
-        Map<Integer, List<ProductFormWithRow>> productsByClientId = CollectionUtil.groupBy(productFormsWithRow, 
-            product -> product.getForm().getClientId());
-        Map<String, List<ProductFormWithRow>> productsByBarcode = CollectionUtil.groupBy(productFormsWithRow, 
-            product -> product.getForm().getBarcode());
-
-        // Step 2: Validate clients using ClientApi
-        Map<Integer, Boolean> clientValidation = clientApi.validateClientsExistBatch(productsByClientId.keySet());
-        TsvValidationUtil.collectClientValidationErrors(productsByClientId, clientValidation, validationErrors);
-
-        // Step 3: Validate barcodes using ProductApi
-        Map<String, Boolean> barcodeValidation = productApi.validateBarcodesUniquenessBatch(productsByBarcode.keySet());
-        TsvValidationUtil.collectBarcodeValidationErrors(productsByBarcode, barcodeValidation, validationErrors);
-
-        // Step 4: Filter valid products and create them
-        List<ProductPojo> validProducts = filterValidProducts(productFormsWithRow, clientValidation, barcodeValidation);
         List<ProductPojo> createdProducts = new ArrayList<>();
 
-        if (!validProducts.isEmpty()) {
-            createdProducts = productApi.bulkCreateProducts(validProducts);
+        if (!products.isEmpty()) {
+            createdProducts = productApi.bulkCreateProducts(products);
             List<Integer> productIds = createdProducts.stream()
                     .map(ProductPojo::getId)
                     .collect(Collectors.toList());
             inventoryApi.bulkCreateInventory(productIds);
         }
-
-        // Step 5: Build result object (no conversion to ProductResponse here)
-        return new ProductTsvUploadResult(createdProducts, validationErrors);
+        return createdProducts;
     }
 
-    private List<ProductPojo> filterValidProducts(
-            List<ProductFormWithRow> productFormsWithRow,
-            Map<Integer, Boolean> clientValidation,
-            Map<String, Boolean> barcodeValidation) {
+    public Map<Integer, ValidationError> validateProductTsvUpload(List<ProductFormWithRow> productFormsWithRow) {
 
-        List<ProductPojo> validProducts = new ArrayList<>();
-        Map<String, Integer> barcodeCount = CollectionUtil.countBy(productFormsWithRow, 
-            product -> product.getForm().getBarcode());
+        Set<Integer> clientIds = productFormsWithRow.stream()
+                .map(form -> form.getForm().getClientId())
+                .collect(Collectors.toSet());
+        Set<String> barcodes = productFormsWithRow.stream()
+                .map(form -> form.getForm().getBarcode())
+                .collect(Collectors.toSet());
 
-        for (ProductFormWithRow productWithRow : productFormsWithRow) {
-            Integer clientId = productWithRow.getForm().getClientId();
-            String barcode = productWithRow.getForm().getBarcode();
+        Map<Integer, Boolean> clientValidation = clientApi.validateClientsExistBatch(clientIds);
+        Map<String, Boolean> barcodeValidation = productApi.validateBarcodesUniquenessBatch(barcodes);
 
-            boolean clientValid = clientValidation.getOrDefault(clientId, false);
-            boolean barcodeUniqueInFile = barcodeCount.get(barcode) == 1;
-            boolean barcodeUniqueInDb = barcodeValidation.getOrDefault(barcode, false);
+        Map<Integer, ValidationError> errorByRow = new HashMap<>();
 
-            if (clientValid && barcodeUniqueInFile && barcodeUniqueInDb) {
-                validProducts.add(convertUtil.convert(productWithRow.getForm(), ProductPojo.class));
+        for (ProductFormWithRow form : productFormsWithRow) {
+            Integer row = form.getRowNumber();
+            Integer clientId = form.getForm().getClientId();
+            String barcode = form.getForm().getBarcode();
+
+            if (!clientValidation.getOrDefault(clientId, false)) {
+                errorByRow.put(row, new ValidationError(row, "clientId", "Client not found"));
+            } else if (!barcodeValidation.getOrDefault(barcode, false)) {
+                errorByRow.put(row, new ValidationError(row, "barcode", "Barcode alr exists"));
             }
         }
-
-        return validProducts;
-    }
-
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ProductTsvUploadResult {
-        private List<ProductPojo> successfulProducts;
-        private List<TsvValidationError> validationErrors;
+        return errorByRow;
     }
 }

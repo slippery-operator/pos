@@ -7,26 +7,30 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * DTO layer for Report operations
- * Handles business logic for daily sales reporting
- */
 @Service
 public class ReportDto {
 
     @Autowired
-    private ReportApi reportApi;
+    private ReportApi api;
 
     public List<DaySalesResponse> getDaySalesByDateRange(String startDate, String endDate) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        LocalDate parsedStart = LocalDate.parse(startDate, formatter);
-        LocalDate parsedEnd = LocalDate.parse(endDate, formatter);
-        
-        List<DaySalesPojo> daySalesList = reportApi.getDaySalesByDateRange(parsedStart, parsedEnd);
+        ZonedDateTime parsedStart = ZonedDateTime.of(
+                java.time.LocalDate.parse(startDate, formatter).atStartOfDay(),
+                ZoneOffset.UTC
+        );
+
+        ZonedDateTime parsedEnd = ZonedDateTime.of(
+                java.time.LocalDate.parse(endDate, formatter).atTime(23, 59, 59, 999_999_999),
+                ZoneOffset.UTC
+        );
+        List<DaySalesPojo> daySalesList = api.getDaySalesByDateRange(parsedStart, parsedEnd);
         return daySalesList.stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());

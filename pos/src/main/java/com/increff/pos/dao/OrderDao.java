@@ -4,8 +4,10 @@ import com.increff.pos.entity.OrdersPojo;
 import org.springframework.stereotype.Repository;
 import javax.persistence.criteria.*;
 import javax.transaction.Transactional;
+import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Repository
@@ -23,11 +25,12 @@ public class OrderDao extends AbstractDao<OrdersPojo> {
         entityManager.refresh(pojo);
     }
 
-    public List<OrdersPojo> findBySearchCriteria(ZonedDateTime startDate, ZonedDateTime endDate, Integer orderId) {
+    public List<OrdersPojo> findBySearchCriteria(ZonedDateTime startDate, ZonedDateTime endDate, Integer orderId, int page, int size) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<OrdersPojo> query = cb.createQuery(OrdersPojo.class);
         Root<OrdersPojo> root = query.from(OrdersPojo.class);
         List<Predicate> predicates = new ArrayList<>();
+
         if (startDate != null) {
             predicates.add(cb.greaterThanOrEqualTo(root.get("time"), startDate));
         }
@@ -37,13 +40,52 @@ public class OrderDao extends AbstractDao<OrdersPojo> {
         if (orderId != null) {
             predicates.add(cb.equal(root.get("id"), orderId));
         }
+
         if (!predicates.isEmpty()) {
             query.where(cb.and(predicates.toArray(new Predicate[0])));
         }
-        // Use descending order for time - more recent orders first
+
         query.orderBy(cb.desc(root.get("time")));
-        return entityManager.createQuery(query).getResultList();
+
+        // Apply pagination
+        return entityManager.createQuery(query)
+                .setFirstResult(page * size)  // Offset
+                .setMaxResults(size)          // Limit
+                .getResultList();
     }
+
+//    public List<OrdersPojo> findBySearchCriteriaPaginated(ZonedDateTime startDate, ZonedDateTime endDate,
+//                                                         Integer orderId, int page, int size) {
+//        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+//        CriteriaQuery<OrdersPojo> query = cb.createQuery(OrdersPojo.class);
+//        Root<OrdersPojo> root = query.from(OrdersPojo.class);
+//        List<Predicate> predicates = new ArrayList<>();
+//
+//        // Add search predicates
+//        if (startDate != null) {
+//            predicates.add(cb.greaterThanOrEqualTo(root.get("time"), startDate));
+//        }
+//        if (endDate != null) {
+//            predicates.add(cb.lessThanOrEqualTo(root.get("time"), endDate));
+//        }
+//        if (orderId != null) {
+//            predicates.add(cb.equal(root.get("id"), orderId));
+//        }
+//
+//        // Apply predicates if any
+//        if (!predicates.isEmpty()) {
+//            query.where(cb.and(predicates.toArray(new Predicate[0])));
+//        }
+//
+//        // Order by time descending
+//        query.orderBy(cb.desc(root.get("time")));
+//
+//        // Apply pagination
+//        return entityManager.createQuery(query)
+//                .setFirstResult(page * size)  // Offset
+//                .setMaxResults(size)          // Limit
+//                .getResultList();
+//    }
 
     public void updateInvoicePath(Integer orderId, String invoicePath) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();

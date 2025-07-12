@@ -21,16 +21,10 @@ public class OrderItemApi {
     @Autowired
     private OrderItemDao orderItemDao;
 
-    /**
-     * Get order items by order ID
-     */
     public List<OrderItemsPojo> getOrderItemsByOrderId(Integer orderId) {
         return orderItemDao.selectByOrderId(orderId);
     }
 
-    /**
-     * Bulk create order items
-     */
     public List<OrderItemsPojo> createOrderItemsGroup(List<OrderItemsPojo> orderItems) {
         orderItemDao.insertGroup(orderItems);
         return orderItems;

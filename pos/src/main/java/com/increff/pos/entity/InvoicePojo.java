@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.time.Instant;
+import java.time.ZonedDateTime;
 
 @Entity
 @Getter
@@ -23,7 +24,7 @@ public class InvoicePojo extends AbstractPojo {
     private Integer orderId;
 
     @Column(nullable = false)
-    private Instant timeStamp;
+    private ZonedDateTime timeStamp;
 
     @Column(nullable = false)
     private Integer countOfItems;
@@ -34,7 +35,7 @@ public class InvoicePojo extends AbstractPojo {
     @Column(nullable = false)
     private Double finalRevenue;
 
-    public InvoicePojo(Integer orderId, Instant timeStamp,
+    public InvoicePojo(Integer orderId, ZonedDateTime timeStamp,
                       Integer countOfItems, String invoicePath, Double finalRevenue) {
         this.orderId = orderId;
         this.timeStamp = timeStamp;

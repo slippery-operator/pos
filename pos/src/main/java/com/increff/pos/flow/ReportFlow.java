@@ -9,12 +9,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.time.Instant;
-import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 
-import static com.increff.pos.util.DateUtil.calEndInstant;
-import static com.increff.pos.util.DateUtil.calStartInstant;
 
 @Service
 public class ReportFlow {
@@ -32,7 +29,7 @@ public class ReportFlow {
     @Scheduled(cron = "0 59 23 * * ?", zone = "UTC")
     @Transactional
     public void calculateDailySales() {
-        LocalDate yesterday = LocalDate.now(ZoneOffset.UTC).minusDays(1);
+        ZonedDateTime yesterday = ZonedDateTime.now(ZoneOffset.UTC).minusDays(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
         calculateDailySalesForDate(yesterday);
     }
 
@@ -41,20 +38,30 @@ public class ReportFlow {
      * @param date The date to calculate sales for
      */
     @Transactional
-    public void calculateDailySalesForDate(LocalDate date) {
-        Instant startInstant = calStartInstant(date);
-        Instant endInstant = calEndInstant(date);
+    public void calculateDailySalesForDate(ZonedDateTime date) {
+        ZonedDateTime startInstant = date.withHour(0).withMinute(0).withSecond(0).withNano(0);
+        ZonedDateTime endInstant = date.withHour(23).withMinute(59).withSecond(59).withNano(999_999_999);
 
         // Get all invoices for the day
         DaySalesModel daySalesInfo = invoiceApi.getInvoicesDataByDateRange(startInstant, endInstant);
 
-        // Create or update day sales record
-        DaySalesPojo daySales = new DaySalesPojo();
-        daySales.setDate(date);
-        daySales.setInvoicedOrdersCount(daySalesInfo.getInvoicedOrdersCount());
-        daySales.setInvoicedItemsCount(daySalesInfo.getInvoicedItemsCount());
-        daySales.setTotalRevenue(daySalesInfo.getTotalRevenue());
-
-        reportApi.saveDaySales(daySales);
+        // Check if day sales record already exists for this date
+        DaySalesPojo existingDaySales = reportApi.getDaySalesByDate(date);
+        
+        if (existingDaySales != null) {
+            // Update existing record
+            existingDaySales.setInvoicedOrdersCount(daySalesInfo.getInvoicedOrdersCount());
+            existingDaySales.setInvoicedItemsCount(daySalesInfo.getInvoicedItemsCount());
+            existingDaySales.setTotalRevenue(daySalesInfo.getTotalRevenue());
+            reportApi.updateDaySales(existingDaySales);
+        } else {
+            // Create new record
+            DaySalesPojo daySales = new DaySalesPojo();
+            daySales.setDate(date);
+            daySales.setInvoicedOrdersCount(daySalesInfo.getInvoicedOrdersCount());
+            daySales.setInvoicedItemsCount(daySalesInfo.getInvoicedItemsCount());
+            daySales.setTotalRevenue(daySalesInfo.getTotalRevenue());
+            reportApi.saveDaySales(daySales);
+        }
     }
 } 

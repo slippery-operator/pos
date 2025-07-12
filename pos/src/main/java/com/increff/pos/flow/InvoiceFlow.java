@@ -9,9 +9,11 @@ import com.increff.pos.entity.OrderItemsPojo;
 import com.increff.pos.entity.OrdersPojo;
 import com.increff.pos.entity.ProductPojo;
 import com.increff.pos.exception.ApiException;
+import com.increff.pos.model.enums.ErrorType;
 import com.increff.pos.model.response.OrderItemInvoiceResponse;
 import com.increff.pos.model.response.OrderWithInvoiceResponse;
 import com.increff.pos.spring.ApplicationProperties;
+import com.increff.pos.util.PdfUtil;
 import com.increff.pos.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,18 +27,6 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
 
-/**
- * Flow layer for invoice operations
- * Orchestrates complex business logic spanning across multiple API classes
- * 
- * This layer handles:
- * - Orchestration between multiple APIs
- * - File system operations
- * - Cross-entity data retrieval
- * - Transaction management for complex operations
- * 
- * Note: Business logic is concentrated in API layer for reusability
- */
 @Service
 @Transactional
 public class InvoiceFlow {
@@ -56,35 +46,22 @@ public class InvoiceFlow {
     @Autowired
     private ProductApi productApi;
 
-    /**
-     * Get order data needed for invoice generation
-     * Orchestrates data retrieval from multiple APIs for external service call
-     * 
-     * @param orderId The ID of the order
-     * @return OrderWithInvoiceResponse containing order information
-     * @throws ApiException if order not found or validation fails
-     */
     public OrderWithInvoiceResponse getOrderDataForInvoice(Integer orderId) {
-        // Check if invoice already exists (business validation in API)
         if (invoiceApi.existsByOrderId(orderId)) {
-            throw new ApiException(ApiException.ErrorType.CONFLICT, "Invoice already exists for order");
+            throw new ApiException(ErrorType.CONFLICT, "Invoice already exists for order");
         }
 
-        // Get order details from Order API
         OrdersPojo order = orderApi.getOrderById(orderId);
         List<OrderItemsPojo> orderItems = orderItemApi.getOrderItemsByOrderId(orderId);
 
-        // Business validation: Ensure order has items
         if (orderItems == null || orderItems.isEmpty()) {
-            throw new ApiException(ApiException.ErrorType.INTERNAL_SERVER_ERROR, "");
+            throw new ApiException(ErrorType.INTERNAL_SERVER_ERROR, "");
         }
 
-        // Calculate total revenue from order items
         double totalRevenue = orderItems.stream()
                 .mapToDouble(item -> item.getQuantity() * item.getSellingPrice())
                 .sum();
 
-        // Convert order items to response format
         List<OrderItemInvoiceResponse> orderItemResponseList = orderItems.stream()
                 .map(this::convertToOrderItemInvoiceResponse)
                 .collect(java.util.stream.Collectors.toList());
@@ -103,10 +80,8 @@ public class InvoiceFlow {
      * @throws ApiException if file operations or database operations fail
      */
     public String processInvoiceGeneration(Integer orderId, String base64Pdf, OrderWithInvoiceResponse orderData) {
-        // Save PDF locally and get file path
-        String invoicePath = savePdfLocally(base64Pdf, orderId);
+        String invoicePath = PdfUtil.savePdfLocally(base64Pdf, orderId, applicationProperties.getInvoiceStoragePath());
 
-        // Create invoice entity
         InvoicePojo invoice = new InvoicePojo(orderId, orderData.getTime(),
                 orderData.getOrderItems().size(), invoicePath, orderData.getTotalRevenue());
 
@@ -127,59 +102,6 @@ public class InvoiceFlow {
     public String getInvoicePath(Integer orderId) {
         return invoiceApi.getInvoicePathByOrderId(orderId);
     }
-
-    /**
-     * Save PDF locally to file system
-     * Decodes base64 string and saves as PDF file
-     * 
-     * @param base64Pdf Base64 encoded PDF string
-     * @param orderId Order ID for file naming
-     * @return File path where PDF is saved
-     * @throws ApiException if file operations fail
-     */
-    private String savePdfLocally(String base64Pdf, Integer orderId) {
-        try {
-            // Create invoices directory if it doesn't exist
-            File invoicesDir = new File(applicationProperties.getInvoiceStoragePath());
-            if (!invoicesDir.exists()) {
-                boolean created = invoicesDir.mkdirs();
-                if (!created) {
-                    throw new ApiException(ApiException.ErrorType.INTERNAL_SERVER_ERROR,
-                        "Failed to create invoices directory");
-                }
-            }
-
-            // Generate unique file name with timestamp
-            String fileName = "invoice_" + orderId + "_" + Instant.now().getEpochSecond() + ".pdf";
-            String filePath = applicationProperties.getInvoiceStoragePath() + File.separator + fileName;
-
-            // Decode base64 string to PDF bytes
-            byte[] pdfBytes = Base64.getDecoder().decode(base64Pdf);
-            
-            // Write PDF bytes to file
-            try (FileOutputStream fos = new FileOutputStream(filePath)) {
-                fos.write(pdfBytes);
-                fos.flush();
-            }
-
-            // Verify file was created successfully
-            File savedFile = new File(filePath);
-            if (!savedFile.exists() || savedFile.length() == 0) {
-                throw new ApiException(ApiException.ErrorType.INTERNAL_SERVER_ERROR,
-                    "Failed to save PDF file or file is empty");
-            }
-
-            return filePath;
-
-        } catch (IOException e) {
-            throw new ApiException(ApiException.ErrorType.INTERNAL_SERVER_ERROR,
-                "Failed to save PDF file: " + e.getMessage());
-        } catch (IllegalArgumentException e) {
-            throw new ApiException(ApiException.ErrorType.BAD_REQUEST,
-                "Invalid base64 PDF data: " + e.getMessage());
-        }
-    }
-
     /**
      * Convert internal order item to response format
      * Maps internal data structure to response requirements

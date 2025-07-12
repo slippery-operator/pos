@@ -38,13 +38,6 @@ public class UserDao extends AbstractDao<UserPojo> {
         return Optional.ofNullable(user);
     }
 
-    /**
-     * Get all users
-     * @return List of all users
-     */
-    public List<UserPojo> selectAllUsers() {
-        return super.selectAll();
-    }
 
     /**
      * Insert a new user

@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.ZonedDateTime;
 
 /**
  * Response class for day sales data
@@ -15,7 +16,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class DaySalesResponse {
 
-    private LocalDate date;
+    private ZonedDateTime date;
     private Integer invoicedOrdersCount;
     private Integer invoicedItemsCount;
     private Double totalRevenue;

@@ -4,12 +4,14 @@ import com.increff.pos.dao.InvoiceDao;
 import com.increff.pos.entity.InvoicePojo;
 import com.increff.pos.exception.ApiException;
 import com.increff.pos.model.DaySalesModel;
+import com.increff.pos.model.enums.ErrorType;
 import com.increff.pos.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 /**
@@ -36,7 +38,7 @@ public class InvoiceApi {
      * Get invoices by date range
      * Returns invoices within specified date range
      */
-    public DaySalesModel getInvoicesDataByDateRange(Instant startDate, Instant endDate) {
+    public DaySalesModel getInvoicesDataByDateRange(ZonedDateTime startDate, ZonedDateTime endDate) {
         List<InvoicePojo> invoices = invoiceDao.selectByDateRange(startDate, endDate);
         int invoicedOrdersCount = invoices.size();
         int invoicedItemsCount = invoices.stream()
@@ -63,7 +65,7 @@ public class InvoiceApi {
     public InvoicePojo getInvoiceByOrderId(Integer orderId) {
         InvoicePojo invoice = invoiceDao.selectByOrderId(orderId);
         if (invoice == null) {
-            throw new ApiException(ApiException.ErrorType.NOT_FOUND, "Invoice not found for order");
+            throw new ApiException(ErrorType.NOT_FOUND, "Invoice not found for order");
         }
         return invoice;
     }

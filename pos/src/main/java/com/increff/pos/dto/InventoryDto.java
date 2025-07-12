@@ -2,24 +2,22 @@ package com.increff.pos.dto;
 
 import com.increff.pos.api.InventoryApi;
 import com.increff.pos.entity.InventoryPojo;
-import com.increff.pos.exception.ApiException;
 import com.increff.pos.model.form.InventoryUpdateForm;
 import com.increff.pos.model.response.InventoryResponse;
 import com.increff.pos.model.form.InventoryForm;
 import com.increff.pos.model.form.InventoryFormWithRow;
-import com.increff.pos.model.response.TsvUploadResponse;
-import com.increff.pos.model.response.TsvValidationError;
+import com.increff.pos.model.response.ValidationError;
 import com.increff.pos.util.ConvertUtil;
 import com.increff.pos.util.TsvParserUtil;
-import com.increff.pos.util.ResponseUtil;
+import com.increff.pos.util.TsvResponseUtil;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Set;
-import java.util.HashSet;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.increff.pos.util.StringUtil.toLowerCase;
 
@@ -32,71 +30,51 @@ public class InventoryDto extends AbstractDto<InventoryForm> {
     @Autowired
     private ConvertUtil convertUtil;
 
-    public List<InventoryResponse> searchInventory(String productName) {
-        List<InventoryPojo> inventoryPojos = inventoryApi.searchInventory(toLowerCase(productName));
+    public List<InventoryResponse> searchInventory(String productName, int page, int size) {
+        List<InventoryPojo> inventoryPojos = inventoryApi.searchInventory(toLowerCase(productName), page, size);
         return convertUtil.convertList(inventoryPojos, InventoryResponse.class);
     }
 
-    /**
-     * Upload inventory from TSV file with all-or-nothing validation.
-     * If any row has invalid product ID or other validation errors, the entire TSV file is rejected.
-     * This simplifies the flow by removing complex partial success handling.
-     * 
-     * @param file The TSV file to upload
-     * @return List of InventoryResponse containing all successfully updated inventory
-     * @throws ApiException if any validation error occurs in any row
-     */
-    public List<InventoryResponse> uploadInventoryTsv(MultipartFile file) {
-        // Step 1: Validate file format and structure
+//    TODO: ask about responsive entity returning
+    public ResponseEntity<String> uploadInventory(MultipartFile file) {
         validationUtil.validateTsvFile(file);
-        
-        // Step 2: Parse TSV file into forms
         List<InventoryFormWithRow> inventoryFormsWithRow = TsvParserUtil.parseInventoryTsvWithRow(file);
         
-        // Step 3: Validate all forms - if any form is invalid, reject entire file
-        List<TsvValidationError> formValidationErrors = validationUtil.validateInventoryFormsWithRow(inventoryFormsWithRow);
-        if (!formValidationErrors.isEmpty()) {
-            // Build error message from first validation error
-            TsvValidationError firstError = formValidationErrors.get(0);
-            throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, 
-                "TSV file rejected - Row " + firstError.getRowNumber() + ": " + firstError.getErrorMessage());
+        // Validate all forms and collect errors
+        List<ValidationError> allErrors = new ArrayList<>();
+        allErrors.addAll(validationUtil.validateInventoryFormsWithRow(inventoryFormsWithRow));
+
+        Set<Integer> invalidRowInfo = allErrors.stream()
+                .map(ValidationError::getRowNumber)
+                .collect(Collectors.toSet());
+        // Get valid forms for API validation
+        List<InventoryFormWithRow> validForms = inventoryFormsWithRow.stream()
+                .filter(form -> !invalidRowInfo.contains(form.getRowNumber()))
+                .collect(Collectors.toList());
+
+
+        Map<Integer, Integer> validRowsByPrductId = new HashMap<>();
+        for (InventoryFormWithRow validForm : validForms) {
+            validRowsByPrductId.put(validForm.getForm().getProductId(), validForm.getRowNumber());
         }
-        
-        // Step 4: Convert to simple InventoryForm list (no need for complex row tracking)
-        List<InventoryForm> inventoryForms = new ArrayList<>();
-        for (InventoryFormWithRow inventoryWithRow : inventoryFormsWithRow) {
-            inventoryForms.add(inventoryWithRow.getForm());
+
+        if(!validRowsByPrductId.isEmpty()) {
+            Map<Integer, ValidationError> errorsByRowNum = inventoryApi.validateInventoryWithoutSaving(validRowsByPrductId);
+            allErrors.addAll(errorsByRowNum.entrySet().stream()
+                    .sorted(Map.Entry.comparingByKey())
+                    .map(Map.Entry::getValue)
+                    .collect(Collectors.toList()));
         }
-        
-        // Step 5: Validate all product IDs exist - if any product is invalid, reject entire file
-        List<Integer> productIds = inventoryForms.stream()
-            .map(InventoryForm::getProductId)
-            .distinct()
-            .collect(java.util.stream.Collectors.toList());
-        
-        for (Integer productId : productIds) {
-            try {
-                // This will throw exception if product doesn't exist
-                inventoryApi.validateProductExists(productId);
-            } catch (ApiException e) {
-                throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, 
-                    "TSV file rejected - Invalid product ID: " + productId);
-            }
+
+        if (allErrors.isEmpty()) {
+            List<InventoryPojo> validatedInventory = validForms.stream()
+                    .map(formWithRow ->
+                        convertUtil.convert(formWithRow.getForm(), InventoryPojo.class)) // we shud just be using inventoryforms
+                    .collect(Collectors.toList());
+            inventoryApi.bulkCreateOrUpdateInventory(validatedInventory);
         }
-        
-        // Step 6: Check for duplicate product IDs within file
-        Set<Integer> uniqueProductIds = new HashSet<>(productIds);
-        if (uniqueProductIds.size() != productIds.size()) {
-            throw new ApiException(ApiException.ErrorType.VALIDATION_ERROR, 
-                "TSV file rejected - Duplicate product IDs found in file");
-        }
-        
-        // Step 7: All validations passed - update all inventory
-        List<InventoryPojo> inventoryPojos = convertUtil.convertList(inventoryForms, InventoryPojo.class);
-        List<InventoryPojo> updatedInventory = inventoryApi.bulkUpdateInventory(inventoryPojos);
-        
-        // Step 8: Return all successful inventory updates
-        return convertUtil.convertList(updatedInventory, InventoryResponse.class);
+
+        return TsvResponseUtil.generateInventoryTsvResponse(inventoryFormsWithRow, allErrors);
     }
 
     public InventoryResponse updateInventoryByProductId(Integer productId, InventoryUpdateForm inventoryUpdateForm) {

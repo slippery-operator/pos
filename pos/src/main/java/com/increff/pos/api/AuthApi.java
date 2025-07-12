@@ -1,7 +1,8 @@
 package com.increff.pos.api;
 
 import com.increff.pos.dao.UserDao;
-import com.increff.pos.entity.Role;
+import com.increff.pos.model.enums.ErrorType;
+import com.increff.pos.model.enums.Role;
 import com.increff.pos.entity.UserPojo;
 import com.increff.pos.exception.ApiException;
 import com.increff.pos.model.response.UserResponse;
@@ -30,7 +31,7 @@ public class AuthApi {
 
         // Check if user already exists
         if (userDao.selectByEmail(email).isPresent()) {
-            throw new ApiException(ApiException.ErrorType.CONFLICT, "User with this email already exists");
+            throw new ApiException(ErrorType.CONFLICT, "User with this email already exists");
         }
 
         // Assign role based on email pattern
@@ -66,11 +67,11 @@ public class AuthApi {
 
         // Find user by email
         UserPojo user = userDao.selectByEmail(email)
-                .orElseThrow(() -> new ApiException(ApiException.ErrorType.BAD_REQUEST, "Invalid credentials"));
+                .orElseThrow(() -> new ApiException(ErrorType.BAD_REQUEST, "Invalid credentials"));
 
         // Validate password
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new ApiException(ApiException.ErrorType.BAD_REQUEST, "Invalid credentials");
+            throw new ApiException(ErrorType.BAD_REQUEST, "Invalid credentials");
         }
 
         // Update last login time

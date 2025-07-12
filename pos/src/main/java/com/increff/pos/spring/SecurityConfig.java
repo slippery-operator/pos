@@ -19,6 +19,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import javax.servlet.http.HttpServletResponse;
+
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -49,13 +51,34 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .authorizeRequests()
                 .antMatchers("/auth/**", "/public/**").permitAll()
-                .antMatchers(HttpMethod.POST, "/products/upload", "/inventory/upload")
-                .hasRole("SUPERVISOR")
-                .antMatchers("/reports/**")
-                .hasRole("SUPERVISOR")
-                .antMatchers("/products/**", "/inventory/**", "/clients/**", "/invoice/**", "/orders/**")
-                .hasAnyRole("SUPERVISOR", "OPERATOR")
+
+                .antMatchers(HttpMethod.POST, "/clients").hasRole("SUPERVISOR")
+                .antMatchers(HttpMethod.PUT, "/clients/**").hasRole("SUPERVISOR")
+
+                .antMatchers(HttpMethod.POST, "/products", "/products/upload").hasRole("SUPERVISOR")
+                .antMatchers(HttpMethod.PUT, "/products/**").hasRole("SUPERVISOR")
+
+                .antMatchers(HttpMethod.POST, "/inventory/upload").hasRole("SUPERVISOR")
+                .antMatchers(HttpMethod.PUT, "/inventory/**").hasRole("SUPERVISOR")
+
+                .antMatchers(HttpMethod.POST, "/orders").hasRole("SUPERVISOR")
+
+                .antMatchers(HttpMethod.GET, "/clients/**").hasAnyRole("SUPERVISOR", "OPERATOR")
+                .antMatchers(HttpMethod.GET, "/products/**").hasAnyRole("SUPERVISOR", "OPERATOR")
+                .antMatchers(HttpMethod.POST, "/products/search").hasAnyRole("SUPERVISOR", "OPERATOR")
+                .antMatchers(HttpMethod.GET, "/inventory/**").hasAnyRole("SUPERVISOR", "OPERATOR")
+                .antMatchers(HttpMethod.GET, "/orders/**").hasAnyRole("SUPERVISOR", "OPERATOR")
+                .antMatchers(HttpMethod.GET, "/invoice/**").hasAnyRole("SUPERVISOR", "OPERATOR")
+                .antMatchers(HttpMethod.GET, "/reports/**").hasAnyRole("SUPERVISOR", "OPERATOR")
+
                 .anyRequest().authenticated()
+                .and()
+                .exceptionHandling()
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"Authentication required\"}");
+                })
                 .and()
                 .addFilterBefore(corsSessionFilter, BasicAuthenticationFilter.class)
                 .addFilterBefore(customAuthFilter, UsernamePasswordAuthenticationFilter.class);

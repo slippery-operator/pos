@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 /**
@@ -19,7 +20,7 @@ import java.util.List;
 public class OrderWithInvoiceResponse {
 
     private Integer id;
-    private Instant time;
+    private ZonedDateTime time;
     private Double totalRevenue;
     private List<OrderItemInvoiceResponse> orderItems;
 } 

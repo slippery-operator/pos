@@ -80,7 +80,7 @@ public class PdfGeneratorUtil {
         context.put("orderId", orderRequest.getOrderId());
         
         // Convert UTC Instant to IST and format
-        String formattedOrderTime = formatInstantToIST(Instant.parse(orderRequest.getOrderTime()));
+        String formattedOrderTime = formatZonedDateTimeToIST(orderRequest.getOrderTime());
         context.put("orderTime", formattedOrderTime);
         
         context.put("clientName", orderRequest.getClientName());
@@ -96,14 +96,12 @@ public class PdfGeneratorUtil {
         return context;
     }
 
-    /**
-     * Convert UTC Instant to IST and format as HH:mm dd/MM/yyyy
-     */
-    private String formatInstantToIST(Instant instant) {
-        if (instant == null) {
+    private String formatZonedDateTimeToIST(String zonedDateTimeStr) {
+        if (zonedDateTimeStr == null || zonedDateTimeStr.trim().isEmpty()) {
             return "N/A";
         }
-        ZonedDateTime istTime = instant.atZone(IST_ZONE);
+        ZonedDateTime zdt = ZonedDateTime.parse(zonedDateTimeStr);
+        ZonedDateTime istTime = zdt.withZoneSameInstant(IST_ZONE);
         return istTime.format(DATE_FORMATTER);
     }
 

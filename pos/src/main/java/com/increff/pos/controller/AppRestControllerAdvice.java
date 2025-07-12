@@ -1,6 +1,7 @@
 package com.increff.pos.controller;
 
 import com.increff.pos.exception.ApiException;
+import com.increff.pos.model.enums.ErrorType;
 import com.increff.pos.model.response.ErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,12 +69,12 @@ public class AppRestControllerAdvice {
                 .orElse("Invalid input");
 
         ErrorResponse errorResponse = new ErrorResponse(
-                ApiException.ErrorType.BAD_REQUEST.getErrorCode(),
+                ErrorType.BAD_REQUEST.getErrorCode(),
                 errorMessage,
                 request.getDescription(false).replace("uri=", "")
         );
 
-        return ResponseEntity.status(ApiException.ErrorType.BAD_REQUEST.getHttpStatus()).body(errorResponse);
+        return ResponseEntity.status(ErrorType.BAD_REQUEST.getHttpStatus()).body(errorResponse);
     }
 
     /**
@@ -90,12 +91,12 @@ public class AppRestControllerAdvice {
         logger.warn("File upload size exceeded: {}", ex.getMessage());
 
         ErrorResponse errorResponse = new ErrorResponse(
-                ApiException.ErrorType.FILE_SIZE_EXCEEDED.getErrorCode(),
+                ErrorType.FILE_SIZE_EXCEEDED.getErrorCode(),
                 "File size exceeds the maximum allowed limit",
                 request.getDescription(false).replace("uri=", "")
         );
 
-        return ResponseEntity.status(ApiException.ErrorType.FILE_SIZE_EXCEEDED.getHttpStatus()).body(errorResponse);
+        return ResponseEntity.status(ErrorType.FILE_SIZE_EXCEEDED.getHttpStatus()).body(errorResponse);
     }
 
     /**
@@ -112,11 +113,11 @@ public class AppRestControllerAdvice {
         logger.error("Unexpected error: {}", ex.getMessage(), ex);
 
         ErrorResponse errorResponse = new ErrorResponse(
-                ApiException.ErrorType.INTERNAL_SERVER_ERROR.getErrorCode(),
+                ErrorType.INTERNAL_SERVER_ERROR.getErrorCode(),
                 "An unexpected error occurred. Please try again later.",
                 request.getDescription(false).replace("uri=", "")
         );
 
-        return ResponseEntity.status(ApiException.ErrorType.INTERNAL_SERVER_ERROR.getHttpStatus()).body(errorResponse);
+        return ResponseEntity.status(ErrorType.INTERNAL_SERVER_ERROR.getHttpStatus()).body(errorResponse);
     }
 }

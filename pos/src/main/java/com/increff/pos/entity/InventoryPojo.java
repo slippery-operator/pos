@@ -24,7 +24,7 @@ public class InventoryPojo extends AbstractPojo {
     @Column(nullable = false)
     private Integer quantity = 0;
 
-    @ManyToOne
-    @JoinColumn(name = "product_id", referencedColumnName = "id", insertable = false, updatable = false)
-    private ProductPojo product;
+//    @ManyToOne
+//    @JoinColumn(name = "product_id", referencedColumnName = "id", insertable = false, updatable = false)
+//    private ProductPojo product;
 }

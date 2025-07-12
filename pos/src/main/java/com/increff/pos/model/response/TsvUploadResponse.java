@@ -23,7 +23,7 @@ public class TsvUploadResponse<T> {
     /**
      * List of validation errors with row numbers and error details
      */
-    private List<TsvValidationError> validationErrors;
+    private List<ValidationError> validationErrors;
     
     /**
      * Total number of rows processed
@@ -44,7 +44,7 @@ public class TsvUploadResponse<T> {
     /**
      * Constructor to initialize the response with all required fields
      */
-    public TsvUploadResponse(List<T> successfulItems, List<TsvValidationError> validationErrors, 
+    public TsvUploadResponse(List<T> successfulItems, List<ValidationError> validationErrors,
                            int totalRows, int successfulRows, int failedRows) {
         this.successfulItems = successfulItems;
         this.validationErrors = validationErrors;
