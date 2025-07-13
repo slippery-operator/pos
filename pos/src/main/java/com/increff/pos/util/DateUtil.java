@@ -14,7 +14,6 @@ public class DateUtil {
         LocalDate localDate = LocalDate.parse(dateStr); // parses "yyyy-MM-dd"
         return localDate.atStartOfDay(ZoneOffset.UTC);  // 00:00 UTC
     }
-
     public static ZonedDateTime parseEndDate(String dateStr) {
         if (dateStr == null || dateStr.trim().isEmpty()) {
             return null;
