@@ -5,6 +5,7 @@ import com.increff.pos.api.InventoryApi;
 import com.increff.pos.api.ProductApi;
 import com.increff.pos.entity.ProductPojo;
 import com.increff.pos.exception.ApiException;
+import com.increff.pos.model.enums.ErrorType;
 import com.increff.pos.model.form.ProductFormWithRow;
 import com.increff.pos.model.response.ValidationError;
 import com.increff.pos.util.ConvertUtil;
@@ -35,16 +36,21 @@ public class ProductFlow {
     private ConvertUtil convertUtil;
 
     public ProductPojo validateAndCreateProduct(ProductPojo productPojo) {
+        if (productPojo == null) {
+            throw new ApiException(ErrorType.VALIDATION_ERROR, "Product cannot be null");
+        }
+        // Validate client exists
+        validateClientExists(productPojo.getClientId());
+        // Validate barcode uniqueness
         productApi.validateBarcodeUniqueness(productPojo.getBarcode(), null);
+        // Create product and initialize inventory
         ProductPojo createdProduct = productApi.createProduct(productPojo);
         inventoryApi.createInventory(createdProduct.getId(), 0);
         return createdProduct;
     }
 
     public List<ProductPojo> processProductTsvUpload(List<ProductPojo> products) {
-
         List<ProductPojo> createdProducts = new ArrayList<>();
-
         if (!products.isEmpty()) {
             createdProducts = productApi.bulkCreateProducts(products);
             List<Integer> productIds = createdProducts.stream()
@@ -56,24 +62,25 @@ public class ProductFlow {
     }
 
     public Map<Integer, ValidationError> validateProductTsvUpload(List<ProductFormWithRow> productFormsWithRow) {
-
         Set<Integer> clientIds = productFormsWithRow.stream()
                 .map(form -> form.getForm().getClientId())
                 .collect(Collectors.toSet());
         Set<String> barcodes = productFormsWithRow.stream()
                 .map(form -> form.getForm().getBarcode())
                 .collect(Collectors.toSet());
-
         Map<Integer, Boolean> clientValidation = clientApi.validateClientsExistBatch(clientIds);
         Map<String, Boolean> barcodeValidation = productApi.validateBarcodesUniquenessBatch(barcodes);
+        Map<Integer, ValidationError> errorByRow = constructErrorByRow(productFormsWithRow, clientValidation, barcodeValidation);
+        return errorByRow;
+    }
 
+    private Map<Integer, ValidationError> constructErrorByRow(List<ProductFormWithRow> productFormsWithRow,Map<Integer, Boolean> clientValidation,
+                                     Map<String, Boolean> barcodeValidation) {
         Map<Integer, ValidationError> errorByRow = new HashMap<>();
-
         for (ProductFormWithRow form : productFormsWithRow) {
             Integer row = form.getRowNumber();
             Integer clientId = form.getForm().getClientId();
             String barcode = form.getForm().getBarcode();
-
             if (!clientValidation.getOrDefault(clientId, false)) {
                 errorByRow.put(row, new ValidationError(row, "clientId", "Client not found"));
             } else if (!barcodeValidation.getOrDefault(barcode, false)) {
@@ -81,5 +88,24 @@ public class ProductFlow {
             }
         }
         return errorByRow;
+    }
+    public void validateProductForUpdate(ProductPojo product) {
+        if (product == null) {
+            throw new ApiException(ErrorType.VALIDATION_ERROR, "Product cannot be null");
+        }
+        if (product.getClientId() == null) {
+            throw new ApiException(ErrorType.VALIDATION_ERROR, "Product client ID cannot be null");
+        }
+        // Validate client exists
+        clientApi.getClientById(product.getClientId());
+        // Validate barcode uniqueness (exclude current product ID)
+        productApi.validateBarcodeUniqueness(product.getBarcode(), product.getId());
+    }
+
+    public void validateClientExists(Integer clientId) {
+        if (clientId == null) {
+            throw new ApiException(ErrorType.VALIDATION_ERROR, "Client ID cannot be null");
+        }
+        clientApi.getClientById(clientId);
     }
 }

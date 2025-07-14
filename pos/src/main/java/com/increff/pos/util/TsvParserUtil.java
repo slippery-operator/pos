@@ -18,23 +18,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-/**
- * Utility class for parsing TSV (Tab-Separated Values) files.
- * This class provides methods to parse different types of TSV files and convert them
- * to appropriate form objects. Uses the new ApiException with ErrorType enum for
- * consistent error handling.
- */
 public class TsvParserUtil {
 
-    /**
-     * Parses a TSV file containing product data and converts it to a list of ProductForm objects.
-     * Expected format: barcode, client_id, name, mrp, imageUrl (optional)
-     * Validates headers and handles parsing errors gracefully.
-     * 
-     * @param file The TSV file to parse
-     * @return List of ProductForm objects with row numbers for error tracking
-     * @throws ApiException with INTERNAL_SERVER_ERROR type if parsing fails
-     */
     public static List<ProductFormWithRow> parseProductTsv(MultipartFile file) {
         List<ProductFormWithRow> productForms = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
@@ -74,13 +59,6 @@ public class TsvParserUtil {
         return productForms;
     }
 
-    /**
-     * Validates that the TSV headers match the expected format.
-     * 
-     * @param headerLine The header line from the TSV file
-     * @param expectedHeaders Array of expected header names
-     * @throws ApiException with BAD_REQUEST type if headers don't match
-     */
     private static void validateHeaders(String headerLine, String[] expectedHeaders) {
         String[] actualHeaders = parseTabDelimitedLine(headerLine);
         
@@ -98,14 +76,6 @@ public class TsvParserUtil {
         }
     }
 
-    /**
-     * Parses a TSV file containing inventory data and converts it to a list of InventoryForm objects.
-     * Expected format: product_id, quantity
-     * 
-     * @param file The TSV file to parse
-     * @return List of InventoryForm objects
-     * @throws ApiException with INTERNAL_SERVER_ERROR type if parsing fails
-     */
     public static List<InventoryForm> parseInventoryTsv(MultipartFile file) {
         List<InventoryForm> inventoryForms = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
@@ -132,13 +102,6 @@ public class TsvParserUtil {
         return inventoryForms;
     }
 
-    /**
-     * Parses a tab-delimited line, handling quoted fields properly.
-     * This method correctly handles TSV format where fields may contain tabs within quotes.
-     * 
-     * @param line The line to parse
-     * @return Array of field values
-     */
     private static String[] parseTabDelimitedLine(String line) {
         List<String> fields = new ArrayList<>();
         StringBuilder currentField = new StringBuilder();
@@ -163,15 +126,6 @@ public class TsvParserUtil {
         return fields.toArray(new String[0]);
     }
 
-    /**
-     * Parses a TSV file containing order item data and converts it to a list of OrderItemForm objects.
-     * Expected format: barcode, mrp, quantity
-     * 
-     * @param file The TSV file to parse
-     * @return List of OrderItemForm objects
-     * @throws ApiException with VALIDATION_ERROR type if file format is invalid
-     * @throws ApiException with INTERNAL_SERVER_ERROR type if parsing fails
-     */
     public static List<OrderItemForm> parseOrderItemsTsv(MultipartFile file) {
         List<OrderItemForm> orderItems = new ArrayList<>();
 

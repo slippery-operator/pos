@@ -21,4 +21,7 @@ public class DateUtil {
         LocalDate localDate = LocalDate.parse(dateStr);
         return localDate.atTime(23, 59, 59, 999_999_999).atZone(ZoneOffset.UTC); // 23:59:59.999 UTC
     }
+    public static ZonedDateTime getYesterday() {
+        return ZonedDateTime.now(ZoneOffset.UTC).minusDays(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+    }
 }

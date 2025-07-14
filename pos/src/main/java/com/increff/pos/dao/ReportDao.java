@@ -21,33 +21,12 @@ public class ReportDao extends AbstractDao<DaySalesPojo> {
     public ReportDao() {
         super(DaySalesPojo.class);
     }
-// TODO: we shud be getting only zoneddate and zonedtime here..
-    // TODO: add use of the abstractdao functions
+
     public List<DaySalesPojo> getDaySalesByDateRange(ZonedDateTime startDate, ZonedDateTime endDate) {
-//        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-//        CriteriaQuery<DaySalesPojo> query = cb.createQuery(DaySalesPojo.class);
-//        Root<DaySalesPojo> root = query.from(DaySalesPojo.class);
-//
-//        Predicate dateGreaterThanOrEqual = cb.greaterThanOrEqualTo(root.get("date"), startDate);
-//        Predicate dateLessThanOrEqual = cb.lessThanOrEqualTo(root.get("date"), endDate);
-//
-//        query.select(root)
-//                .where(cb.and(dateGreaterThanOrEqual, dateLessThanOrEqual))
-//                .orderBy(cb.asc(root.get("date")));
-//
-//        return entityManager.createQuery(query).getResultList();
         return selectByFieldRange("date", startDate, endDate, "date", SortOrder.ASC);
     }
 
     public DaySalesPojo getDaySalesByDate(ZonedDateTime date) {
-//        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-//        CriteriaQuery<DaySalesPojo> query = cb.createQuery(DaySalesPojo.class);
-//        Root<DaySalesPojo> root = query.from(DaySalesPojo.class);
-//
-//        query.select(root).where(cb.equal(root.get("date"), date));
-//
-//        List<DaySalesPojo> results = entityManager.createQuery(query).getResultList();
-//        return results.isEmpty() ? null : results.get(0);
         return selectByField("date", date);
     }
 }

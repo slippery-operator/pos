@@ -14,10 +14,7 @@ import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.List;
 
-/**
- * API layer for Invoice entity operations in POS app
- * Handles business logic and data validation
- */
+
 @Service
 @Transactional
 public class InvoiceApi {
@@ -25,19 +22,14 @@ public class InvoiceApi {
     @Autowired
     private InvoiceDao invoiceDao;
 
-    /**
-     * Create a new invoice record
-     * Validates invoice data and persists to database
-     */
     public InvoicePojo createInvoice(InvoicePojo invoice) {
+        if (invoice == null) {
+            throw new ApiException(ErrorType.VALIDATION_ERROR, "Invoice cannot be null");
+        }
         invoiceDao.insert(invoice);
         return invoice;
     }
 
-    /**
-     * Get invoices by date range
-     * Returns invoices within specified date range
-     */
     public DaySalesModel getInvoicesDataByDateRange(ZonedDateTime startDate, ZonedDateTime endDate) {
         List<InvoicePojo> invoices = invoiceDao.selectByDateRange(startDate, endDate);
         int invoicedOrdersCount = invoices.size();
@@ -50,18 +42,10 @@ public class InvoiceApi {
         return new DaySalesModel(invoicedOrdersCount, invoicedItemsCount, totalRevenue);
     }
 
-    /**
-     * Check if invoice exists for order ID
-     * Returns true if invoice exists, false otherwise
-     */
     public boolean existsByOrderId(Integer orderId) {
         return invoiceDao.selectByOrderId(orderId) != null;
     }
 
-    /**
-     * Get invoice by order ID
-     * Throws exception if invoice not found
-     */
     public InvoicePojo getInvoiceByOrderId(Integer orderId) {
         InvoicePojo invoice = invoiceDao.selectByOrderId(orderId);
         if (invoice == null) {
@@ -70,10 +54,6 @@ public class InvoiceApi {
         return invoice;
     }
 
-    /**
-     * Get invoice path by order ID
-     * Returns the file path where invoice PDF is stored
-     */
     public String getInvoicePathByOrderId(Integer orderId) {
         InvoicePojo invoice = getInvoiceByOrderId(orderId);
         return invoice.getInvoicePath();

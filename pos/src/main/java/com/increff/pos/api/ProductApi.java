@@ -54,6 +54,7 @@ public class ProductApi {
         existingProduct.setName(name);
         existingProduct.setMrp(mrp);
         existingProduct.setImageUrl(imageUrl);
+        productDao.update(existingProduct);
         return existingProduct;
     }
 

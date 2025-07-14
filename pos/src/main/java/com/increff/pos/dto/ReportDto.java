@@ -3,6 +3,7 @@ package com.increff.pos.dto;
 import com.increff.pos.api.ReportApi;
 import com.increff.pos.entity.DaySalesPojo;
 import com.increff.pos.model.response.DaySalesResponse;
+import com.increff.pos.util.DateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,16 +21,8 @@ public class ReportDto {
     private ReportApi api;
 
     public List<DaySalesResponse> getDaySalesByDateRange(String startDate, String endDate) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        ZonedDateTime parsedStart = ZonedDateTime.of(
-                java.time.LocalDate.parse(startDate, formatter).atStartOfDay(),
-                ZoneOffset.UTC
-        );
-
-        ZonedDateTime parsedEnd = ZonedDateTime.of(
-                java.time.LocalDate.parse(endDate, formatter).atTime(23, 59, 59, 999_999_999),
-                ZoneOffset.UTC
-        );
+        ZonedDateTime parsedStart = DateUtil.parseStartDate(startDate);
+        ZonedDateTime parsedEnd = DateUtil.parseEndDate(endDate);
         List<DaySalesPojo> daySalesList = api.getDaySalesByDateRange(parsedStart, parsedEnd);
         return daySalesList.stream()
                 .map(this::convertToResponse)

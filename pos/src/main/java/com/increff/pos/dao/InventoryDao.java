@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import javax.persistence.Query;
 import javax.persistence.criteria.*;
+import javax.transaction.Transactional;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -15,6 +16,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Repository
+@Transactional
 public class InventoryDao extends AbstractDao<InventoryPojo> {
 
     public InventoryDao() {super(InventoryPojo.class);}
@@ -24,16 +26,12 @@ public class InventoryDao extends AbstractDao<InventoryPojo> {
     }
 
     public List<InventoryPojo> findByProductNameLike(String productName, int page, int size) {
-        String sql = "SELECT i.* FROM inventory i " +
-                "JOIN product p ON i.product_id = p.id ";
-
+        String sql = "SELECT i.* FROM inventory i " + "JOIN product p ON i.product_id = p.id ";
         if (productName != null && !productName.trim().isEmpty()) {
             sql += "WHERE LOWER(p.name) LIKE ? ";
         }
         sql += "ORDER BY p.name ASC LIMIT ? OFFSET ?";
-
         Query nativeQuery = entityManager.createNativeQuery(sql, InventoryPojo.class);
-
         int paramIndex = 1;
         if (productName != null && !productName.trim().isEmpty()) {
             nativeQuery.setParameter(paramIndex++, productName.toLowerCase() + "%");
@@ -43,30 +41,7 @@ public class InventoryDao extends AbstractDao<InventoryPojo> {
         return nativeQuery.getResultList();
     }
 
-//    public List<InventoryPojo> findByProductNameLikePaginated(String productName, int page, int size) {
-//        String sql = "SELECT i.* FROM inventory i " +
-//                "JOIN product p ON i.product_id = p.id ";
-//
-//        if (productName != null && !productName.trim().isEmpty()) {
-//            sql += "WHERE LOWER(p.name) LIKE ? ";
-//        }
-//        sql += "ORDER BY p.name ASC LIMIT ? OFFSET ?";
-//
-//        Query nativeQuery = entityManager.createNativeQuery(sql, InventoryPojo.class);
-//
-//        int paramIndex = 1;
-//        if (productName != null && !productName.trim().isEmpty()) {
-//            nativeQuery.setParameter(paramIndex++, productName.toLowerCase() + "%");
-//        }
-//        nativeQuery.setParameter(paramIndex++, size);        // LIMIT
-//        nativeQuery.setParameter(paramIndex, page * size);   // OFFSET
-//
-//        return nativeQuery.getResultList();
-//    }
-
-//    TODO: remove DONE
     public void bulkInsert(List<Integer> productIds) {
-
         Session session = entityManager.unwrap(Session.class);
         session.doWork(connection -> {
         String sql = "INSERT INTO inventory (product_id, quantity) VALUES (?, 0)";
@@ -83,7 +58,6 @@ public class InventoryDao extends AbstractDao<InventoryPojo> {
     }
 
     public void bulkUpsert(List<InventoryPojo> inventoryList) {
-
         Session session = entityManager.unwrap(Session.class);
         session.doWork(connection -> {
             String sql = "INSERT INTO inventory (product_id, quantity) VALUES (?, ?) ON DUPLICATE KEY UPDATE quantity = VALUES(quantity)";

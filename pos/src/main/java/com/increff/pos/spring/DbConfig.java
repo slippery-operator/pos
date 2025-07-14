@@ -14,13 +14,6 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-/**
- * Database configuration class that sets up the data source, entity manager factory,
- * and transaction manager for the application.
- * 
- * This class now uses ApplicationProperties to centralize configuration management,
- * making it easier to maintain and test.
- */
 @EnableTransactionManagement
 @Configuration
 public class DbConfig {
@@ -28,12 +21,6 @@ public class DbConfig {
 	@Autowired
 	private ApplicationProperties applicationProperties;
 
-	/**
-	 * Creates and configures the data source bean.
-	 * Uses properties from ApplicationProperties for database connection.
-	 * 
-	 * @return Configured BasicDataSource bean
-	 */
 	@Bean(name = "dataSource")
 	public DataSource getDataSource() {
 		BasicDataSource bean = new BasicDataSource();
@@ -51,13 +38,6 @@ public class DbConfig {
 		return bean;
 	}
 
-	/**
-	 * Creates and configures the entity manager factory bean.
-	 * Sets up Hibernate JPA vendor adapter and properties.
-	 * 
-	 * @param dataSource The data source to use
-	 * @return Configured LocalContainerEntityManagerFactoryBean
-	 */
 	@Bean(name = "entityManagerFactory")
 	@Autowired
 	public LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource dataSource) {
@@ -78,13 +58,7 @@ public class DbConfig {
 		bean.setJpaProperties(jpaProperties);
 		return bean;
 	}
-	
-	/**
-	 * Creates and configures the transaction manager bean.
-	 * 
-	 * @param emf The entity manager factory to use
-	 * @return Configured JpaTransactionManager
-	 */
+
 	@Bean(name = "transactionManager")
 	@Autowired
 	public JpaTransactionManager transactionManager(LocalContainerEntityManagerFactoryBean emf) {

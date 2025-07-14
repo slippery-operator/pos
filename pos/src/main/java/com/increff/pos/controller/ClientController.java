@@ -23,8 +23,6 @@ public class ClientController {
     public List<ClientResponse> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        // Use paginated version if pagination parameters are provided
-        // For backward compatibility, return all when default parameters are used
         return dto.getAll(page, size);
     }
 
@@ -33,11 +31,6 @@ public class ClientController {
             @RequestParam String name,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        // Use paginated version if pagination parameters are provided
-//        if (page > 0 || size != 10) {
-//            return dto.searchByNamePaginated(name, page, size);
-//        }
-        // For backward compatibility, return all when default parameters are used
         return dto.searchByName(name, page, size);
     }
 

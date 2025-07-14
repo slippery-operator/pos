@@ -18,10 +18,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 
-/**
- * Utility class for communicating with external invoice service
- * Handles HTTP calls, request/response conversion, and error handling
- */
 @Component
 public class InvoiceServiceClient {
 
@@ -30,13 +26,6 @@ public class InvoiceServiceClient {
 
     private RestTemplate restTemplate = new RestTemplate();
 
-    /**
-     * Call external invoice-app service to generate PDF
-     *
-     * @param orderData Order data needed for invoice generation
-     * @return Base64 encoded PDF string
-     * @throws ApiException if external service call fails
-     */
     public String generateInvoicePdf(OrderWithInvoiceResponse orderData) {
         try {
             // Convert order data to external service format
@@ -70,33 +59,17 @@ public class InvoiceServiceClient {
         }
     }
 
-    /**
-     * Validate response from external invoice service
-     *
-     * @param response Response from external service
-     * @throws ApiException if response is invalid
-     */
     private void validateResponse(InvoiceGenerationResponse response) {
         if (response == null) {
             throw new ApiException(ErrorType.BAD_GATEWAY, "No response received from invoice service");
         }
-
         if (!response.isSuccess()) {
             throw new ApiException(ErrorType.BAD_GATEWAY, "Failed to generate invoice");
         }
-
         if (response.getBase64Pdf() == null || response.getBase64Pdf().trim().isEmpty()) {
             throw new ApiException(ErrorType.BAD_GATEWAY, "Invoice service returned empty PDF data");
         }
     }
-
-    /**
-     * Create request object for external invoice service
-     * Converts internal order data to external service format
-     *
-     * @param orderData Internal order data
-     * @return Request object for external service
-     */
     private InvoiceGenerationForm createInvoiceGenerationForm(OrderWithInvoiceResponse orderData) {
         InvoiceGenerationForm request = new InvoiceGenerationForm();
         request.setOrderId(orderData.getId());
@@ -113,13 +86,6 @@ public class InvoiceServiceClient {
         return request;
     }
 
-    /**
-     * Convert internal order item to external service format
-     * Maps internal data structure to external API requirements
-     *
-     * @param item Internal order item
-     * @return External service format item
-     */
     private InvoiceItemForm convertToInvoiceItemForm(OrderItemInvoiceResponse item) {
         InvoiceItemForm request = new InvoiceItemForm();
 

@@ -18,10 +18,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Custom authentication filter that validates session-based authentication
- * This filter checks if user has a valid session and sets the security context
- */
 @Component
 public class CustomAuthenticationFilter extends OncePerRequestFilter {
 
@@ -30,10 +26,6 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-
-        // Add this to your CustomAuthenticationFilter
-        logger.info("Request: " + request.getMethod() + " " + request.getRequestURI());
-        logger.info("Origin: " + request.getHeader("Origin"));
 
         // Skip authentication for public endpoints
         String requestPath = request.getRequestURI();
@@ -79,9 +71,6 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    /**
-     * Check if the endpoint is public and doesn't require authentication
-     */
     private boolean isPublicEndpoint(String path) {
         return path.startsWith("/auth/") ||
                 path.startsWith("/public/") ||

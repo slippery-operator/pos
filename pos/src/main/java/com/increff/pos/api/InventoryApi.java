@@ -29,11 +29,9 @@ public class InventoryApi {
         if (existingInventory != null) {
             throw new ApiException(ErrorType.CONFLICT, "Inventory already exists for product id: " + productId);
         }
-
         InventoryPojo inventory = new InventoryPojo();
         inventory.setProductId(productId);
         inventory.setQuantity(quantity != null ? quantity : 0);
-
         inventoryDao.insert(inventory);
         return inventory;
     }
@@ -58,12 +56,11 @@ public class InventoryApi {
     }
 
     public void reduceInventory(Integer productId, Integer orderQuantity) {
+        validateInventoryAvailability(productId, orderQuantity);
         InventoryPojo inventory = inventoryDao.selectByProductId(productId);
         int newQuantity = inventory.getQuantity() - orderQuantity;
         inventory.setQuantity(newQuantity);
     }
-
-    // TODO: check redundance in bulk functions
 
     public List<InventoryPojo> bulkCreateInventory(List<Integer> productIds) {
         inventoryDao.bulkInsert(productIds);
@@ -79,22 +76,21 @@ public class InventoryApi {
     }
 
     public Map<Integer, ValidationError> validateInventoryWithoutSaving(Map<Integer, Integer> rowByProductId) {
-        List<Integer> productIds = new ArrayList<>(rowByProductId.keySet());
-
-        Map<Integer, Boolean> productValidation = inventoryDao.validateProductsExist(productIds);
-
+        if (rowByProductId == null) {
+            throw new NullPointerException("Input map cannot be null");
+        }
         Map<Integer, ValidationError> errorByRow = new HashMap<>();
-        rowByProductId.forEach((productId, row) -> {
-            if(!productValidation.getOrDefault(productId, false)) {
-                errorByRow.put(row, new ValidationError(
-                        row, "productId", "Product not found"
+        // Validate each entry
+        for (Map.Entry<Integer, Integer> entry : rowByProductId.entrySet()) {
+            Integer productId = entry.getKey();
+            Integer quantity = entry.getValue();
+            // Validate quantity is not negative
+            if (quantity != null && quantity < 0) {
+                errorByRow.put(productId, new ValidationError(
+                        productId, "quantity", "Quantity cannot be negative"
                 ));
             }
-        });
+        }
         return errorByRow;
     }
-
-//    private Map<Integer, Boolean> validateProductsExistBatch(List<Integer> productIds, boolean throwOnFailure) {
-//        return inventoryDao.validateProductsExist(productIds);
-//    }
 }

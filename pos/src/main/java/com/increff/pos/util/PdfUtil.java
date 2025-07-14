@@ -11,15 +11,6 @@ import java.util.Base64;
 
 public class PdfUtil {
 
-    /**
-     * Save PDF locally to the file system.
-     *
-     * @param base64Pdf Base64-encoded PDF string
-     * @param orderId Order ID for file naming
-     * @param invoiceStoragePath Path where PDFs should be saved
-     * @return File path where PDF is saved
-     * @throws ApiException if saving fails
-     */
     public static String savePdfLocally(String base64Pdf, Integer orderId, String invoiceStoragePath) {
         try {
             // Ensure directory exists

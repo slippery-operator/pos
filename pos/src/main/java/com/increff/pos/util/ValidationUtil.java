@@ -36,6 +36,10 @@ public class ValidationUtil {
      * @throws ApiException with VALIDATION_ERROR type if validation fails
      */
     public <T> void validateForm(T form) {
+        if (form == null) {
+            throw new ApiException(ErrorType.BAD_REQUEST, "Form cannot be null");
+        }
+        
         Set<ConstraintViolation<T>> violations = validator.validate(form);
         if (!violations.isEmpty()) {
             String errorMessage = violations.stream()

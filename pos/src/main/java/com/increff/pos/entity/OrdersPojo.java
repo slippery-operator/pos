@@ -23,5 +23,4 @@ public class OrdersPojo extends AbstractPojo {
     @Column(name = "time", nullable = false, updatable = false, insertable = false)
     @org.hibernate.annotations.Generated(org.hibernate.annotations.GenerationTime.ALWAYS)
     private ZonedDateTime time;
-//    TODO: sue zonedDate
 }

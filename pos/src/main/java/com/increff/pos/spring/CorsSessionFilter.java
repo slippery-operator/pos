@@ -8,11 +8,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-/**
- * Custom filter to handle CORS and session management for cross-origin requests.
- * This filter ensures that sessions work properly between the Angular frontend
- * and the Spring backend when running on different ports.
- */
 @Component
 public class CorsSessionFilter implements Filter {
 

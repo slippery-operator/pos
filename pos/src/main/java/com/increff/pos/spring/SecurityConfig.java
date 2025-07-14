@@ -24,10 +24,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 import java.util.Collections;
 
-/**
- * Spring Security configuration
- * Defines security rules and authentication mechanisms
- */
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(securedEnabled = true)

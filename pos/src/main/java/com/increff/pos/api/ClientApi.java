@@ -20,6 +20,9 @@ public class ClientApi {
     private ClientDao clientDao;
 
     public ClientPojo add(String name) {
+        if (name == null) {
+            throw new ApiException(ErrorType.VALIDATION_ERROR, "Client name cannot be null");
+        }
         ClientPojo existingClient = clientDao.selectByName(name);
         if (existingClient != null) {
             throw new ApiException(ErrorType.CONFLICT, "Client with name: " + name + " already exists.");
@@ -39,6 +42,14 @@ public class ClientApi {
             throw new ApiException(ErrorType.NOT_FOUND, "Client not found");
         }
         client.setName(name);
+        return client;
+    }
+
+    public ClientPojo getClientById(Integer id) {
+        ClientPojo client = clientDao.selectById(id);
+        if (client == null) {
+            throw new ApiException(ErrorType.NOT_FOUND, "Client not found");
+        }
         return client;
     }
 

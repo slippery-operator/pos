@@ -7,10 +7,6 @@ import lombok.Setter;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 
-/**
- * Response class for day sales data
- * Used for day-on-day sales reporting
- */
 @Getter
 @Setter
 @NoArgsConstructor

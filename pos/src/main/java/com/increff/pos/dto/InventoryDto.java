@@ -35,46 +35,22 @@ public class InventoryDto extends AbstractDto<InventoryForm> {
         return convertUtil.convertList(inventoryPojos, InventoryResponse.class);
     }
 
-//    TODO: ask about responsive entity returning
     public ResponseEntity<String> uploadInventory(MultipartFile file) {
         validationUtil.validateTsvFile(file);
-        List<InventoryFormWithRow> inventoryFormsWithRow = TsvParserUtil.parseInventoryTsvWithRow(file);
-        
-        // Validate all forms and collect errors
+        List<InventoryFormWithRow> allForms = parseInventoryFile(file);
         List<ValidationError> allErrors = new ArrayList<>();
-        allErrors.addAll(validationUtil.validateInventoryFormsWithRow(inventoryFormsWithRow));
+        allErrors.addAll(validateInventoryForms(allForms));
+        List<InventoryFormWithRow> validForms = filterValidForms(allForms, allErrors);
+        Map<Integer, Integer> validProductRowMap = mapProductIdsToRowNumbers(validForms);
 
-        Set<Integer> invalidRowInfo = allErrors.stream()
-                .map(ValidationError::getRowNumber)
-                .collect(Collectors.toSet());
-        // Get valid forms for API validation
-        List<InventoryFormWithRow> validForms = inventoryFormsWithRow.stream()
-                .filter(form -> !invalidRowInfo.contains(form.getRowNumber()))
-                .collect(Collectors.toList());
-
-
-        Map<Integer, Integer> validRowsByPrductId = new HashMap<>();
-        for (InventoryFormWithRow validForm : validForms) {
-            validRowsByPrductId.put(validForm.getForm().getProductId(), validForm.getRowNumber());
-        }
-
-        if(!validRowsByPrductId.isEmpty()) {
-            Map<Integer, ValidationError> errorsByRowNum = inventoryApi.validateInventoryWithoutSaving(validRowsByPrductId);
-            allErrors.addAll(errorsByRowNum.entrySet().stream()
-                    .sorted(Map.Entry.comparingByKey())
-                    .map(Map.Entry::getValue)
-                    .collect(Collectors.toList()));
-        }
+        allErrors.addAll(validateInventoryWithoutSaving(validProductRowMap));
 
         if (allErrors.isEmpty()) {
-            List<InventoryPojo> validatedInventory = validForms.stream()
-                    .map(formWithRow ->
-                        convertUtil.convert(formWithRow.getForm(), InventoryPojo.class)) // we shud just be using inventoryforms
-                    .collect(Collectors.toList());
-            inventoryApi.bulkCreateOrUpdateInventory(validatedInventory);
+            List<InventoryPojo> pojos = convertToInventoryPojos(validForms);
+            inventoryApi.bulkCreateOrUpdateInventory(pojos);
         }
 
-        return TsvResponseUtil.generateInventoryTsvResponse(inventoryFormsWithRow, allErrors);
+        return TsvResponseUtil.generateInventoryTsvResponse(allForms, allErrors);
     }
 
     public InventoryResponse updateInventoryByProductId(Integer productId, InventoryUpdateForm inventoryUpdateForm) {
@@ -82,5 +58,46 @@ public class InventoryDto extends AbstractDto<InventoryForm> {
         validateForm(inventoryUpdateForm);
         InventoryPojo updated = inventoryApi.updateInventoryByProductId(productId, inventoryUpdateForm.getQuantity());
         return convertUtil.convert(updated, InventoryResponse.class);
+    }
+
+    private List<InventoryFormWithRow> parseInventoryFile(MultipartFile file) {
+        return TsvParserUtil.parseInventoryTsvWithRow(file);
+    }
+
+    private List<ValidationError> validateInventoryForms(List<InventoryFormWithRow> inventoryFormsWithRow) {
+        return validationUtil.validateInventoryFormsWithRow(inventoryFormsWithRow);
+    }
+
+    private List<InventoryFormWithRow> filterValidForms(List<InventoryFormWithRow> allForms, List<ValidationError> allErrors) {
+        Set<Integer> invalidRows = allErrors.stream()
+                .map(ValidationError::getRowNumber)
+                .collect(Collectors.toSet());
+
+        return allForms.stream()
+                .filter(form -> !invalidRows.contains(form.getRowNumber()))
+                .collect(Collectors.toList());
+    }
+
+    private Map<Integer, Integer> mapProductIdsToRowNumbers(List<InventoryFormWithRow> validForms) {
+        Map<Integer, Integer> productRowMap = new HashMap<>();
+        for (InventoryFormWithRow form : validForms) {
+            productRowMap.put(form.getForm().getProductId(), form.getRowNumber());
+        }
+        return productRowMap;
+    }
+
+    private List<ValidationError> validateInventoryWithoutSaving(Map<Integer, Integer> productRowMap) {
+        if (productRowMap.isEmpty()) return Collections.emptyList();
+
+        return inventoryApi.validateInventoryWithoutSaving(productRowMap).entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toList());
+    }
+
+    private List<InventoryPojo> convertToInventoryPojos(List<InventoryFormWithRow> validForms) {
+        return validForms.stream()
+                .map(form -> convertUtil.convert(form.getForm(), InventoryPojo.class))
+                .collect(Collectors.toList());
     }
 }

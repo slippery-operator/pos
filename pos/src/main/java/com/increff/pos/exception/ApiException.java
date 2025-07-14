@@ -14,27 +14,14 @@ public class ApiException extends RuntimeException {
         super(message, cause);
         this.errorType = errorType;
     }
-    
-    /**
-     * Get the error type enum
-     * @return The ErrorType enum value
-     */
     public ErrorType getErrorType() {
         return errorType;
     }
-    
-    /**
-     * Get the HTTP status code for this error type
-     * @return HTTP status code
-     */
+
     public int getHttpStatus() {
         return errorType.getHttpStatus();
     }
-    
-    /**
-     * Get the error code string for this error type
-     * @return Error code string
-     */
+
     public String getErrorCode() {
         return errorType.getErrorCode();
     }

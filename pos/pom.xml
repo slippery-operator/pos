@@ -59,6 +59,7 @@
 
 		<!-- Testing versions -->
 		<junit.version>4.12</junit.version>
+		<mockito.version>3.12.4</mockito.version>
 
 		<!-- Jetty configuration -->
 		<jetty.version>9.4.21.v20190926</jetty.version>
@@ -326,6 +327,22 @@
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
 			<version>${h2.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Mockito for mocking in unit tests -->
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>${mockito.version}</version>
+			<scope>test</scope>
+		</dependency>
+		
+		<!-- Mockito inline for final classes (optional but useful) -->
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-inline</artifactId>
+			<version>${mockito.version}</version>
 			<scope>test</scope>
 		</dependency>
 

@@ -47,9 +47,7 @@ public class OrderDto extends AbstractDto<OrderItemForm> {
     public List<OrderResponse> searchOrders(String startDate, String endDate, Integer orderId, int page, int size) {
         ZonedDateTime parsedStartDate = DateUtil.parseStartDate(startDate);
         ZonedDateTime parsedEndDate = DateUtil.parseEndDate(endDate);
-
         List<OrdersPojo> orders = orderApi.searchOrders(parsedStartDate, parsedEndDate, orderId, page, size);
-
         List<OrderResponse> retrievedOrders = orders.stream()
                 .map(order -> convertToOrderResponse(order, orderItemApi.getOrderItemsByOrderId(order.getId())))
                 .collect(Collectors.toList());

@@ -20,9 +20,10 @@ public class ReportController {
 
     @GetMapping("/day-sales")
     public List<DaySalesResponse> getDaySalesReport(@RequestParam String startDate, @RequestParam String endDate) {
-//        yyyy-MM-dd
+        //yyyy-MM-dd
         return dto.getDaySalesByDateRange(startDate, endDate);
     }
+
     @PostMapping("/run-daily-sales")
     public void runDailySalesNow() {
         flow.calculateDailySales();

@@ -50,6 +50,5 @@ public class OrderApi {
         }
         orderDao.updateInvoicePath(orderId, invoicePath);
     }
-
     // Removed getOrderItemsByOrderId - this should be called from OrderItemApi directly
 }

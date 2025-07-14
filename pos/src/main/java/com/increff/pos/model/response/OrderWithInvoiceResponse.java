@@ -9,10 +9,6 @@ import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.List;
 
-/**
- * Response class for order data with invoice information
- * Contains order information with additional invoice-related fields
- */
 @Getter
 @Setter
 @NoArgsConstructor

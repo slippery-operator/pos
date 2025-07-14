@@ -13,10 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZonedDateTime;
 
-/**
- * API layer for authentication operations
- * Handles user signup, login, and role assignment logic
- */
 @Service
 @Transactional
 public class AuthApi {
@@ -28,15 +24,12 @@ public class AuthApi {
     private PasswordEncoder passwordEncoder;
 
     public UserResponse signup(String name, String email, String password) {
-
         // Check if user already exists
         if (userDao.selectByEmail(email).isPresent()) {
             throw new ApiException(ErrorType.CONFLICT, "User with this email already exists");
         }
-
         // Assign role based on email pattern
         Role role = determineRole(email);
-
         // Create new user
         UserPojo user = new UserPojo();
         user.setEmail(email);
@@ -57,12 +50,6 @@ public class AuthApi {
         );
     }
 
-//    /**
-//     * Handle user login with credential validation
-//     * @param request login form data
-//     * @return UserResponse with user details
-//     * @throws ApiException if credentials are invalid
-//     */
     public UserResponse login(String email, String password) {
 
         // Find user by email
@@ -87,11 +74,6 @@ public class AuthApi {
         );
     }
 
-    /**
-     * Determine user role based on email pattern
-     * @param email user email
-     * @return Role enum value
-     */
     private Role determineRole(String email) {
         // Email patterns that indicate supervisor role
         if (email.contains("supervisor") || email.contains("admin")) {

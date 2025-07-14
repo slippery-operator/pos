@@ -15,10 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.increff.pos.util.StringUtil.toLowerCase;
@@ -57,42 +54,57 @@ public class ProductDto extends AbstractDto<ProductForm> {
 
     public ResponseEntity<String> uploadProducts(MultipartFile file) {
         validationUtil.validateTsvFile(file);
-        List<ProductFormWithRow> productFormsWithRow = TsvParserUtil.parseProductTsv(file);
-        
-        // Validate all forms and collect errors
+        List<ProductFormWithRow> allForms = parseProductFile(file);
         List<ValidationError> allErrors = new ArrayList<>();
-        allErrors.addAll(validationUtil.validateProductFormsWithRow(productFormsWithRow));
-        
-        // Get valid forms for flow validation
-        Set<Integer> invalidRowInfo = allErrors.stream()
-                .map(ValidationError::getRowNumber)
-                .collect(Collectors.toSet());
-        // Get valid forms for API validation
-        List<ProductFormWithRow> validForms = productFormsWithRow.stream()
-                .filter(form -> !invalidRowInfo.contains(form.getRowNumber()))
-                .collect(Collectors.toList());
-
-        if(!validForms.isEmpty()) {
-            Map<Integer, ValidationError> errorsByRowNum = flow.validateProductTsvUpload(validForms);
-            allErrors.addAll(errorsByRowNum.entrySet().stream()
-                    .sorted(Map.Entry.comparingByKey())
-                    .map(Map.Entry::getValue)
-                    .collect(Collectors.toList()));
-        }
-        // If no errors, save all valid products
+        allErrors.addAll(validateProductForms(allForms));
+        List<ProductFormWithRow> validForms = filterValidProductForms(allForms, allErrors);
+        allErrors.addAll(validateProductWithFlow(validForms));
         if (allErrors.isEmpty()) {
-            List<ProductPojo> validatedProducts = validForms.stream()
-                    .map(formWithRow ->
-                            convertUtil.convert(formWithRow.getForm(), ProductPojo.class)) // we shud just be using inventoryforms
-                    .collect(Collectors.toList());
-            flow.processProductTsvUpload(validatedProducts);
+            List<ProductPojo> productPojos = convertToProductPojos(validForms);
+            flow.processProductTsvUpload(productPojos);
         }
-        return TsvResponseUtil.generateProductTsvResponse(productFormsWithRow, allErrors);
+        return TsvResponseUtil.generateProductTsvResponse(allForms, allErrors);
     }
 
     public boolean checkProductExists(String barcode) {
         return api.checkProductExists(toLowerCase(barcode));
     }
+
+    private List<ProductFormWithRow> parseProductFile(MultipartFile file) {
+        return TsvParserUtil.parseProductTsv(file);
+    }
+
+    private List<ValidationError> validateProductForms(List<ProductFormWithRow> productForms) {
+        return validationUtil.validateProductFormsWithRow(productForms);
+    }
+
+    private List<ProductFormWithRow> filterValidProductForms(List<ProductFormWithRow> allForms, List<ValidationError> allErrors) {
+        Set<Integer> invalidRows = allErrors.stream()
+                .map(ValidationError::getRowNumber)
+                .collect(Collectors.toSet());
+
+        return allForms.stream()
+                .filter(form -> !invalidRows.contains(form.getRowNumber()))
+                .collect(Collectors.toList());
+    }
+
+    private List<ValidationError> validateProductWithFlow(List<ProductFormWithRow> validForms) {
+        if (validForms.isEmpty()) return Collections.emptyList();
+
+        Map<Integer, ValidationError> errorsByRowNum = flow.validateProductTsvUpload(validForms);
+
+        return errorsByRowNum.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toList());
+    }
+
+    private List<ProductPojo> convertToProductPojos(List<ProductFormWithRow> validForms) {
+        return validForms.stream()
+                .map(form -> convertUtil.convert(form.getForm(), ProductPojo.class))
+                .collect(Collectors.toList());
+    }
+
 
     private void validateUpdateInput(Integer id, ProductUpdateForm productUpdateForm) {
         validateId(id, "Product id");

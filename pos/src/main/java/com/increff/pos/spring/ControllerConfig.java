@@ -30,16 +30,6 @@ import javax.validation.ValidatorFactory;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
-/**
- * Web MVC configuration class that sets up controllers, Swagger documentation,
- * CORS support, and Jackson object mapping.
- * 
- * This class consolidates all web-related configuration including:
- * - Swagger API documentation
- * - CORS configuration for cross-origin requests
- * - Jackson JSON serialization configuration
- * - Resource handlers for static content
- */
 @Configuration
 @EnableWebMvc
 @EnableSwagger2
@@ -50,13 +40,7 @@ public class ControllerConfig extends WebMvcConfigurerAdapter {
 	public void setApplicationContext(ApplicationContext applicationContext) {
 		this.applicationContext = applicationContext;
 	}
-	
-	/**
-	 * Creates and configures the Swagger API documentation bean.
-	 * This bean generates API documentation for all controllers in the specified package.
-	 * 
-	 * @return Configured Docket bean for Swagger
-	 */
+
 	@Bean
 	public Docket api() {
 		return new Docket(DocumentationType.SWAGGER_2)
@@ -66,12 +50,6 @@ public class ControllerConfig extends WebMvcConfigurerAdapter {
 				.build();
 	}
 
-	/**
-	 * Configures resource handlers for Swagger UI and static content.
-	 * This method sets up the paths for accessing Swagger documentation and static resources.
-	 * 
-	 * @param registry The resource handler registry
-	 */
 	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry) {
 		registry.addResourceHandler("/swagger-ui.html").addResourceLocations("classpath:/META-INF/resources/");
@@ -79,12 +57,6 @@ public class ControllerConfig extends WebMvcConfigurerAdapter {
 		registry.addResourceHandler("/static/**").addResourceLocations("/static/");
 	}
 
-	/**
-	 * Configures CORS (Cross-Origin Resource Sharing) support at the MVC level.
-	 * This provides a fallback CORS configuration, but Spring Security CORS takes precedence.
-	 * 
-	 * @param registry The CORS registry
-	 */
 	@Override
 	public void addCorsMappings(CorsRegistry registry) {
 		registry.addMapping("/**")
@@ -95,13 +67,6 @@ public class ControllerConfig extends WebMvcConfigurerAdapter {
 				.maxAge(3600);
 	}
 
-	/**
-	 * Creates and configures the HandlerMappingIntrospector bean.
-	 * This bean is required for Spring MVC request mapping introspection.
-	 * 
-	 * @param context The application context
-	 * @return Configured HandlerMappingIntrospector bean
-	 */
 	@Bean
 	public HandlerMappingIntrospector mvcHandlerMappingIntrospector(ApplicationContext context) {
 		return new HandlerMappingIntrospector(context);

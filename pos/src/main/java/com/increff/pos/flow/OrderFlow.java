@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class OrderFlow {
 
     @Autowired
@@ -33,89 +34,40 @@ public class OrderFlow {
     @Autowired
     private InventoryApi inventoryApi;
 
-    /**
-     * Creates an order from a list of OrderItemModel objects.
-     * This method provides better readability and reduces the risk of index mismatches
-     * by using a structured model instead of separate lists.
-     * 
-     * @param orderItems List of OrderItemModel containing barcode, quantity, and MRP
-     * @return Created OrdersPojo
-     */
-//    @Transactional
-//    public OrdersPojo createOrder(List<OrderItemModel> orderItems) {
-//        // Extract barcodes from OrderItemModel for product lookup
-//        List<String> barcodes = orderItems.stream()
-//                .map(OrderItemModel::getBarcode)
-//                .collect(java.util.stream.Collectors.toList());
-//
-//        // Look up products by their barcodes
-//        Map<String, Integer> productBarcodeToId = productApi.findProductsByBarcodes(barcodes);
-//
-//        // Validate that all barcodes were found
-//        for (OrderItemModel orderItem : orderItems) {
-//            if (!productBarcodeToId.containsKey(orderItem.getBarcode())) {
-//                throw new ApiException(ErrorType.NOT_FOUND, "Product not found");
-//            }
-//        }
-//
-//        // Validate inventory availability for each item
-//        for (OrderItemModel orderItem : orderItems) {
-//            Integer productId = productBarcodeToId.get(orderItem.getBarcode());
-//            inventoryApi.validateInventoryAvailability(productId, orderItem.getQuantity());
-//        }
-//
-//        // Create the main order record
-//        OrdersPojo createdOrder = orderApi.createOrder();
-//
-//        // Process each order item using OrderItemModel for better readability
-//        List<OrderItemsPojo> orderItemsToCreate = new ArrayList<>();
-//        for (OrderItemModel orderItem : orderItems) {
-//
-//            Integer productId = productBarcodeToId.get(orderItem.getBarcode());
-//
-//            inventoryApi.reduceInventory(productId, orderItem.getQuantity());
-//
-//            OrderItemsPojo orderItemPojo = new OrderItemsPojo(createdOrder.getId(), productId, orderItem.getQuantity(), orderItem.getMrp());
-//            orderItemsToCreate.add(orderItemPojo);
-//        }
-//        // Bulk create all order items
-//         orderItemApi.createOrderItemsGroup(orderItemsToCreate);
-//
-//        return createdOrder;
-//    }
     @Transactional
     public OrdersPojo createOrder(List<OrderItemForm> orderItems) {
-        List<String> barcodes = orderItems.stream()
-                .map(OrderItemForm::getBarcode)
-                .collect(Collectors.toList());
+        Map<String, Integer> productBarcodeToId =  validateOrderCreation(orderItems);
+        OrdersPojo createdOrder = orderApi.createOrder();
+        List<OrderItemsPojo> orderItemsToCreate = constructOrderItemList(orderItems, productBarcodeToId, createdOrder.getId());
+        orderItemApi.createOrderItemsGroup(orderItemsToCreate);
+        return createdOrder;
+    }
 
+    private Map<String, Integer> validateOrderCreation(List<OrderItemForm> orderItems) {
+        List<String> barcodes = orderItems.stream().map(OrderItemForm::getBarcode).collect(Collectors.toList());
         Map<String, Integer> productBarcodeToId = productApi.findProductsByBarcodes(barcodes);
-
         for (OrderItemForm orderItem : orderItems) {
             if (!productBarcodeToId.containsKey(orderItem.getBarcode())) {
                 throw new ApiException(ErrorType.NOT_FOUND, "Product not found");
             }
         }
-
         for (OrderItemForm orderItem : orderItems) {
             Integer productId = productBarcodeToId.get(orderItem.getBarcode());
             inventoryApi.validateInventoryAvailability(productId, orderItem.getQuantity());
         }
+        return productBarcodeToId;
+    }
 
-        // Create the main order record
-        OrdersPojo createdOrder = orderApi.createOrder();
-
-        // Process each order item using OrderItemModel for better readability
+    private List<OrderItemsPojo> constructOrderItemList(List<OrderItemForm> orderItemForms,
+                                                        Map<String, Integer> productBarcodeToId, Integer orderId) {
         List<OrderItemsPojo> orderItemsToCreate = new ArrayList<>();
-        for (OrderItemForm orderItem : orderItems) {
+        for (OrderItemForm orderItem : orderItemForms) {
             Integer productId = productBarcodeToId.get(orderItem.getBarcode());
             inventoryApi.reduceInventory(productId, orderItem.getQuantity());
-            OrderItemsPojo orderItemPojo = new OrderItemsPojo(createdOrder.getId(), productId, orderItem.getQuantity(), orderItem.getMrp());
+            OrderItemsPojo orderItemPojo = new OrderItemsPojo(orderId, productId,
+                    orderItem.getQuantity(), orderItem.getMrp());
             orderItemsToCreate.add(orderItemPojo);
         }
-        // Bulk create all order items
-        orderItemApi.createOrderItemsGroup(orderItemsToCreate);
-
-        return createdOrder;
+        return orderItemsToCreate;
     }
 }

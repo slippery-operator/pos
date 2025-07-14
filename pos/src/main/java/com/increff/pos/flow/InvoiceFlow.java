@@ -50,71 +50,38 @@ public class InvoiceFlow {
         if (invoiceApi.existsByOrderId(orderId)) {
             throw new ApiException(ErrorType.CONFLICT, "Invoice already exists for order");
         }
-
         OrdersPojo order = orderApi.getOrderById(orderId);
         List<OrderItemsPojo> orderItems = orderItemApi.getOrderItemsByOrderId(orderId);
-
         if (orderItems == null || orderItems.isEmpty()) {
             throw new ApiException(ErrorType.INTERNAL_SERVER_ERROR, "");
         }
-
         double totalRevenue = orderItems.stream()
                 .mapToDouble(item -> item.getQuantity() * item.getSellingPrice())
                 .sum();
-
         List<OrderItemInvoiceResponse> orderItemResponseList = orderItems.stream()
                 .map(this::convertToOrderItemInvoiceResponse)
                 .collect(java.util.stream.Collectors.toList());
-
         return new OrderWithInvoiceResponse(orderId, order.getTime(), totalRevenue, orderItemResponseList);
     }
 
-    /**
-     * Process invoice generation after external service call
-     * Orchestrates file saving and database operations
-     * 
-     * @param orderId The ID of the order
-     * @param base64Pdf Base64 encoded PDF from external service
-     * @param orderData Order data for invoice creation
-     * @return The file path where the PDF is stored locally
-     * @throws ApiException if file operations or database operations fail
-     */
     public String processInvoiceGeneration(Integer orderId, String base64Pdf, OrderWithInvoiceResponse orderData) {
         String invoicePath = PdfUtil.savePdfLocally(base64Pdf, orderId, applicationProperties.getInvoiceStoragePath());
-
         InvoicePojo invoice = new InvoicePojo(orderId, orderData.getTime(),
                 orderData.getOrderItems().size(), invoicePath, orderData.getTotalRevenue());
-
-        // Create invoice record in database using API
         invoiceApi.createInvoice(invoice);
-
         return invoicePath;
     }
 
-    /**
-     * Get invoice file path for order
-     * Delegates to API layer for data retrieval
-     * 
-     * @param orderId The ID of the order
-     * @return The file path where the invoice PDF is stored
-     * @throws ApiException if invoice not found
-     */
     public String getInvoicePath(Integer orderId) {
         return invoiceApi.getInvoicePathByOrderId(orderId);
     }
+
     /**
      * Convert internal order item to response format
      * Maps internal data structure to response requirements
      */
     private OrderItemInvoiceResponse convertToOrderItemInvoiceResponse(OrderItemsPojo item) {
-        // Get product details from Product API
         ProductPojo product = productApi.getProductById(item.getProductId());
-        
-        return new OrderItemInvoiceResponse(
-            product.getName(),
-            product.getBarcode(),
-            item.getQuantity(),
-            item.getSellingPrice()
-        );
+        return new OrderItemInvoiceResponse(product.getName(), product.getBarcode(), item.getQuantity(), item.getSellingPrice());
     }
 } 
