@@ -374,11 +374,18 @@ public class InventoryApiTest {
      */
     @Test
     public void testValidateInventoryWithoutSaving_AllValid() {
-        // Given: Valid inventory data
+        // Given: Valid inventory data (productId -> rowNumber mapping)
         Map<Integer, Integer> rowByProductId = new HashMap<>();
-        rowByProductId.put(1, 50);
-        rowByProductId.put(2, 75);
-        rowByProductId.put(3, 100);
+        rowByProductId.put(1, 1);  // Product ID 1 on row 1
+        rowByProductId.put(2, 2);  // Product ID 2 on row 2
+        rowByProductId.put(3, 3);  // Product ID 3 on row 3
+
+        // Mock: All products exist
+        Map<Integer, Boolean> productExistence = new HashMap<>();
+        productExistence.put(1, true);
+        productExistence.put(2, true);
+        productExistence.put(3, true);
+        when(inventoryDao.validateProductsExist(Arrays.asList(1, 2, 3))).thenReturn(productExistence);
 
         // When: API validates inventory
         Map<Integer, ValidationError> result = inventoryApi.validateInventoryWithoutSaving(rowByProductId);
@@ -393,21 +400,28 @@ public class InventoryApiTest {
      */
     @Test
     public void testValidateInventoryWithoutSaving_SomeInvalid() {
-        // Given: Invalid inventory data (negative quantities)
+        // Given: Invalid inventory data (some products don't exist)
         Map<Integer, Integer> rowByProductId = new HashMap<>();
-        rowByProductId.put(1, 50);    // Valid
-        rowByProductId.put(2, -10);   // Invalid - negative quantity
-        rowByProductId.put(3, 100);   // Valid
+        rowByProductId.put(1, 1);    // Product ID 1 on row 1 - exists
+        rowByProductId.put(2, 2);    // Product ID 2 on row 2 - doesn't exist
+        rowByProductId.put(3, 3);    // Product ID 3 on row 3 - exists
+
+        // Mock: Product 2 doesn't exist
+        Map<Integer, Boolean> productExistence = new HashMap<>();
+        productExistence.put(1, true);
+        productExistence.put(2, false);  // Product 2 doesn't exist
+        productExistence.put(3, true);
+        when(inventoryDao.validateProductsExist(Arrays.asList(1, 2, 3))).thenReturn(productExistence);
 
         // When: API validates inventory
         Map<Integer, ValidationError> result = inventoryApi.validateInventoryWithoutSaving(rowByProductId);
 
         // Then: Validation errors should be returned for invalid entries
         assertEquals(1, result.size());
-        assertTrue(result.containsKey(2));
+        assertTrue(result.containsKey(2));  // Row 2 should have error
         ValidationError error = result.get(2);
         assertNotNull(error);
-        assertTrue(error.getErrorMessage().contains("negative") || error.getErrorMessage().contains("invalid"));
+        assertTrue(error.getErrorMessage().contains("does not exist"));
     }
 
     /**
@@ -418,6 +432,9 @@ public class InventoryApiTest {
     public void testValidateInventoryWithoutSaving_EmptyInput() {
         // Given: Empty inventory data
         Map<Integer, Integer> emptyRowByProductId = new HashMap<>();
+
+        // Mock: Empty list validation (no products to validate)
+        when(inventoryDao.validateProductsExist(Collections.emptyList())).thenReturn(new HashMap<>());
 
         // When: API validates inventory
         Map<Integer, ValidationError> result = inventoryApi.validateInventoryWithoutSaving(emptyRowByProductId);
@@ -484,5 +501,32 @@ public class InventoryApiTest {
         inventoryApi.validateInventoryAvailability(productId, requiredQuantity);
 
         verify(inventoryDao).selectByProductId(productId);
+    }
+
+    /**
+     * Test edge case - zero quantity validation.
+     * Verifies that zero quantity is handled correctly.
+     */
+    @Test
+    public void testValidateInventoryWithoutSaving_NonExistentProduct() {
+        // Given: Inventory data with non-existent product ID
+        Map<Integer, Integer> rowByProductId = new HashMap<>();
+        rowByProductId.put(999, 1);  // Product ID 999 on row 1 - doesn't exist
+
+        // Mock: Product 999 doesn't exist
+        Map<Integer, Boolean> productExistence = new HashMap<>();
+        productExistence.put(999, false);  // Product 999 doesn't exist
+        when(inventoryDao.validateProductsExist(Arrays.asList(999))).thenReturn(productExistence);
+
+        // When: API validates inventory
+        Map<Integer, ValidationError> result = inventoryApi.validateInventoryWithoutSaving(rowByProductId);
+
+        // Then: Validation error should be returned for non-existent product
+        assertEquals(1, result.size());
+        assertTrue(result.containsKey(1));  // Row 1 should have error
+        ValidationError error = result.get(1);
+        assertNotNull(error);
+        assertEquals("productId", error.getField());
+        assertTrue(error.getErrorMessage().contains("Product with ID 999 does not exist"));
     }
 } 

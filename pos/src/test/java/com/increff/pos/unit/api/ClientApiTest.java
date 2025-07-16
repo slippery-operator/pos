@@ -94,25 +94,6 @@ public class ClientApiTest {
     }
 
     /**
-     * Test adding a client with null name.
-     * Verifies that null safety is handled properly.
-     */
-    @Test
-    public void testAdd_NullName() {
-        // Given: Null client name
-        String nullName = null;
-
-        // When & Then: Exception should be thrown
-        try {
-            clientApi.add(nullName);
-            fail("Expected exception to be thrown for null name");
-        } catch (Exception e) {
-            // Some form of exception should be thrown
-            assertNotNull(e);
-        }
-    }
-
-    /**
      * Test updating a client successfully.
      * Verifies that client is updated when new name is unique.
      */

@@ -13,6 +13,6 @@ public class Constants {
     public static final String SESSION_USER_ID = "userId";
     public static final String SESSION_ROLE = "userRole";
     public static final String SESSION_LAST_CHECKED_TIME = "lastCheckedTime";
-    public static final long SESSION_REVALIDATION_INTERVAL_MS = 300_000;
+    public static final long SESSION_REVALIDATION_INTERVAL_MS = 300_000_000;
     // Optional: Add comments if needed
 }

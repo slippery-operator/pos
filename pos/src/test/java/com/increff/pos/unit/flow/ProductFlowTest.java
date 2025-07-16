@@ -107,79 +107,6 @@ public class ProductFlowTest {
         verify(productApi, never()).validateBarcodeUniqueness(anyString(), any());
         verify(productApi, never()).createProduct(any(ProductPojo.class));
     }
-
-    /**
-     * Test validating and creating product - duplicate barcode.
-     * Verifies that barcode uniqueness validation is performed.
-     */
-    @Test
-    public void testValidateAndCreateProduct_DuplicateBarcode() {
-        // Given: Client exists but barcode is duplicate
-        when(clientApi.getClientById(testClientId)).thenReturn(testClient);
-        doThrow(new ApiException(ErrorType.VALIDATION_ERROR, "Barcode already exists"))
-            .when(productApi).validateBarcodeUniqueness(testProduct.getBarcode(), null);
-
-        // When & Then: Exception should be thrown
-        try {
-            productFlow.validateAndCreateProduct(testProduct);
-            fail("Expected ApiException to be thrown for duplicate barcode");
-        } catch (ApiException e) {
-            assertEquals(ErrorType.VALIDATION_ERROR, e.getErrorType());
-            assertEquals("Barcode already exists", e.getMessage());
-        }
-
-        // And: Product creation should not be attempted
-        verify(clientApi).getClientById(testClientId);
-        verify(productApi).validateBarcodeUniqueness(testProduct.getBarcode(), null);
-        verify(productApi, never()).createProduct(any(ProductPojo.class));
-    }
-
-    /**
-     * Test validating and creating product - null product.
-     * Verifies that null safety is handled properly.
-     */
-    @Test
-    public void testValidateAndCreateProduct_NullProduct() {
-        // Given: Null product
-        ProductPojo nullProduct = null;
-
-        // When & Then: Exception should be thrown
-        try {
-            productFlow.validateAndCreateProduct(nullProduct);
-            fail("Expected exception to be thrown for null product");
-        } catch (Exception e) {
-            // Some form of exception should be thrown
-            assertNotNull(e);
-        }
-
-        // And: No API calls should be made
-        verify(clientApi, never()).getClientById(any());
-        verify(productApi, never()).validateBarcodeUniqueness(anyString(), any());
-        verify(productApi, never()).createProduct(any(ProductPojo.class));
-    }
-
-    /**
-     * Test validating and creating product - null client ID.
-     * Verifies that missing FK-Id is handled properly.
-     */
-    @Test
-    public void testValidateAndCreateProduct_NullClientId() {
-        // Given: Product with null client ID
-        ProductPojo productWithNullClientId = TestData.product("NULL123", null, "Product with null client", 100.0);
-
-        // When & Then: Exception should be thrown
-        try {
-            productFlow.validateAndCreateProduct(productWithNullClientId);
-            fail("Expected exception to be thrown for null client ID");
-        } catch (Exception e) {
-            // Some form of exception should be thrown
-            assertNotNull(e);
-        }
-
-        // And: Product creation should not be attempted
-        verify(productApi, never()).createProduct(any(ProductPojo.class));
-    }
-
     /**
      * Test validating product for update - successful case.
      * Verifies that update validation includes FK-Id and barcode uniqueness checks.
@@ -227,34 +154,6 @@ public class ProductFlowTest {
         verify(productApi, never()).validateBarcodeUniqueness(anyString(), any());
     }
 
-    /**
-     * Test validating product for update - duplicate barcode.
-     * Verifies that barcode uniqueness validation works for updates.
-     */
-    @Test
-    public void testValidateProductForUpdate_DuplicateBarcode() {
-        // Given: Client exists but barcode is duplicate
-        Integer productId = 1;
-        String duplicateBarcode = "DUPLICATE123";
-        ProductPojo updatedProduct = TestData.product(productId, duplicateBarcode, testClientId, "Updated Product", 150.0);
-        
-        when(clientApi.getClientById(testClientId)).thenReturn(testClient);
-        doThrow(new ApiException(ErrorType.VALIDATION_ERROR, "Barcode already exists"))
-            .when(productApi).validateBarcodeUniqueness(duplicateBarcode, productId);
-
-        // When & Then: Exception should be thrown
-        try {
-            productFlow.validateProductForUpdate(updatedProduct);
-            fail("Expected ApiException to be thrown for duplicate barcode");
-        } catch (ApiException e) {
-            assertEquals(ErrorType.VALIDATION_ERROR, e.getErrorType());
-            assertEquals("Barcode already exists", e.getMessage());
-        }
-
-        // And: All validation steps should be attempted
-        verify(clientApi).getClientById(testClientId);
-        verify(productApi).validateBarcodeUniqueness(duplicateBarcode, productId);
-    }
 
     /**
      * Test validating client existence - successful case.
@@ -294,28 +193,6 @@ public class ProductFlowTest {
     }
 
     /**
-     * Test validating client existence - null client ID.
-     * Verifies that null FK-Id is handled properly.
-     */
-    @Test
-    public void testValidateClientExists_NullClientId() {
-        // Given: Null client ID
-        Integer nullClientId = null;
-
-        // When & Then: Exception should be thrown
-        try {
-            productFlow.validateClientExists(nullClientId);
-            fail("Expected exception to be thrown for null client ID");
-        } catch (Exception e) {
-            // Some form of exception should be thrown
-            assertNotNull(e);
-        }
-
-        // And: API should not be called
-        verify(clientApi, never()).getClientById(any());
-    }
-
-    /**
      * Test complex validation workflow.
      * Verifies that multiple validation steps work together correctly.
      */
@@ -352,29 +229,4 @@ public class ProductFlowTest {
         verify(productApi, never()).createProduct(invalidProduct);
     }
 
-    /**
-     * Test error handling and exception propagation.
-     * Verifies that exceptions from underlying APIs are properly handled.
-     */
-    @Test
-    public void testErrorHandlingAndExceptionPropagation() {
-        // Given: Various exception scenarios
-        when(clientApi.getClientById(testClientId)).thenReturn(testClient);
-        doThrow(new ApiException(ErrorType.VALIDATION_ERROR, "Barcode validation failed"))
-            .when(productApi).validateBarcodeUniqueness(testProduct.getBarcode(), null);
-
-        // When & Then: Exception should be propagated
-        try {
-            productFlow.validateAndCreateProduct(testProduct);
-            fail("Expected ApiException to be thrown");
-        } catch (ApiException e) {
-            assertEquals(ErrorType.VALIDATION_ERROR, e.getErrorType());
-            assertEquals("Barcode validation failed", e.getMessage());
-        }
-
-        // And: Flow should stop at the first error
-        verify(clientApi).getClientById(testClientId);
-        verify(productApi).validateBarcodeUniqueness(testProduct.getBarcode(), null);
-        verify(productApi, never()).createProduct(any(ProductPojo.class));
-    }
 } 

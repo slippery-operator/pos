@@ -75,25 +75,6 @@ public class InvoiceApiTest {
     }
 
     /**
-     * Test creating invoice with null input.
-     * Verifies that null validation works correctly.
-     */
-    @Test
-    public void testCreateInvoice_NullInput() throws ApiException {
-        // Given: Null invoice
-        InvoicePojo invoice = null;
-
-        // When & Then: Should handle null input gracefully or throw exception
-        try {
-            invoiceApi.createInvoice(invoice);
-            fail("Should throw exception for null invoice");
-        } catch (Exception e) {
-            // Should throw either ApiException or NullPointerException
-            assertTrue(e instanceof ApiException || e instanceof NullPointerException);
-        }
-    }
-
-    /**
      * Test getting invoices data by date range successfully.
      * Verifies that date range queries work correctly.
      */

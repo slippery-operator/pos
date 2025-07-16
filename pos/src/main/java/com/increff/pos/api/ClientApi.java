@@ -20,9 +20,6 @@ public class ClientApi {
     private ClientDao clientDao;
 
     public ClientPojo add(String name) {
-        if (name == null) {
-            throw new ApiException(ErrorType.VALIDATION_ERROR, "Client name cannot be null");
-        }
         ClientPojo existingClient = clientDao.selectByName(name);
         if (existingClient != null) {
             throw new ApiException(ErrorType.CONFLICT, "Client with name: " + name + " already exists.");
@@ -57,33 +54,25 @@ public class ClientApi {
         return clientDao.selectAll(page, size);
     }
 
-    // ======================== PAGINATION METHODS ========================
-
-
     public List<ClientPojo> searchByName(String name, int page, int size) {
         return clientDao.selectByNameContaining(name, page, size);
     }
-
-
 
     public Map<Integer, Boolean> validateClientsExistBatch(Set<Integer> clientIds) {
         if (clientIds == null || clientIds.isEmpty()) {
             return Collections.EMPTY_MAP;
         }
-        
         // Get all existing clients in one query
         List<ClientPojo> existingClients = clientDao.selectByIds(clientIds);
         Set<Integer> existingClientIds = existingClients.stream()
                 .map(ClientPojo::getClientId)
                 .collect(Collectors.toSet());
-        
         // Create result map (true if client exists, false if not found)
         Map<Integer, Boolean> result = clientIds.stream()
                 .collect(Collectors.toMap(
                         clientId -> clientId,
                         clientId -> existingClientIds.contains(clientId)
                 ));
-        
         return result;
     }
 }

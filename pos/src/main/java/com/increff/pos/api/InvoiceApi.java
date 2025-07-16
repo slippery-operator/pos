@@ -23,9 +23,6 @@ public class InvoiceApi {
     private InvoiceDao invoiceDao;
 
     public InvoicePojo createInvoice(InvoicePojo invoice) {
-        if (invoice == null) {
-            throw new ApiException(ErrorType.VALIDATION_ERROR, "Invoice cannot be null");
-        }
         invoiceDao.insert(invoice);
         return invoice;
     }

@@ -61,12 +61,10 @@ public class TsvParserUtil {
 
     private static void validateHeaders(String headerLine, String[] expectedHeaders) {
         String[] actualHeaders = parseTabDelimitedLine(headerLine);
-        
         if (actualHeaders.length < 4) {
             throw new ApiException(ErrorType.BAD_REQUEST, 
                 "Invalid TSV format: Expected at least 4 columns (barcode, client_id, name, mrp), got " + actualHeaders.length);
         }
-        
         // Check if required headers are present (case-insensitive)
         for (int i = 0; i < Math.min(actualHeaders.length, expectedHeaders.length); i++) {
             if (!actualHeaders[i].trim().toLowerCase().equals(expectedHeaders[i].toLowerCase())) {
@@ -81,7 +79,6 @@ public class TsvParserUtil {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
             String line;
             boolean isFirstLine = true;
-
             while ((line = reader.readLine()) != null) {
                 if (isFirstLine) {
                     isFirstLine = false;
@@ -98,7 +95,6 @@ public class TsvParserUtil {
         } catch (Exception e) {
             throw new ApiException(ErrorType.INTERNAL_SERVER_ERROR, "Error parsing inventory TSV file");
         }
-
         return inventoryForms;
     }
 
@@ -106,7 +102,6 @@ public class TsvParserUtil {
         List<String> fields = new ArrayList<>();
         StringBuilder currentField = new StringBuilder();
         boolean inQuotes = false;
-
         for (int i = 0; i < line.length(); i++) {
             char c = line.charAt(i);
 
@@ -119,76 +114,10 @@ public class TsvParserUtil {
                 currentField.append(c);
             }
         }
-
         // Add the last field
         fields.add(currentField.toString());
 
         return fields.toArray(new String[0]);
-    }
-
-    public static List<OrderItemForm> parseOrderItemsTsv(MultipartFile file) {
-        List<OrderItemForm> orderItems = new ArrayList<>();
-
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
-            String headerLine = reader.readLine();
-            if (headerLine == null) {
-                throw new ApiException(ErrorType.VALIDATION_ERROR, "Empty TSV file");
-            }
-
-            // Validate header
-            String[] headers = headerLine.split("\t");
-            if (headers.length != 3 ||
-                    !headers[0].trim().equalsIgnoreCase("barcode") ||
-                    !headers[1].trim().equalsIgnoreCase("mrp") ||
-                    !headers[2].trim().equalsIgnoreCase("quantity")) {
-                throw new ApiException(ErrorType.VALIDATION_ERROR, 
-                    "Invalid TSV format. Expected headers: barcode, mrp, quantity");
-            }
-
-            String line;
-            int lineNumber = 2;
-            while ((line = reader.readLine()) != null) {
-                String[] values = line.split("\t");
-                if (values.length != 3) {
-                    throw new ApiException(ErrorType.VALIDATION_ERROR, 
-                        "Invalid data format at line " + lineNumber);
-                }
-
-                try {
-                    OrderItemForm orderItem = new OrderItemForm();
-                    orderItem.setBarcode(values[0].trim());
-                    orderItem.setMrp(Double.parseDouble(values[1].trim()));
-                    orderItem.setQuantity(Integer.parseInt(values[2].trim()));
-
-                    if (orderItem.getQuantity() <= 0) {
-                        throw new ApiException(ErrorType.VALIDATION_ERROR, 
-                            "Quantity must be positive at line " + lineNumber);
-                    }
-                    if (orderItem.getMrp() <= 0) {
-                        throw new ApiException(ErrorType.VALIDATION_ERROR, 
-                            "MRP must be positive at line " + lineNumber);
-                    }
-
-                    orderItems.add(orderItem);
-                } catch (NumberFormatException e) {
-                    throw new ApiException(ErrorType.VALIDATION_ERROR, 
-                        "Invalid number format at line " + lineNumber);
-                }
-
-                lineNumber++;
-            }
-
-            if (orderItems.isEmpty()) {
-                throw new ApiException(ErrorType.VALIDATION_ERROR, 
-                    "No valid order items found in TSV file");
-            }
-
-        } catch (IOException e) {
-            throw new ApiException(ErrorType.VALIDATION_ERROR, 
-                "Error reading TSV file: " + e.getMessage());
-        }
-
-        return orderItems;
     }
 
     public static List<InventoryFormWithRow> parseInventoryTsvWithRow(MultipartFile file) {

@@ -36,9 +36,6 @@ public class ProductFlow {
     private ConvertUtil convertUtil;
 
     public ProductPojo validateAndCreateProduct(ProductPojo productPojo) {
-        if (productPojo == null) {
-            throw new ApiException(ErrorType.VALIDATION_ERROR, "Product cannot be null");
-        }
         // Validate client exists
         validateClientExists(productPojo.getClientId());
         // Validate barcode uniqueness
@@ -90,12 +87,6 @@ public class ProductFlow {
         return errorByRow;
     }
     public void validateProductForUpdate(ProductPojo product) {
-        if (product == null) {
-            throw new ApiException(ErrorType.VALIDATION_ERROR, "Product cannot be null");
-        }
-        if (product.getClientId() == null) {
-            throw new ApiException(ErrorType.VALIDATION_ERROR, "Product client ID cannot be null");
-        }
         // Validate client exists
         clientApi.getClientById(product.getClientId());
         // Validate barcode uniqueness (exclude current product ID)
@@ -103,9 +94,6 @@ public class ProductFlow {
     }
 
     public void validateClientExists(Integer clientId) {
-        if (clientId == null) {
-            throw new ApiException(ErrorType.VALIDATION_ERROR, "Client ID cannot be null");
-        }
         clientApi.getClientById(clientId);
     }
 }

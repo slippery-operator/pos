@@ -163,7 +163,7 @@ public class OrderFlowTest {
         when(productApi.findProductsByBarcodes(any())).thenReturn(barcodeToIdMap);
         
         // Mock inventory validation to throw exception
-        doThrow(new ApiException(ErrorType.VALIDATION_ERROR, "Insufficient inventory"))
+        doThrow(new ApiException(ErrorType.BAD_REQUEST, "Insufficient inventory"))
             .when(inventoryApi).validateInventoryAvailability(testProduct1.getId(), 100);
 
         // When & Then: OrderFlow should throw exception
@@ -171,7 +171,7 @@ public class OrderFlowTest {
             orderFlow.createOrder(orderItems);
             fail("Should throw ApiException for insufficient inventory");
         } catch (ApiException e) {
-            assertEquals(ErrorType.VALIDATION_ERROR, e.getErrorType());
+            assertEquals(ErrorType.BAD_REQUEST, e.getErrorType());
         }
 
         // And: Verify API interactions

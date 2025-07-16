@@ -15,26 +15,12 @@ import java.util.ArrayList;
 import com.increff.pos.model.form.InventoryFormWithRow;
 import com.increff.pos.model.response.ValidationError;
 
-/**
- * Utility class for validation operations across the application.
- * This class provides centralized validation logic and uses the new ApiException
- * with ErrorType enum for consistent error handling.
- */
 @Component
 public class ValidationUtil {
 
     @Autowired
     private Validator validator;
 
-    /**
-     * Generic form validation using Bean Validation.
-     * Validates a single form object and throws ApiException with VALIDATION_ERROR
-     * if validation fails.
-     * 
-     * @param form The form object to validate
-     * @param <T> The type of the form object
-     * @throws ApiException with VALIDATION_ERROR type if validation fails
-     */
     public <T> void validateForm(T form) {
         if (form == null) {
             throw new ApiException(ErrorType.BAD_REQUEST, "Form cannot be null");
@@ -45,23 +31,13 @@ public class ValidationUtil {
             String errorMessage = violations.stream()
                     .map(ConstraintViolation::getMessage)
                     .collect(Collectors.joining("; "));
-            throw new ApiException(ErrorType.BAD_REQUEST,
-                "Validation failed: " + errorMessage);
+            throw new ApiException(ErrorType.BAD_REQUEST, "bad form failed: " + errorMessage);
         }
     }
 
-    /**
-     * Validate list of forms.
-     * Checks if the list is not null/empty and validates each form individually.
-     * 
-     * @param forms The list of forms to validate
-     * @param <T> The type of the form objects
-     * @throws ApiException with VALIDATION_ERROR type if validation fails
-     */
     public <T> void validateForms(List<T> forms) {
         if (forms == null || forms.isEmpty()) {
-            throw new ApiException(ErrorType.BAD_REQUEST, 
-                "Form list cannot be empty");
+            throw new ApiException(ErrorType.BAD_REQUEST, "Form list cannot be empty");
         }
 
         for (T form : forms) {
@@ -69,34 +45,13 @@ public class ValidationUtil {
         }
     }
 
-    /**
-     * Validate ID parameters.
-     * Ensures the ID is not null and greater than 0.
-     * 
-     * @param id The ID to validate
-     * @param fieldName The name of the field for error message
-     * @throws ApiException with VALIDATION_ERROR type if ID is invalid
-     */
+
     public void validateId(Integer id, String fieldName) {
         if (id == null || id <= 0) {
-            throw new ApiException(ErrorType.BAD_REQUEST,
-                "Invalid " + fieldName + ": " + id);
+            throw new ApiException(ErrorType.BAD_REQUEST, "Invalid " + fieldName + ": " + id);
         }
     }
 
-    /**
-     * Validate search name parameter.
-     * Ensures the search name is not null or empty.
-     * 
-     * @param name The search name to validate
-     * @throws ApiException with VALIDATION_ERROR type if name is invalid
-     */
-    public void validateSearchName(String name) {
-        if (name == null || name.trim().isEmpty()) {
-            throw new ApiException(ErrorType.VALIDATION_ERROR,
-                "Search name cannot be empty");
-        }
-    }
 
     /**
      * Validate TSV file.
@@ -168,32 +123,6 @@ public class ValidationUtil {
         // Custom validation logic for search parameters
         // Implementation depends on specific business rules
         // Currently no validation is performed as parameters can be null
-    }
-
-    /**
-     * Validate quantity range parameters for inventory search.
-     * Ensures that if both minQty and maxQty are provided, minQty is less than or equal to maxQty.
-     * Also ensures that quantities are non-negative if provided.
-     * 
-     * @param minQty The minimum quantity (can be null)
-     * @param maxQty The maximum quantity (can be null)
-     * @throws ApiException with VALIDATION_ERROR type if validation fails
-     */
-    public void validateQuantityRange(Integer minQty, Integer maxQty) {
-        if (minQty != null && minQty < 0) {
-            throw new ApiException(ErrorType.VALIDATION_ERROR, 
-                "Minimum quantity cannot be negative: " + minQty);
-        }
-        
-        if (maxQty != null && maxQty < 0) {
-            throw new ApiException(ErrorType.VALIDATION_ERROR, 
-                "Maximum quantity cannot be negative: " + maxQty);
-        }
-        
-        if (minQty != null && maxQty != null && minQty > maxQty) {
-            throw new ApiException(ErrorType.VALIDATION_ERROR, 
-                "Minimum quantity (" + minQty + ") cannot be greater than maximum quantity (" + maxQty + ")");
-        }
     }
 
     /**

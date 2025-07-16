@@ -80,14 +80,19 @@ public class InventoryApi {
             throw new NullPointerException("Input map cannot be null");
         }
         Map<Integer, ValidationError> errorByRow = new HashMap<>();
+        // Extract product IDs and row numbers for validation
+        List<Integer> productIds = new ArrayList<>(rowByProductId.keySet());
+        // Validate that all product IDs exist in the database
+        Map<Integer, Boolean> productExistence = inventoryDao.validateProductsExist(productIds);
+    
         // Validate each entry
         for (Map.Entry<Integer, Integer> entry : rowByProductId.entrySet()) {
             Integer productId = entry.getKey();
-            Integer quantity = entry.getValue();
-            // Validate quantity is not negative
-            if (quantity != null && quantity < 0) {
-                errorByRow.put(productId, new ValidationError(
-                        productId, "quantity", "Quantity cannot be negative"
+            Integer rowNumber = entry.getValue();
+            // Check if product exists
+            if (!productExistence.getOrDefault(productId, false)) {
+                errorByRow.put(rowNumber, new ValidationError(
+                        rowNumber, "productId", "Product with ID " + productId + " does not exist"
                 ));
             }
         }

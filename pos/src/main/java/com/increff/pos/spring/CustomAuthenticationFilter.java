@@ -21,7 +21,7 @@ import java.util.List;
 @Component
 public class CustomAuthenticationFilter extends OncePerRequestFilter {
 
-    private static final Logger logger = Logger.getLogger(CustomAuthenticationFilter.class);
+//    private static final Logger logger = Logger.getLogger(CustomAuthenticationFilter.class);
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
@@ -48,7 +48,6 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
                 long currentTime = System.currentTimeMillis();
                 long timeDifference = currentTime - lastCheckedTime;
 
-                // 5 minutes = 300,000 milliseconds
                 if (timeDifference < Constants.SESSION_REVALIDATION_INTERVAL_MS) {
                     // Update last checked time
                     session.setAttribute("lastCheckedTime", currentTime);
