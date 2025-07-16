@@ -4,7 +4,6 @@ import com.increff.pos.dao.ClientDao;
 import com.increff.pos.entity.ClientPojo;
 import com.increff.pos.exception.ApiException;
 import com.increff.pos.model.enums.ErrorType;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

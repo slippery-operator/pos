@@ -2,8 +2,6 @@ package com.increff.pos.model.enums;
 
 public enum ErrorType {
 
-    VALIDATION_ERROR(400, "Validation Error"),
-
     FILE_SIZE_EXCEEDED(413, "File Size Exceeded"),
     BAD_REQUEST(400, "Bad Request"),
     NOT_FOUND(404, "Not Found"),

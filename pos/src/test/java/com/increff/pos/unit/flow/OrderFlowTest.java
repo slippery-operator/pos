@@ -303,7 +303,7 @@ public class OrderFlowTest {
         barcodeToIdMap.put(testProduct1.getBarcode(), testProduct1.getId());
         when(productApi.findProductsByBarcodes(any())).thenReturn(barcodeToIdMap);
         when(orderApi.createOrder()).thenReturn(testOrder);
-        doThrow(new ApiException(ErrorType.VALIDATION_ERROR, "Inventory reduction failed"))
+        doThrow(new ApiException(ErrorType.BAD_REQUEST, "Inventory reduction failed"))
             .when(inventoryApi).reduceInventory(testProduct1.getId(), 5);
 
         // When & Then: OrderFlow should propagate exception
@@ -311,7 +311,7 @@ public class OrderFlowTest {
             orderFlow.createOrder(orderItems);
             fail("Should throw ApiException when inventory reduction fails");
         } catch (ApiException e) {
-            assertEquals(ErrorType.VALIDATION_ERROR, e.getErrorType());
+            assertEquals(ErrorType.BAD_REQUEST, e.getErrorType());
         }
 
         // And: Verify API interactions
