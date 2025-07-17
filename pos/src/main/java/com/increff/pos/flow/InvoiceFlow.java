@@ -52,9 +52,6 @@ public class InvoiceFlow {
         }
         OrdersPojo order = orderApi.getOrderById(orderId);
         List<OrderItemsPojo> orderItems = orderItemApi.getOrderItemsByOrderId(orderId);
-        if (orderItems == null || orderItems.isEmpty()) {
-            throw new ApiException(ErrorType.INTERNAL_SERVER_ERROR, "");
-        }
         double totalRevenue = orderItems.stream()
                 .mapToDouble(item -> item.getQuantity() * item.getSellingPrice())
                 .sum();

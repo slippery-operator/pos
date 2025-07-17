@@ -39,7 +39,7 @@ public class InventoryApi {
     public InventoryPojo updateInventoryByProductId(Integer productId, Integer quantity) {
         InventoryPojo existingInventory = inventoryDao.selectByProductId(productId);
         if (existingInventory == null) {
-            throw new ApiException(ErrorType.NOT_FOUND, "Inventory not found for product");
+            throw new ApiException(ErrorType.NOT_FOUND, "Inventory not found for product: " + productId);
         }
         existingInventory.setQuantity(quantity);
         return existingInventory;
@@ -48,10 +48,10 @@ public class InventoryApi {
     public void validateInventoryAvailability(Integer productId, Integer requiredQuantity) {
         InventoryPojo inventory = inventoryDao.selectByProductId(productId);
         if (inventory == null) {
-            throw new ApiException(ErrorType.BAD_REQUEST, "No inventory found for product");
+            throw new ApiException(ErrorType.BAD_REQUEST, "No inventory found for product: " + productId);
         }
         if (inventory.getQuantity() < requiredQuantity) {
-            throw new ApiException(ErrorType.BAD_REQUEST, "Insufficient inventory");
+            throw new ApiException(ErrorType.BAD_REQUEST, "Insufficient inventory for product " +  productId);
         }
     }
 
@@ -84,7 +84,6 @@ public class InventoryApi {
         List<Integer> productIds = new ArrayList<>(rowByProductId.keySet());
         // Validate that all product IDs exist in the database
         Map<Integer, Boolean> productExistence = inventoryDao.validateProductsExist(productIds);
-    
         // Validate each entry
         for (Map.Entry<Integer, Integer> entry : rowByProductId.entrySet()) {
             Integer productId = entry.getKey();

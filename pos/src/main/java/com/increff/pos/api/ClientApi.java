@@ -13,16 +13,14 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
-public class ClientApi {
+public class ClientApi extends AbstractApi {
 
     @Autowired
     private ClientDao clientDao;
 
     public ClientPojo add(String name) {
-        ClientPojo existingClient = clientDao.selectByName(name);
-        if (existingClient != null) {
-            throw new ApiException(ErrorType.CONFLICT, "Client with name: " + name + " already exists.");
-        }
+        checkConflict(clientDao.selectByName(name) != null,
+                "Client with name: " + name + " already exists");
         ClientPojo client = new ClientPojo(name);
         clientDao.insert(client);
         return client;
@@ -30,23 +28,15 @@ public class ClientApi {
 
     public ClientPojo update(Integer id, String name) {
         ClientPojo existingClient = clientDao.selectByName(name);
-        if (existingClient != null && !existingClient.getClientId().equals(id)) {
-            throw new ApiException(ErrorType.CONFLICT, "Client with name: " + name + " already exists");
-        }
-        ClientPojo client = clientDao.selectById(id);
-        if (client == null) {
-            throw new ApiException(ErrorType.NOT_FOUND, "Client not found");
-        }
+        checkConflict(existingClient != null && !existingClient.getClientId().equals(id),
+                "Client with name: " + name + " already exists");
+        ClientPojo client = checkNotNull(clientDao.selectById(id), "Client with id: " + id + " not found");
         client.setName(name);
         return client;
     }
 
     public ClientPojo getClientById(Integer id) {
-        ClientPojo client = clientDao.selectById(id);
-        if (client == null) {
-            throw new ApiException(ErrorType.NOT_FOUND, "Client not found");
-        }
-        return client;
+        return checkNotNull(clientDao.selectById(id), "Client with id: " + id + " not found");
     }
 
     public List<ClientPojo> getAll(int page, int size) {

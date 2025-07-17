@@ -13,10 +13,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 
-/**
- * REST Controller for authentication operations
- * Handles signup, login, and logout endpoints
- */
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -26,49 +22,29 @@ public class AuthController {
     @Autowired
     private AuthDto dto;
 
-    /**
-     * User signup endpoint
-     * @param signupForm signup form data
-     * @return UserResponse with user details
-     */
     @PostMapping("/signup")
     public UserResponse signup(@Valid @RequestBody SignupForm signupForm) {
         return dto.signup(signupForm);
     }
 
-    /**
-     * User login endpoint with session management
-     * @param loginForm login form data
-     * @param httpRequest HTTP request object for session management
-     * @return LoginResponse with success message and user details
-     */
     @PostMapping("/login")
     public LoginResponse login(@Valid @RequestBody LoginForm loginForm, HttpServletRequest httpRequest) {
         logger.info("Login attempt for email: " + loginForm.getEmail());
         logger.info("Request Origin: " + httpRequest.getHeader("Origin"));
         logger.info("Request User-Agent: " + httpRequest.getHeader("User-Agent"));
-        
         // Get user details from DTO
         UserResponse user = dto.login(loginForm).getUser();
-        
         // Create or get existing session
         HttpSession session = httpRequest.getSession(true);
         logger.info("Session created/retrieved: " + session.getId());
-        
         // Store user information in session
         session.setAttribute("userId", user.getId());
         session.setAttribute("userRole", user.getRole().name());
         session.setAttribute("lastCheckedTime", System.currentTimeMillis());
-
         logger.info("Login successful for user: " + user.getId() + " with role: " + user.getRole());
         return new LoginResponse("Login successful", user);
     }
 
-    /**
-     * User logout endpoint
-     * @param httpRequest HTTP request object for session management
-     * @return logout success message
-     */
     @PostMapping("/logout")
     public String logout(HttpServletRequest httpRequest) {
         HttpSession session = httpRequest.getSession(false);
@@ -81,7 +57,6 @@ public class AuthController {
     @GetMapping("/session-info")
     public String getSessionInfo(HttpServletRequest httpRequest) {
         HttpSession session = httpRequest.getSession(false);
-
         if (session != null) {
             Integer userId = (Integer) session.getAttribute("userId");
             String userRole = (String) session.getAttribute("userRole");
@@ -102,8 +77,6 @@ public class AuthController {
                 }
             }
         }
-
         return "No active session";
     }
-
 }

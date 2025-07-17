@@ -24,7 +24,7 @@ public class ProductUpdateForm {
     private String name;
 
     @NotNull(message = "MRP cannot be null")
-    @Positive(message = "MRP must be positive")
+    @Positive(message = "MRP must be greater than 0")
     private Double mrp;
 
     private String imageUrl;

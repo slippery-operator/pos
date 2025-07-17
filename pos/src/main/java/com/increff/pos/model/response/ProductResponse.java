@@ -11,7 +11,4 @@ import java.time.ZonedDateTime;
 public class ProductResponse extends ProductForm {
 
     private Integer id;
-    private Integer version;
-    private ZonedDateTime createdAt;
-    private ZonedDateTime updatedAt;
 }

@@ -4,7 +4,6 @@ import com.increff.pos.exception.ApiException;
 import com.increff.pos.model.enums.ErrorType;
 import com.increff.pos.model.form.InventoryForm;
 import com.increff.pos.model.form.InventoryFormWithRow;
-import com.increff.pos.model.form.OrderItemForm;
 import com.increff.pos.model.form.ProductForm;
 import com.increff.pos.model.form.ProductFormWithRow;
 import org.springframework.web.multipart.MultipartFile;
@@ -39,19 +38,24 @@ public class TsvParserUtil {
                 }
 
                 String[] fields = parseTabDelimitedLine(line);
-                System.out.println("TSV line parsed: " + Arrays.toString(fields));
+                // System.out.println("TSV line parsed: " + Arrays.toString(fields));
 
-                if (fields.length >= 4) { // barcode, client_id, name, mrp (imageUrl optional)
+//                if (fields.length >= 4) { // barcode, client_id, name, mrp (imageUrl optional)
                     ProductForm form = new ProductForm();
-                    form.setBarcode(fields[0].trim());
-                    form.setClientId(Integer.parseInt(fields[1].trim()));
-                    form.setName(fields[2].trim());
-                    form.setMrp(Double.parseDouble(fields[3].trim()));
-                    if (fields.length > 4 && !fields[4].trim().isEmpty()) {
-                        form.setImageUrl(fields[4].trim());
-                    }
+//                    form.setBarcode(fields[0].trim());
+                    form.setBarcode(getField(fields, 0));
+//                    form.setClientId(Integer.parseInt(fields[1].trim()));
+                    form.setClientId(safeParseInteger(getField(fields, 1)));
+                    form.setName(getField(fields, 2));
+//                    form.setName(fields[2].trim());
+//                    form.setMrp(Double.parseDouble(fields[3].trim()));
+                    form.setMrp(safeParseDouble(getField(fields, 3)));
+//                    if (fields.length > 4 && !fields[4].trim().isEmpty()) {
+//                        form.setImageUrl(fields[4].trim());
+//                    }
+                    form.setImageUrl(getField(fields, 4));
                     productForms.add(new ProductFormWithRow(form, rowNumber, line));
-                }
+//                }
             }
         } catch (Exception e) {
             throw new ApiException(ErrorType.INTERNAL_SERVER_ERROR, "Error parsing product TSV file");
@@ -85,12 +89,14 @@ public class TsvParserUtil {
                     continue; // Skip header
                 }
               String[] fields = parseTabDelimitedLine(line);
-                if (fields.length >= 2) { // product_id, quantity
+//                if (fields.length >= 2) { // barcode, quantity
                     InventoryForm form = new InventoryForm();
-                    form.setProductId(Integer.parseInt(fields[0].trim()));
-                    form.setQuantity(Integer.parseInt(fields[1].trim()));
+//                    form.setBarcode(Integer.parseInt(fields[0].trim()));
+                    form.setBarcode(getField(fields, 0));
+//                    form.setQuantity(Integer.parseInt(fields[1].trim()));
+                    form.setQuantity(safeParseInteger(getField(fields, 1)));
                     inventoryForms.add(form);
-                }
+//                }
             }
         } catch (Exception e) {
             throw new ApiException(ErrorType.INTERNAL_SERVER_ERROR, "Error parsing inventory TSV file");
@@ -128,5 +134,22 @@ public class TsvParserUtil {
                         .collect(Collectors.toList());
 
         return result;
+    }
+    private static String getField(String[] fields, int idx) {
+        return (fields.length > idx) ? fields[idx].trim() : null;
+    }
+    private static Integer safeParseInteger(String str) {
+        try {
+            return (str == null || str.isEmpty()) ? null : Integer.parseInt(str);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+    private static Double safeParseDouble(String str) {
+        try {
+            return (str == null || str.isEmpty()) ? null : Double.parseDouble(str);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 }

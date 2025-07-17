@@ -13,7 +13,4 @@ import java.time.ZonedDateTime;
 public class InventoryResponse extends InventoryForm {
 
     private Integer id;
-    private Integer version;
-    private ZonedDateTime createdAt;
-    private ZonedDateTime updatedAt;
 }

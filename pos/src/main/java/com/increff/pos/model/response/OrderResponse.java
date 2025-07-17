@@ -11,5 +11,6 @@ import java.util.List;
 public class OrderResponse {
     private Integer id;
     private ZonedDateTime time;
+    private String formattedTime;
     private List<OrderItemResponse> orderItems;
 }

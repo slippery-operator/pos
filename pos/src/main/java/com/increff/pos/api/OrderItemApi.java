@@ -10,10 +10,6 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.util.List;
 
-/**
- * API layer for OrderItem entity operations
- * Handles business logic and data validation for order items
- */
 @Service
 @Transactional
 public class OrderItemApi {

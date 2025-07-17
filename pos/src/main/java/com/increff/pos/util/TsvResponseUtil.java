@@ -1,6 +1,8 @@
 package com.increff.pos.util;
 
+import com.increff.pos.model.form.InventoryForm;
 import com.increff.pos.model.form.InventoryFormWithRow;
+import com.increff.pos.model.form.ProductForm;
 import com.increff.pos.model.form.ProductFormWithRow;
 import com.increff.pos.model.response.ValidationError;
 import org.springframework.http.HttpHeaders;
@@ -17,21 +19,10 @@ import java.util.stream.Collectors;
  */
 public class TsvResponseUtil {
 
-    /**
-     * Generates TSV response for inventory upload with validation results.
-     * Format: productId, quantity, remarks
-     * 
-     * @param inventoryFormsWithRow List of inventory forms with row numbers
-     * @param validationErrors List of validation errors
-     * @return ResponseEntity with TSV content
-     */
-    public static ResponseEntity<String> generateInventoryTsvResponse(
-            List<InventoryFormWithRow> inventoryFormsWithRow,
+    public static String generateInventoryTsvResponse( List<InventoryFormWithRow> inventoryFormsWithRow,
             List<ValidationError> validationErrors) {
-        
         StringBuilder tsvContent = new StringBuilder();
-        tsvContent.append("productId\tquantity\tremarks\n");
-        
+        tsvContent.append("barcode\tquantity\tvalidity\tremarks\n");
         // Create error map for quick lookup
         Map<Integer, String> errorMap = validationErrors.stream()
                 .collect(Collectors.toMap(
@@ -41,67 +32,55 @@ public class TsvResponseUtil {
                 ));
         
         for (InventoryFormWithRow formWithRow : inventoryFormsWithRow) {
-            String productId = formWithRow.getForm().getProductId() != null ? 
-                formWithRow.getForm().getProductId().toString() : "invalid";
-            String quantity = formWithRow.getForm().getQuantity() != null ? 
-                formWithRow.getForm().getQuantity().toString() : "invalid";
-            String remarks = errorMap.getOrDefault(formWithRow.getRowNumber(), "valid");
-            
-            tsvContent.append(productId).append("\t")
-                      .append(quantity).append("\t")
-                      .append(remarks).append("\n");
+            InventoryForm form = formWithRow.getForm();
+            String errorMessage = errorMap.get(formWithRow.getRowNumber());
+
+            String validity = (errorMessage == null) ? "valid" : "invalid";
+            String remarks = (errorMessage == null) ? "" : errorMessage;
+
+            tsvContent.append(nullToString(form.getBarcode())).append("\t")
+                    .append(nullToString(form.getQuantity())).append("\t")
+                    .append(validity).append("\t")
+                    .append(remarks).append("\n");
+
         }
-        
-        return createTsvResponse(tsvContent.toString(), "inventory_results.tsv");
+        return tsvContent.toString();
     }
-    
-    /**
-     * Generates TSV response for product upload with validation results.
-     * Format: barcode, clientId, name, mrp, imageUrl, remarks
-     * 
-     * @param productFormsWithRow List of product forms with row numbers
-     * @param validationErrors List of validation errors
-     * @return ResponseEntity with TSV content
-     */
-    public static ResponseEntity<String> generateProductTsvResponse(
+
+    public static String buildProductTsvContent(
             List<ProductFormWithRow> productFormsWithRow,
             List<ValidationError> validationErrors) {
-        
-        StringBuilder tsvContent = new StringBuilder();
-        tsvContent.append("barcode\tclientId\tname\tmrp\timageUrl\tremarks\n");
-        
-        // Create error map for quick lookup
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("barcode\tclient_id\tname\tmrp\timageUrl\tvalidity\tremarks\n");
+
         Map<Integer, String> errorMap = validationErrors.stream()
                 .collect(Collectors.toMap(
-                    ValidationError::getRowNumber,
-                    ValidationError::getErrorMessage,
-                    (existing, replacement) -> existing + "; " + replacement
+                        ValidationError::getRowNumber,
+                        ValidationError::getErrorMessage,
+                        (a, b) -> a + "; " + b // merge multiple errors for same row
                 ));
-        
-        for (ProductFormWithRow formWithRow : productFormsWithRow) {
-            String barcode = formWithRow.getForm().getBarcode() != null ? 
-                formWithRow.getForm().getBarcode() : "invalid";
-            String clientId = formWithRow.getForm().getClientId() != null ? 
-                formWithRow.getForm().getClientId().toString() : "invalid";
-            String name = formWithRow.getForm().getName() != null ? 
-                formWithRow.getForm().getName() : "invalid";
-            String mrp = formWithRow.getForm().getMrp() != null ? 
-                formWithRow.getForm().getMrp().toString() : "invalid";
-            String imageUrl = formWithRow.getForm().getImageUrl() != null ? 
-                formWithRow.getForm().getImageUrl() : "";
-            String remarks = errorMap.getOrDefault(formWithRow.getRowNumber(), "valid");
-            
-            tsvContent.append(barcode).append("\t")
-                      .append(clientId).append("\t")
-                      .append(name).append("\t")
-                      .append(mrp).append("\t")
-                      .append(imageUrl).append("\t")
-                      .append(remarks).append("\n");
+
+        for (ProductFormWithRow row : productFormsWithRow) {
+            ProductForm form = row.getForm();
+            String errorMessage = errorMap.get(row.getRowNumber());
+            String validity = (errorMessage == null) ? "valid" : "invalid";
+            String remarks = (errorMessage == null) ? "" : errorMessage;
+            sb.append(nullToString(form.getBarcode())).append("\t")
+                    .append(nullToString(form.getClientId())).append("\t")
+                    .append(nullToString(form.getName())).append("\t")
+                    .append(nullToString(form.getMrp())).append("\t")
+                    .append(nullToString(form.getImageUrl())).append("\t")
+                    .append(validity).append("\t")
+                    .append(remarks).append("\n");
         }
-        
-        return createTsvResponse(tsvContent.toString(), "product_validation_results.tsv");
+        return sb.toString();
     }
-    
+
+    private static String nullToString(Object val) {
+        return val == null ? "invalid" : val.toString();
+    }
+
     /**
      * Creates ResponseEntity with TSV content and appropriate headers.
      * 
@@ -113,7 +92,6 @@ public class TsvResponseUtil {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.TEXT_PLAIN);
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename);
-        
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(tsvContent);

@@ -57,16 +57,6 @@ public class ControllerConfig extends WebMvcConfigurerAdapter {
 		registry.addResourceHandler("/static/**").addResourceLocations("/static/");
 	}
 
-	@Override
-	public void addCorsMappings(CorsRegistry registry) {
-		registry.addMapping("/**")
-				.allowedOrigins("http://localhost:4200")
-				.allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD")
-				.allowedHeaders("*")
-				.allowCredentials(true)
-				.maxAge(3600);
-	}
-
 	@Bean
 	public HandlerMappingIntrospector mvcHandlerMappingIntrospector(ApplicationContext context) {
 		return new HandlerMappingIntrospector(context);

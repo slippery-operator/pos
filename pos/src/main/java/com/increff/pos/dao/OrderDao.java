@@ -43,7 +43,6 @@ public class OrderDao extends AbstractDao<OrdersPojo> {
             query.where(cb.and(predicates.toArray(new Predicate[0])));
         }
         query.orderBy(cb.desc(root.get("time")));
-
         // Apply pagination
         return entityManager.createQuery(query)
                 .setFirstResult(page * size)  // Offset

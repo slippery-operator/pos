@@ -46,7 +46,7 @@ public class InvoiceApi {
     public InvoicePojo getInvoiceByOrderId(Integer orderId) {
         InvoicePojo invoice = invoiceDao.selectByOrderId(orderId);
         if (invoice == null) {
-            throw new ApiException(ErrorType.NOT_FOUND, "Invoice not found for order");
+            throw new ApiException(ErrorType.NOT_FOUND, "Invoice not found for order: " + orderId);
         }
         return invoice;
     }

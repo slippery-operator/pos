@@ -15,8 +15,4 @@ import java.time.ZonedDateTime;
 public class ClientResponse extends ClientForm {
 
     private Integer clientId;
-    private Integer version;
-    private ZonedDateTime createdAt;
-    private ZonedDateTime updatedAt;
-
 }

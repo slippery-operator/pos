@@ -4,6 +4,7 @@ import com.increff.pos.dto.InventoryDto;
 import com.increff.pos.model.form.InventoryUpdateForm;
 import com.increff.pos.model.response.InventoryResponse;
 
+import com.increff.pos.model.response.UploadResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -29,13 +30,12 @@ public class InventoryController {
     }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> uploadInventory(@RequestPart(value = "file") MultipartFile file) {
+    public ResponseEntity<UploadResponse> uploadInventory(@RequestPart(value = "file") MultipartFile file) {
         return dto.uploadInventory(file);
     }
 
     @PutMapping("/{product-id}")
-    public InventoryResponse updateInventoryByProductId(
-            @PathVariable("product-id") Integer productId,
+    public InventoryResponse updateInventoryByProductId(@PathVariable("product-id") Integer productId,
             @Valid @RequestBody InventoryUpdateForm inventoryUpdateForm) {
         return dto.updateInventoryByProductId(productId, inventoryUpdateForm);
     }

@@ -2,6 +2,7 @@ package com.increff.pos.util;
 
 import com.increff.pos.exception.ApiException;
 import com.increff.pos.model.enums.ErrorType;
+import com.increff.pos.model.form.ProductFormWithRow;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,6 +16,8 @@ import java.util.ArrayList;
 import com.increff.pos.model.form.InventoryFormWithRow;
 import com.increff.pos.model.response.ValidationError;
 
+import static com.increff.pos.util.StringUtil.extractFieldFromValidationError;
+
 @Component
 public class ValidationUtil {
 
@@ -25,13 +28,12 @@ public class ValidationUtil {
         if (form == null) {
             throw new ApiException(ErrorType.BAD_REQUEST, "Form cannot be null");
         }
-        
         Set<ConstraintViolation<T>> violations = validator.validate(form);
         if (!violations.isEmpty()) {
             String errorMessage = violations.stream()
                     .map(ConstraintViolation::getMessage)
                     .collect(Collectors.joining("; "));
-            throw new ApiException(ErrorType.BAD_REQUEST, "bad form failed: " + errorMessage);
+            throw new ApiException(ErrorType.BAD_REQUEST, errorMessage);
         }
     }
 
@@ -39,7 +41,6 @@ public class ValidationUtil {
         if (forms == null || forms.isEmpty()) {
             throw new ApiException(ErrorType.BAD_REQUEST, "Form list cannot be empty");
         }
-
         for (T form : forms) {
             validateForm(form);
         }
@@ -96,7 +97,7 @@ public class ValidationUtil {
             // Check if row count exceeds the maximum allowed limit
             final int MAX_ROWS = 5000;
             if (rowCount > MAX_ROWS) {
-                throw new ApiException(ErrorType.BAD_REQUEST, "ROW LIMIT EXCEEDED.");
+                throw new ApiException(ErrorType.BAD_REQUEST, "FILE ROW LIMIT EXCEEDED");
             }
 
         } catch (java.io.IOException e) {
@@ -131,13 +132,13 @@ public class ValidationUtil {
      * @param productFormsWithRow List of product forms with row information
      * @return List of validation errors
      */
-    public List<ValidationError> validateProductFormsWithRow(List<com.increff.pos.model.form.ProductFormWithRow> productFormsWithRow) {
+    public List<ValidationError> validateProductFormsWithRow(List<ProductFormWithRow> productFormsWithRow) {
         List<ValidationError> errors = new java.util.ArrayList<>();
-        for (com.increff.pos.model.form.ProductFormWithRow productWithRow : productFormsWithRow) {
+        for (ProductFormWithRow productWithRow : productFormsWithRow) {
             try {
                 validateForm(productWithRow.getForm());
-            } catch (com.increff.pos.exception.ApiException e) {
-                String field = com.increff.pos.util.StringUtil.extractFieldFromValidationError(e.getMessage());
+            } catch (ApiException e) {
+                String field = extractFieldFromValidationError(e.getMessage());
                 errors.add(new ValidationError(
                     productWithRow.getRowNumber(),
                     field,

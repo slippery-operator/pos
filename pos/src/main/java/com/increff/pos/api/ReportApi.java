@@ -2,13 +2,10 @@ package com.increff.pos.api;
 
 import com.increff.pos.dao.ReportDao;
 import com.increff.pos.entity.DaySalesPojo;
-import com.increff.pos.exception.ApiException;
-import com.increff.pos.model.enums.ErrorType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.List;
 

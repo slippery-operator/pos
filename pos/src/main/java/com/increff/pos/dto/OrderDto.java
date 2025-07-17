@@ -19,6 +19,8 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.increff.pos.util.DateUtil.format;
+
 @Service
 public class OrderDto extends AbstractDto<OrderItemForm> {
 
@@ -64,7 +66,7 @@ public class OrderDto extends AbstractDto<OrderItemForm> {
 
     private OrderResponse convertToOrderResponse(OrdersPojo order, List<OrderItemsPojo> orderItems) {
         OrderResponse response = convertUtil.convert(order, OrderResponse.class);
-
+        response.setFormattedTime(format(order.getTime()));
         if (orderItems != null && !orderItems.isEmpty()) {
             List<OrderItemResponse> orderItemResponses = convertUtil.convertList(orderItems, OrderItemResponse.class);
             response.setOrderItems(orderItemResponses);

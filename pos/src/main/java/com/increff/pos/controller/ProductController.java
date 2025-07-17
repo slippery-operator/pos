@@ -6,6 +6,7 @@ import com.increff.pos.model.response.ProductResponse;
 import com.increff.pos.model.form.ProductForm;
 import com.increff.pos.model.form.ProductUpdateForm;
 
+import com.increff.pos.model.response.UploadResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -35,7 +36,7 @@ public class ProductController {
     }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> uploadProducts(@RequestPart(value = "file") MultipartFile file) {
+    public ResponseEntity<UploadResponse> uploadProducts(@RequestPart(value = "file") MultipartFile file) {
         return dto.uploadProducts(file);
     }
     
@@ -43,6 +44,7 @@ public class ProductController {
     public ProductResponse updateProduct(@PathVariable Integer id, @Valid @RequestBody ProductUpdateForm productUpdateForm) {
         return dto.updateProduct(id, productUpdateForm);
     }
+
     @GetMapping("/check/{barcode}")
     public boolean checkProductExists(@PathVariable String barcode) {
         return dto.checkProductExists(barcode);

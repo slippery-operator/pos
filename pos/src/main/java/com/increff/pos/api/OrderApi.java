@@ -31,7 +31,7 @@ public class OrderApi {
     public OrdersPojo getOrderById(Integer id) {
         OrdersPojo order = orderDao.selectById(id);
         if (order == null) {
-            throw new ApiException(ErrorType.NOT_FOUND, "Order not found");
+            throw new ApiException(ErrorType.NOT_FOUND, "Order with id " + id + " not found");
         }
         return order;
     }
@@ -45,8 +45,7 @@ public class OrderApi {
     public void updateInvoicePath(Integer orderId, String invoicePath) {
         OrdersPojo order = orderDao.selectById(orderId);
         if (order == null) {
-            throw new ApiException(ErrorType.NOT_FOUND,
-                "Order not found");
+            throw new ApiException(ErrorType.NOT_FOUND, "Order with id: " + orderId + " not found");
         }
         orderDao.updateInvoicePath(orderId, invoicePath);
     }

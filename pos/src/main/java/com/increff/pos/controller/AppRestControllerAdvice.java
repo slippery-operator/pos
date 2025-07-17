@@ -6,6 +6,7 @@ import com.increff.pos.model.response.ErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -64,7 +65,7 @@ public class AppRestControllerAdvice {
 
         // Extract first error message from BindingResult
         String errorMessage = ex.getBindingResult().getFieldErrors().stream()
-                .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
+                .map(fieldError -> fieldError.getDefaultMessage())
                 .findFirst()
                 .orElse("Invalid input");
 
@@ -114,10 +115,27 @@ public class AppRestControllerAdvice {
 
         ErrorResponse errorResponse = new ErrorResponse(
                 ErrorType.INTERNAL_SERVER_ERROR.getErrorCode(),
-                "An unexpected error occurred. Please try again later.",
+                "An unexpected error occurred. Please try again later " + ex.getMessage(),
                 request.getDescription(false).replace("uri=", "")
         );
 
         return ResponseEntity.status(ErrorType.INTERNAL_SERVER_ERROR.getHttpStatus()).body(errorResponse);
     }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadableException(
+            HttpMessageNotReadableException ex, WebRequest request) {
+
+        logger.warn("Request body could not be parsed: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                ErrorType.BAD_REQUEST.getErrorCode(),
+                "Malformed or invalid request body",
+                request.getDescription(false).replace("uri=", "")
+        );
+        return ResponseEntity
+                .status(ErrorType.BAD_REQUEST.getHttpStatus())
+                .body(errorResponse);
+    }
+
 }

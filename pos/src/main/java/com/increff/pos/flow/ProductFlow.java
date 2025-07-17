@@ -6,6 +6,7 @@ import com.increff.pos.api.ProductApi;
 import com.increff.pos.entity.ProductPojo;
 import com.increff.pos.exception.ApiException;
 import com.increff.pos.model.enums.ErrorType;
+import com.increff.pos.model.form.ProductForm;
 import com.increff.pos.model.form.ProductFormWithRow;
 import com.increff.pos.model.response.ValidationError;
 import com.increff.pos.util.ConvertUtil;
@@ -37,7 +38,7 @@ public class ProductFlow {
 
     public ProductPojo validateAndCreateProduct(ProductPojo productPojo) {
         // Validate client exists
-        validateClientExists(productPojo.getClientId());
+        clientApi.getClientById(productPojo.getClientId());
         // Validate barcode uniqueness
         productApi.validateBarcodeUniqueness(productPojo.getBarcode(), null);
         // Create product and initialize inventory
@@ -59,16 +60,56 @@ public class ProductFlow {
     }
 
     public Map<Integer, ValidationError> validateProductTsvUpload(List<ProductFormWithRow> productFormsWithRow) {
-        Set<Integer> clientIds = productFormsWithRow.stream()
+        Map<Integer, ValidationError> errorByRow = new HashMap<>();
+        Map<Integer, ValidationError> duplicateErrors  = validateDuplicateBarcodesInFile(productFormsWithRow);
+        errorByRow.putAll(duplicateErrors);
+        List<ProductFormWithRow> productFormsWithoutDuplicates = filterFormsWithoutDuplicates(productFormsWithRow, duplicateErrors);
+        Map<Integer, ValidationError> dbErrors = validateAgainstDatabase(productFormsWithoutDuplicates);
+        errorByRow.putAll(dbErrors);
+        return errorByRow;
+    }
+
+    private Map<Integer, ValidationError> validateDuplicateBarcodesInFile(List<ProductFormWithRow> productForms) {
+        Map<String, List<ProductFormWithRow>> barcodeGroups = productForms.stream()
+                .collect(Collectors.groupingBy(
+                        productForm -> productForm.getForm().getBarcode()
+                ));
+        Map<Integer, ValidationError> duplicateErrors = new HashMap<>();
+        for(Map.Entry<String, List<ProductFormWithRow>> entry: barcodeGroups.entrySet()) {
+            String barcode = entry.getKey();
+            List<ProductFormWithRow> formsWithSameBarcode = entry.getValue();
+            if(formsWithSameBarcode.size() > 1) {
+                addDuplicateErrorsForBarcode(duplicateErrors, barcode, formsWithSameBarcode);
+            }
+        }
+        return duplicateErrors;
+    }
+
+    private void addDuplicateErrorsForBarcode(Map<Integer, ValidationError> duplicateErrors, String barcode,
+                                              List<ProductFormWithRow> formsWithSameBarcode) {
+        for (ProductFormWithRow form : formsWithSameBarcode) {
+            ValidationError error = new ValidationError(form.getRowNumber(), "barcode", "Barcode is multiple times in your file");
+            duplicateErrors.put(form.getRowNumber(), error);
+        }
+    }
+
+    private List<ProductFormWithRow> filterFormsWithoutDuplicates(List<ProductFormWithRow> productForms, Map<Integer, ValidationError> duplicateErrors) {
+        List<ProductFormWithRow> validForms = productForms.stream()
+                .filter(p -> !duplicateErrors.containsKey(p.getRowNumber()))
+                .collect(Collectors.toList());
+        return validForms;
+    }
+
+    private Map<Integer, ValidationError> validateAgainstDatabase(List<ProductFormWithRow> productForms) {
+        Set<Integer> clientIds = productForms.stream()
                 .map(form -> form.getForm().getClientId())
                 .collect(Collectors.toSet());
-        Set<String> barcodes = productFormsWithRow.stream()
+        Set<String> barcodes = productForms.stream()
                 .map(form -> form.getForm().getBarcode())
                 .collect(Collectors.toSet());
         Map<Integer, Boolean> clientValidation = clientApi.validateClientsExistBatch(clientIds);
         Map<String, Boolean> barcodeValidation = productApi.validateBarcodesUniquenessBatch(barcodes);
-        Map<Integer, ValidationError> errorByRow = constructErrorByRow(productFormsWithRow, clientValidation, barcodeValidation);
-        return errorByRow;
+        return constructErrorByRow(productForms, clientValidation, barcodeValidation);
     }
 
     private Map<Integer, ValidationError> constructErrorByRow(List<ProductFormWithRow> productFormsWithRow,Map<Integer, Boolean> clientValidation,
@@ -81,19 +122,9 @@ public class ProductFlow {
             if (!clientValidation.getOrDefault(clientId, false)) {
                 errorByRow.put(row, new ValidationError(row, "clientId", "Client not found"));
             } else if (!barcodeValidation.getOrDefault(barcode, false)) {
-                errorByRow.put(row, new ValidationError(row, "barcode", "Barcode alr exists"));
+                errorByRow.put(row, new ValidationError(row, "barcode", "Barcode alr exists in db"));
             }
         }
         return errorByRow;
-    }
-    public void validateProductForUpdate(ProductPojo product) {
-        // Validate client exists
-        clientApi.getClientById(product.getClientId());
-        // Validate barcode uniqueness (exclude current product ID)
-        productApi.validateBarcodeUniqueness(product.getBarcode(), product.getId());
-    }
-
-    public void validateClientExists(Integer clientId) {
-        clientApi.getClientById(clientId);
     }
 }

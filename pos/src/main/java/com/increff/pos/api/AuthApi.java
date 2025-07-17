@@ -51,16 +51,13 @@ public class AuthApi {
     }
 
     public UserResponse login(String email, String password) {
-
         // Find user by email
         UserPojo user = userDao.selectByEmail(email)
-                .orElseThrow(() -> new ApiException(ErrorType.BAD_REQUEST, "Invalid credentials"));
-
+                .orElseThrow(() -> new ApiException(ErrorType.BAD_REQUEST, "Wrong username or password."));
         // Validate password
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new ApiException(ErrorType.BAD_REQUEST, "Invalid credentials");
+            throw new ApiException(ErrorType.BAD_REQUEST, "Wrong username or password.");
         }
-
         // Update last login time
         user.setLastLogin(ZonedDateTime.now());
         userDao.updateUser(user);

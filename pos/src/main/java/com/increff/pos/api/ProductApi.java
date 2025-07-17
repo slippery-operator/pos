@@ -36,7 +36,7 @@ public class ProductApi {
     public ProductPojo getProductById(Integer id) {
         ProductPojo product = productDao.selectById(id);
         if (product == null) {
-            throw new ApiException(ErrorType.NOT_FOUND, "Product not found");
+            throw new ApiException(ErrorType.NOT_FOUND, "Product with id: " + id + " not found");
         }
         return product;
     }
@@ -49,12 +49,11 @@ public class ProductApi {
     public ProductPojo updateProduct(Integer id, String name, Double mrp, String imageUrl) {
         ProductPojo existingProduct = productDao.selectById(id);
         if (existingProduct == null) {
-            throw new ApiException(ErrorType.NOT_FOUND, "Product not found");
+            throw new ApiException(ErrorType.NOT_FOUND, "Product with id: " + id + " not found");
         }
         existingProduct.setName(name);
         existingProduct.setMrp(mrp);
         existingProduct.setImageUrl(imageUrl);
-        productDao.update(existingProduct);
         return existingProduct;
     }
 
@@ -71,14 +70,11 @@ public class ProductApi {
     }
 
     public Map<String, Boolean> validateBarcodesUniquenessBatch(Set<String> barcodes) {
-
-        
         // Get all existing products with these barcodes in one query
         List<ProductPojo> existingProducts = productDao.selectByBarcodes(barcodes);
         Set<String> existingBarcodes = existingProducts.stream()
                 .map(ProductPojo::getBarcode)
                 .collect(Collectors.toSet());
-        
         // Create result map (true if barcode is NOT in existing barcodes, i.e., unique)
         Map<String, Boolean> result = barcodes.stream()
                 .collect(Collectors.toMap(
