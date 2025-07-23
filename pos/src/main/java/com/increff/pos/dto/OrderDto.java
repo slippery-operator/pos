@@ -14,12 +14,11 @@ import com.increff.pos.api.ProductApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.increff.pos.util.DateUtil.format;
 
 @Service
 public class OrderDto extends AbstractDto<OrderItemForm> {
@@ -46,10 +45,10 @@ public class OrderDto extends AbstractDto<OrderItemForm> {
         return convertToOrderResponse(createdOrder, orderItemPojos);
     }
 
-    public List<OrderResponse> searchOrders(String startDate, String endDate, Integer orderId, int page, int size) {
-        ZonedDateTime parsedStartDate = DateUtil.parseStartDate(startDate);
-        ZonedDateTime parsedEndDate = DateUtil.parseEndDate(endDate);
-        List<OrdersPojo> orders = orderApi.searchOrders(parsedStartDate, parsedEndDate, orderId, page, size);
+    public List<OrderResponse> searchOrders(LocalDate startDate, LocalDate endDate, Integer orderId, int page, int size) {
+        ZonedDateTime startDateTime = DateUtil.toStartOfDayUTC(startDate);
+        ZonedDateTime endDateTime = DateUtil.toEndOfDayUTC(endDate);
+        List<OrdersPojo> orders = orderApi.searchOrders(startDateTime, endDateTime, orderId, page, size);
         List<OrderResponse> retrievedOrders = orders.stream()
                 .map(order -> convertToOrderResponse(order, orderItemApi.getOrderItemsByOrderId(order.getId())))
                 .collect(Collectors.toList());
@@ -66,7 +65,6 @@ public class OrderDto extends AbstractDto<OrderItemForm> {
 
     private OrderResponse convertToOrderResponse(OrdersPojo order, List<OrderItemsPojo> orderItems) {
         OrderResponse response = convertUtil.convert(order, OrderResponse.class);
-        response.setFormattedTime(format(order.getTime()));
         if (orderItems != null && !orderItems.isEmpty()) {
             List<OrderItemResponse> orderItemResponses = convertUtil.convertList(orderItems, OrderItemResponse.class);
             response.setOrderItems(orderItemResponses);

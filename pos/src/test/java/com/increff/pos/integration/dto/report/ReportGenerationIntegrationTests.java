@@ -8,6 +8,7 @@ import com.increff.pos.setup.TestData;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -53,7 +54,10 @@ public class ReportGenerationIntegrationTests extends AbstractIntegrationTest {
         reportDao.insert(daySales3);
 
         // When: Get day sales by date range using string dates
-        List<DaySalesResponse> result = reportDto.getDaySalesByDateRange("2024-01-15", "2024-01-16");
+        List<DaySalesResponse> result = reportDto.getDaySalesByDateRange(
+            LocalDate.parse("2024-01-15"), 
+            LocalDate.parse("2024-01-16")
+        );
 
         // Then: Verify results and database state
         assertNotNull("Result should not be null", result);
@@ -88,7 +92,10 @@ public class ReportGenerationIntegrationTests extends AbstractIntegrationTest {
         // Given: No day sales data in database for the date range
         
         // When: Get day sales by date range with no data
-        List<DaySalesResponse> result = reportDto.getDaySalesByDateRange("2024-02-01", "2024-02-05");
+        List<DaySalesResponse> result = reportDto.getDaySalesByDateRange(
+            LocalDate.parse("2024-02-01"), 
+            LocalDate.parse("2024-02-05")
+        );
 
         // Then: Verify empty result
         assertNotNull("Result should not be null", result);
@@ -114,7 +121,10 @@ public class ReportGenerationIntegrationTests extends AbstractIntegrationTest {
         reportDao.insert(daySales);
 
         // When: Get day sales for single date (same start and end)
-        List<DaySalesResponse> result = reportDto.getDaySalesByDateRange("2024-01-20", "2024-01-20");
+        List<DaySalesResponse> result = reportDto.getDaySalesByDateRange(
+            LocalDate.parse("2024-01-20"), 
+            LocalDate.parse("2024-01-20")
+        );
 
         // Then: Verify single result
         assertNotNull("Result should not be null", result);
@@ -148,7 +158,10 @@ public class ReportGenerationIntegrationTests extends AbstractIntegrationTest {
         reportDao.insert(salesFeb);
 
         // When: Get day sales across month boundary
-        List<DaySalesResponse> result = reportDto.getDaySalesByDateRange("2024-01-31", "2024-02-01");
+        List<DaySalesResponse> result = reportDto.getDaySalesByDateRange(
+            LocalDate.parse("2024-01-31"), 
+            LocalDate.parse("2024-02-01")
+        );
 
         // Then: Verify both records are returned
         assertNotNull("Result should not be null", result);
@@ -186,7 +199,10 @@ public class ReportGenerationIntegrationTests extends AbstractIntegrationTest {
         reportDao.insert(afternoonSales);
 
         // When: Get day sales for the date
-        List<DaySalesResponse> result = reportDto.getDaySalesByDateRange("2024-01-25", "2024-01-25");
+        List<DaySalesResponse> result = reportDto.getDaySalesByDateRange(
+            LocalDate.parse("2024-01-25"), 
+            LocalDate.parse("2024-01-25")
+        );
 
         // Then: Verify both records are returned
         assertNotNull("Result should not be null", result);
@@ -224,7 +240,10 @@ public class ReportGenerationIntegrationTests extends AbstractIntegrationTest {
         reportDao.insert(daySales);
 
         // When: Get day sales using string date format
-        List<DaySalesResponse> result = reportDto.getDaySalesByDateRange("2024-03-05", "2024-03-05");
+        List<DaySalesResponse> result = reportDto.getDaySalesByDateRange(
+            LocalDate.parse("2024-03-05"), 
+            LocalDate.parse("2024-03-05")
+        );
 
         // Then: Verify date parsing worked correctly
         assertNotNull("Result should not be null", result);
@@ -252,7 +271,10 @@ public class ReportGenerationIntegrationTests extends AbstractIntegrationTest {
         reportDao.insert(daySales);
 
         // When: Get day sales through DTO
-        List<DaySalesResponse> result = reportDto.getDaySalesByDateRange("2024-04-10", "2024-04-10");
+        List<DaySalesResponse> result = reportDto.getDaySalesByDateRange(
+            LocalDate.parse("2024-04-10"), 
+            LocalDate.parse("2024-04-10")
+        );
 
         // Then: Verify response conversion
         assertNotNull("Result should not be null", result);
@@ -288,7 +310,10 @@ public class ReportGenerationIntegrationTests extends AbstractIntegrationTest {
         }
 
         // When: Get day sales for large date range
-        List<DaySalesResponse> result = reportDto.getDaySalesByDateRange("2024-05-01", "2024-05-10");
+        List<DaySalesResponse> result = reportDto.getDaySalesByDateRange(
+            LocalDate.parse("2024-05-01"), 
+            LocalDate.parse("2024-05-10")
+        );
 
         // Then: Verify all records are returned
         assertNotNull("Result should not be null", result);
@@ -320,7 +345,10 @@ public class ReportGenerationIntegrationTests extends AbstractIntegrationTest {
         reportDao.insert(daySales);
 
         // When: Get day sales with zero values
-        List<DaySalesResponse> result = reportDto.getDaySalesByDateRange("2024-06-15", "2024-06-15");
+        List<DaySalesResponse> result = reportDto.getDaySalesByDateRange(
+            LocalDate.parse("2024-06-15"), 
+            LocalDate.parse("2024-06-15")
+        );
 
         // Then: Verify zero values are handled correctly
         assertNotNull("Result should not be null", result);

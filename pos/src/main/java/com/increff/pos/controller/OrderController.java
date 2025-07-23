@@ -4,9 +4,11 @@ import com.increff.pos.dto.OrderDto;
 import com.increff.pos.model.form.OrderItemForm;
 import com.increff.pos.model.response.OrderResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -18,8 +20,11 @@ public class OrderController {
 
     @GetMapping
     public List<OrderResponse> searchOrders(
-            @RequestParam(required = false, name = "start-date") String startDate,
-            @RequestParam(required = false, name = "end-date") String endDate,
+            @RequestParam(required = false, name = "start-date")
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false, name = "end-date")
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+
             @RequestParam(required = false, name = "order-id") Integer orderId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {

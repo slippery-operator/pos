@@ -11,8 +11,10 @@ import com.increff.pos.model.response.LoginResponse;
 import com.increff.pos.model.response.UserResponse;
 import com.increff.pos.setup.AbstractIntegrationTest;
 import com.increff.pos.setup.TestData;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mock.web.MockHttpServletRequest;
 
 import static org.junit.Assert.*;
 import java.lang.reflect.Field;
@@ -34,6 +36,13 @@ public class AuthenticationIntegrationTests extends AbstractIntegrationTest {
 
     @Autowired
     private AuthDto authDto;
+    
+    private MockHttpServletRequest mockRequest;
+    
+    @Before
+    public void setUp() {
+        mockRequest = new MockHttpServletRequest();
+    }
     
     /**
      * Helper method to set private fields in LoginForm using reflection
@@ -170,7 +179,7 @@ public class AuthenticationIntegrationTests extends AbstractIntegrationTest {
         setLoginFormFields(loginForm, "login@example.com", "password123");
 
         // When: Login user
-        LoginResponse result = authDto.login(loginForm);
+        LoginResponse result = authDto.login(loginForm, mockRequest);
 
         // Then: Verify response
         assertNotNull("Result should not be null", result);
@@ -202,7 +211,7 @@ public class AuthenticationIntegrationTests extends AbstractIntegrationTest {
 
         // When & Then: Login should throw exception
         try {
-            authDto.login(loginForm);
+            authDto.login(loginForm, mockRequest);
             fail("Should throw ApiException for invalid credentials");
         } catch (ApiException e) {
             assertEquals("Should throw BAD_REQUEST", ErrorType.BAD_REQUEST, e.getErrorType());
@@ -228,7 +237,7 @@ public class AuthenticationIntegrationTests extends AbstractIntegrationTest {
 
         // When & Then: Login should throw exception
         try {
-            authDto.login(loginForm);
+            authDto.login(loginForm, mockRequest);
             fail("Should throw ApiException for non-existent user");
         } catch (ApiException e) {
             assertEquals("Should throw BAD_REQUEST", ErrorType.BAD_REQUEST, e.getErrorType());
@@ -338,8 +347,8 @@ public class AuthenticationIntegrationTests extends AbstractIntegrationTest {
         LoginForm login2 = new LoginForm();
         setLoginFormFields(login2, "user2@example.com", "pass2");
         
-        LoginResponse loginResult1 = authDto.login(login1);
-        LoginResponse loginResult2 = authDto.login(login2);
+        LoginResponse loginResult1 = authDto.login(login1, mockRequest);
+        LoginResponse loginResult2 = authDto.login(login2, mockRequest);
         
         assertEquals("User 1 login should succeed", "Login successful", loginResult1.getMessage());
         assertEquals("User 2 login should succeed", "Login successful", loginResult2.getMessage());
@@ -378,7 +387,7 @@ public class AuthenticationIntegrationTests extends AbstractIntegrationTest {
 
         // When & Then: Login should throw exception
         try {
-            authDto.login(nullForm);
+            authDto.login(nullForm, mockRequest);
             fail("Should throw exception for null form");
         } catch (Exception e) {
             // Should throw NullPointerException or ApiException

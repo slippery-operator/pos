@@ -1,5 +1,6 @@
 package com.increff.pos.model.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -10,8 +11,7 @@ import java.util.List;
 @Setter
 public class OrderResponse {
     private Integer id;
+    @JsonFormat(pattern = "dd MMM yyyy, h:mm a z")
     private ZonedDateTime time;
-    //TODO: check Jackson time converter
-    private String formattedTime;
     private List<OrderItemResponse> orderItems;
 }

@@ -6,11 +6,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.ser.ZonedDateTimeSerializer;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.context.annotation.PropertySources;
+import org.springframework.context.annotation.*;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
@@ -30,6 +26,9 @@ import java.time.format.DateTimeFormatter;
 })
 @EnableScheduling
 public class SpringConfig {
+
+	private static final DateTimeFormatter CUSTOM_FORMATTER =
+			DateTimeFormatter.ofPattern("dd MMM yyyy, h:mm a z");
 
 	@Bean
 	public Validator validator() {
@@ -66,13 +65,12 @@ public class SpringConfig {
 	}
 
 	@Bean
+	@Primary
 	public ObjectMapper objectMapper() {
-		JavaTimeModule javaTimeModule = new JavaTimeModule();
-		javaTimeModule.addSerializer(ZonedDateTime.class,
-				new ZonedDateTimeSerializer(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")));
 		return Jackson2ObjectMapperBuilder.json()
-				.featuresToDisable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS) // ISODate
-				.modules(javaTimeModule)
+				.modules(new JavaTimeModule())
+				.featuresToDisable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+				.serializers(new ZonedDateTimeSerializer(CUSTOM_FORMATTER))
 				.build();
 	}
 }

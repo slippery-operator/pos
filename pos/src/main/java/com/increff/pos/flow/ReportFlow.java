@@ -32,8 +32,9 @@ public class ReportFlow {
 
     @Transactional
     public void calculateDailySalesForDate(ZonedDateTime date) {
-        ZonedDateTime startInstant = date.withHour(0).withMinute(0).withSecond(0).withNano(0);
-        ZonedDateTime endInstant = date.withHour(23).withMinute(59).withSecond(59).withNano(999_999_999);
+        ZonedDateTime startInstant = DateUtil.getStartOfDay(date);
+        ZonedDateTime endInstant = DateUtil.getEndOfDay(date);
+
         DaySalesModel daySalesInfo = invoiceApi.getInvoicesDataByDateRange(startInstant, endInstant);
         DaySalesPojo existingDaySales = reportApi.getDaySalesByDate(date);
         if (existingDaySales != null) {
