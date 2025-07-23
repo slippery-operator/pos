@@ -64,8 +64,9 @@ public class ProductDto extends AbstractDto<ProductForm> {
         if (allErrors.isEmpty()) {
             createProductsFromValidForms(allForms, allErrors);
         }
-        String tsvContent = TsvResponseUtil.buildProductTsvContent(allForms, allErrors);
-        String base64Tsv = Base64.getEncoder().encodeToString(tsvContent.getBytes(StandardCharsets.UTF_8));
+
+        String tsvContent = allErrors.isEmpty() ? "" : TsvResponseUtil.buildProductTsvContent(allForms, allErrors);
+        String base64Tsv = tsvContent == "" ? "" : Base64.getEncoder().encodeToString(tsvContent.getBytes(StandardCharsets.UTF_8));
 
         UploadResponse response = new UploadResponse();
         response.setStatus(allErrors.isEmpty() ? "success" : "error");

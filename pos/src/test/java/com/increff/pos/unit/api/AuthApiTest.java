@@ -177,7 +177,7 @@ public class AuthApiTest {
             fail("Should throw ApiException for invalid email");
         } catch (ApiException e) {
             assertEquals(ErrorType.BAD_REQUEST, e.getErrorType());
-            assertTrue(e.getMessage().contains("Invalid credentials"));
+            assertTrue(e.getMessage().contains("Wrong"));
         }
 
         // And: DAO should only be called to check email
@@ -202,7 +202,7 @@ public class AuthApiTest {
             fail("Should throw ApiException for invalid password");
         } catch (ApiException e) {
             assertEquals(ErrorType.BAD_REQUEST, e.getErrorType());
-            assertTrue(e.getMessage().contains("Invalid credentials"));
+            assertTrue(e.getMessage().contains("Wrong"));
         }
 
         // And: DAO should be called to check email and password

@@ -19,14 +19,17 @@ import java.util.stream.Collectors;
 @Transactional
 public class InventoryDao extends AbstractDao<InventoryPojo> {
 
-    public InventoryDao() {super(InventoryPojo.class);}
+    public InventoryDao() {
+        super(InventoryPojo.class);
+    }
 
     public InventoryPojo selectByProductId(Integer productId) {
         return selectByField("productId", productId);
     }
 
     public List<InventoryPojo> findByProductNameLike(String productName, int page, int size) {
-        String sql = "SELECT i.* FROM inventory i " + "JOIN product p ON i.product_id = p.id ";
+        String sql = "SELECT i.* FROM inventory i " + "JOIN product p ON i.product_id = p.id " +
+                "WHERE i.quantity > 0 ";
         if (productName != null && !productName.trim().isEmpty()) {
             sql += "WHERE LOWER(p.name) LIKE ? ";
         }

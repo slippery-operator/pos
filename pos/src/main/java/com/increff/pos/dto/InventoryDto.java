@@ -57,8 +57,8 @@ public class InventoryDto extends AbstractDto<InventoryForm> {
             flow.processTsvUpload(finalValidForms);
         }
 
-        String tsvContent = TsvResponseUtil.generateInventoryTsvResponse(allForms, allErrors);
-        String base64Tsv = Base64.getEncoder().encodeToString(tsvContent.getBytes(StandardCharsets.UTF_8));
+        String tsvContent = allErrors.isEmpty() ? "" : TsvResponseUtil.generateInventoryTsvResponse(allForms, allErrors);
+        String base64Tsv = tsvContent == "" ? "" : Base64.getEncoder().encodeToString(tsvContent.getBytes(StandardCharsets.UTF_8));
 
         UploadResponse response = new UploadResponse();
         response.setStatus(allErrors.isEmpty() ? "success" : "error");

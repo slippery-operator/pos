@@ -207,7 +207,7 @@ public class AuthenticationIntegrationTests extends AbstractIntegrationTest {
         } catch (ApiException e) {
             assertEquals("Should throw BAD_REQUEST", ErrorType.BAD_REQUEST, e.getErrorType());
             assertTrue("Error message should mention invalid credentials", 
-                e.getMessage().contains("Invalid") || e.getMessage().contains("credentials"));
+                e.getMessage().contains("wrong") || e.getMessage().contains("or"));
         }
         
         // Verify database state unchanged

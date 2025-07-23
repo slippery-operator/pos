@@ -13,7 +13,6 @@ public class ConvertUtil {
 
     @Autowired
     private ModelMapper modelMapper;
-// id -> not id
 
     public <S, D> D convert(S source, Class<D> destinationType) {
         if (source == null) {
@@ -30,15 +29,5 @@ public class ConvertUtil {
         return sourceList.stream()
                 .map(source -> convert(source, destinationType))
                 .collect(Collectors.toList());
-    }
-
-    public <S, D> D convertWithConfig(S source, Class<D> destinationType,
-                                      java.util.function.Consumer<ModelMapper> config) {
-        if (source == null) {
-            return null;
-        }
-        ModelMapper customMapper = new ModelMapper();
-        config.accept(customMapper);
-        return customMapper.map(source, destinationType);
     }
 }

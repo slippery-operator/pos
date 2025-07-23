@@ -28,6 +28,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    //TODO: move the logic to DTO
     public LoginResponse login(@Valid @RequestBody LoginForm loginForm, HttpServletRequest httpRequest) {
         logger.info("Login attempt for email: " + loginForm.getEmail());
         logger.info("Request Origin: " + httpRequest.getHeader("Origin"));

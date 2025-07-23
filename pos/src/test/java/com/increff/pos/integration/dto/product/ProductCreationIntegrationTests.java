@@ -119,7 +119,7 @@ public class ProductCreationIntegrationTests extends AbstractIntegrationTest {
             productDto.createProduct(productForm);
             fail("Expected ApiException to be thrown for non-existent client");
         } catch (ApiException e) {
-            assertTrue(e.getMessage().contains("Client not found"));
+            assertTrue(e.getMessage().contains("not found"));
         }
 
         // And: No product should be created in database

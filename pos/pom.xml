@@ -150,13 +150,6 @@
 			<version>${jetty.version}</version>
 		</dependency>
 
-		<!-- Jetty Session support -->
-		<dependency>
-			<groupId>org.eclipse.jetty</groupId>
-			<artifactId>jetty-server</artifactId>
-			<version>${jetty.version}</version>
-		</dependency>
-
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-servlets</artifactId>
@@ -292,17 +285,6 @@
 		</dependency>
 
 		<!-- ======================================== -->
-		<!-- SPRING BOOT DEPENDENCIES -->
-		<!-- ======================================== -->
-		
-		<!-- Spring Boot Starter Data JPA -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-jpa</artifactId>
-			<version>${spring.boot.version}</version>
-		</dependency>
-
-		<!-- ======================================== -->
 		<!-- TESTING DEPENDENCIES -->
 		<!-- ======================================== -->
 		
@@ -369,7 +351,7 @@
 				<artifactId>jetty-maven-plugin</artifactId>
 				<version>${jetty.version}</version>
 				<configuration>
-					<scanIntervalSeconds>5</scanIntervalSeconds>
+					<scanIntervalSeconds>0</scanIntervalSeconds>
 					<useTestClasspath>false</useTestClasspath>
 					<systemProperties>
 						<systemProperty>
@@ -391,6 +373,8 @@
 					<webApp>
 						<contextPath>${jetty.context}</contextPath>
 					</webApp>
+					<!-- Disable automatic scanning to prevent restarts when invoices are generated -->
+					<scanIntervalSeconds>0</scanIntervalSeconds>
 
 				</configuration>
 			</plugin>

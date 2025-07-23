@@ -76,7 +76,7 @@ public class OrderCreationIntegrationTests extends AbstractIntegrationTest {
             orderDto.createOrders(orderForm.getOrderItems());
             fail("Expected ApiException to be thrown for non-existent product");
         } catch (ApiException e) {
-            assertTrue(e.getMessage().contains("Product not found") ||
+            assertTrue(e.getMessage().contains("not found") ||
                       e.getMessage().contains("does not exist"));
         }
 

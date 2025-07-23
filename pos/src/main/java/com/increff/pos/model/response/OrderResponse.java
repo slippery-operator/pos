@@ -11,6 +11,7 @@ import java.util.List;
 public class OrderResponse {
     private Integer id;
     private ZonedDateTime time;
+    //TODO: check Jackson time converter
     private String formattedTime;
     private List<OrderItemResponse> orderItems;
 }

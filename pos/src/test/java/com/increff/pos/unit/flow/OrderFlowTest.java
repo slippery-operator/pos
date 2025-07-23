@@ -134,7 +134,7 @@ public class OrderFlowTest {
             fail("Should throw ApiException for non-existent product");
         } catch (ApiException e) {
             assertEquals(ErrorType.NOT_FOUND, e.getErrorType());
-            assertTrue(e.getMessage().contains("Product not found"));
+            assertTrue(e.getMessage().contains("not found"));
         }
 
         // And: Verify API interactions

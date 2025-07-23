@@ -18,7 +18,7 @@ public class ClientPojo extends AbstractPojo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer clientId;
 
-    @Column(nullable = false, length = 255, unique = true)
+    @Column(nullable = false, length = 51, unique = true)
     private String name;
 
     public ClientPojo(String name) {

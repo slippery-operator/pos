@@ -48,10 +48,10 @@ public class InventoryApi {
     public void validateInventoryAvailability(Integer productId, Integer requiredQuantity) {
         InventoryPojo inventory = inventoryDao.selectByProductId(productId);
         if (inventory == null) {
-            throw new ApiException(ErrorType.BAD_REQUEST, "No inventory found for product: " + productId);
+            throw new ApiException(ErrorType.BAD_REQUEST, "No inventory found for cart product: " + productId);
         }
         if (inventory.getQuantity() < requiredQuantity) {
-            throw new ApiException(ErrorType.BAD_REQUEST, "Insufficient inventory for product " +  productId);
+            throw new ApiException(ErrorType.BAD_REQUEST, "Insufficient inventory for cart product " +  productId);
         }
     }
 

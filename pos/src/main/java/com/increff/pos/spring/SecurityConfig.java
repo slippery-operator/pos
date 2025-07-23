@@ -174,7 +174,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.POST, "/inventory/upload").hasRole("SUPERVISOR")
                 .antMatchers(HttpMethod.PUT, "/inventory/**").hasRole("SUPERVISOR")
 
-                .antMatchers(HttpMethod.POST, "/orders").hasRole("SUPERVISOR")
+                .antMatchers(HttpMethod.POST, "/orders").hasAnyRole("SUPERVISOR", "OPERATOR")
 
                 .antMatchers(HttpMethod.GET, "/clients/**").hasAnyRole("SUPERVISOR", "OPERATOR")
                 .antMatchers(HttpMethod.GET, "/products/**").hasAnyRole("SUPERVISOR", "OPERATOR")
@@ -188,6 +188,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .exceptionHandling()
                 .authenticationEntryPoint((request, response, authException) -> {
+                    response.setHeader("Access-Control-Allow-Origin", "http://localhost:4200");
+                    response.setHeader("Access-Control-Allow-Credentials", "true");
+                    response.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS,HEAD");
+                    response.setHeader("Access-Control-Allow-Headers", "*");
+
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     response.setContentType("application/json");
                     response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"Authentication required\"}");

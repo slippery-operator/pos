@@ -15,6 +15,6 @@ import javax.validation.constraints.Size;
 public class ClientForm {
 
     @NotBlank
-    @Size(min = 1, max = 255)
+    @Size(min = 1, max = 51)
     private String name;
  }

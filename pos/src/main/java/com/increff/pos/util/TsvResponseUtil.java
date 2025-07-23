@@ -21,6 +21,9 @@ public class TsvResponseUtil {
 
     public static String generateInventoryTsvResponse( List<InventoryFormWithRow> inventoryFormsWithRow,
             List<ValidationError> validationErrors) {
+        if(validationErrors.isEmpty()) {
+            return "";
+        }
         StringBuilder tsvContent = new StringBuilder();
         tsvContent.append("barcode\tquantity\tvalidity\tremarks\n");
         // Create error map for quick lookup
@@ -51,6 +54,10 @@ public class TsvResponseUtil {
             List<ProductFormWithRow> productFormsWithRow,
             List<ValidationError> validationErrors) {
 
+        if(validationErrors.isEmpty()) {
+            return "";
+        }
+
         StringBuilder sb = new StringBuilder();
         sb.append("barcode\tclient_id\tname\tmrp\timageUrl\tvalidity\tremarks\n");
 
@@ -78,7 +85,7 @@ public class TsvResponseUtil {
     }
 
     private static String nullToString(Object val) {
-        return val == null ? "invalid" : val.toString();
+        return val == null ? "" : val.toString();
     }
 
     /**

@@ -48,7 +48,7 @@ public class InvoiceFlow {
 
     public OrderWithInvoiceResponse getOrderDataForInvoice(Integer orderId) {
         if (invoiceApi.existsByOrderId(orderId)) {
-            throw new ApiException(ErrorType.CONFLICT, "Invoice already exists for order");
+            throw new ApiException(ErrorType.CONFLICT, "Invoice already exists for order: " +  orderId);
         }
         OrdersPojo order = orderApi.getOrderById(orderId);
         List<OrderItemsPojo> orderItems = orderItemApi.getOrderItemsByOrderId(orderId);

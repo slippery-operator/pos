@@ -10,7 +10,8 @@ import java.time.ZonedDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-public class InventoryResponse extends InventoryForm {
-
+public class InventoryResponse {
+    private Integer productId;
+    private Integer quantity;
     private Integer id;
 }

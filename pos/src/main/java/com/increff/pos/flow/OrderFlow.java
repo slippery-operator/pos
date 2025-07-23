@@ -48,7 +48,7 @@ public class OrderFlow {
         Map<String, Integer> productBarcodeToId = productApi.findProductsByBarcodes(barcodes);
         for (OrderItemForm orderItem : orderItems) {
             if (!productBarcodeToId.containsKey(orderItem.getBarcode())) {
-                throw new ApiException(ErrorType.NOT_FOUND, "Product not found");
+                throw new ApiException(ErrorType.NOT_FOUND, "Product with barcode: " + orderItem.getBarcode() + " not found");
             }
         }
         for (OrderItemForm orderItem : orderItems) {
