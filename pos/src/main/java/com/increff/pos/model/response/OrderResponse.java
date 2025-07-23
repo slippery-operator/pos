@@ -11,7 +11,7 @@ import java.util.List;
 @Setter
 public class OrderResponse {
     private Integer id;
-    @JsonFormat(pattern = "dd MMM yyyy, h:mm a z")
+    @JsonFormat(pattern = "dd MMM yyyy, h:mm a z", timezone = "UTC")
     private ZonedDateTime time;
     private List<OrderItemResponse> orderItems;
 }

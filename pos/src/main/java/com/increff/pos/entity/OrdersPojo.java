@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
 import java.time.Instant;
@@ -20,7 +21,7 @@ public class OrdersPojo extends AbstractPojo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "time", nullable = false, updatable = false, insertable = false)
-    @org.hibernate.annotations.Generated(org.hibernate.annotations.GenerationTime.ALWAYS)
+    @Column(name = "time", nullable = false, updatable = false)
+    @CreationTimestamp
     private ZonedDateTime time;
 }
