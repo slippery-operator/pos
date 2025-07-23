@@ -10,15 +10,10 @@ import com.increff.pos.model.response.ValidationError;
 import com.increff.pos.util.ConvertUtil;
 import com.increff.pos.util.TsvParserUtil;
 import com.increff.pos.util.TsvResponseUtil;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -64,15 +59,7 @@ public class ProductDto extends AbstractDto<ProductForm> {
         if (allErrors.isEmpty()) {
             createProductsFromValidForms(allForms, allErrors);
         }
-
-        String tsvContent = allErrors.isEmpty() ? "" : TsvResponseUtil.buildProductTsvContent(allForms, allErrors);
-        String base64Tsv = tsvContent == "" ? "" : Base64.getEncoder().encodeToString(tsvContent.getBytes(StandardCharsets.UTF_8));
-
-        UploadResponse response = new UploadResponse();
-        response.setStatus(allErrors.isEmpty() ? "success" : "error");
-        response.setTsvBase64(base64Tsv);
-        response.setFilename("product_upload_results.tsv");
-
+        UploadResponse response = TsvResponseUtil.createProductUploadResponse(allForms, allErrors);
         return ResponseEntity.ok(response);
     }
 

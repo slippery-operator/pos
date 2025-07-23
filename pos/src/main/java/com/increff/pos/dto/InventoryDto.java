@@ -44,7 +44,6 @@ public class InventoryDto extends AbstractDto<InventoryForm> {
         validationUtil.validateTsvFile(file);
         List<InventoryFormWithRow> allForms = TsvParserUtil.parseInventoryTsvWithRow(file);
         List<ValidationError> allErrors = new ArrayList<>();
-
         allErrors.addAll(validateInventoryForms(allForms));
 
         List<InventoryFormWithRow> validForms = filterValidForms(allForms, allErrors);
@@ -52,18 +51,11 @@ public class InventoryDto extends AbstractDto<InventoryForm> {
         allErrors.addAll(flowErrors.values());
 
         List<InventoryFormWithRow> finalValidForms = filterValidForms(validForms, allErrors);
-
         if (!finalValidForms.isEmpty() && allErrors.isEmpty()) {
             flow.processTsvUpload(finalValidForms);
         }
 
-        String tsvContent = allErrors.isEmpty() ? "" : TsvResponseUtil.generateInventoryTsvResponse(allForms, allErrors);
-        String base64Tsv = tsvContent == "" ? "" : Base64.getEncoder().encodeToString(tsvContent.getBytes(StandardCharsets.UTF_8));
-
-        UploadResponse response = new UploadResponse();
-        response.setStatus(allErrors.isEmpty() ? "success" : "error");
-        response.setTsvBase64(base64Tsv);
-        response.setFilename("inventory_upload_results.tsv");
+        UploadResponse response = TsvResponseUtil.createInventoryUploadResponse(allForms, allErrors);
         return ResponseEntity.ok(response);
     }
 
