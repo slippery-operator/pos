@@ -13,7 +13,7 @@ import java.time.format.DateTimeFormatter;
 public class ErrorResponse {
     private String error;
     private String message;
-    @JsonFormat(pattern = "dd MMM yyyy, h:mm a z")
+    @JsonFormat(pattern = "dd MMM yyyy, h:mm a z", timezone = "UTC")
     private ZonedDateTime timestamp;
     private String path;
 

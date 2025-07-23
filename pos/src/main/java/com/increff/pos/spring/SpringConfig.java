@@ -16,8 +16,8 @@ import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.TimeZone;
 
 @Configuration
 @ComponentScan("com.increff.pos")
@@ -71,6 +71,7 @@ public class SpringConfig {
 				.modules(new JavaTimeModule())
 				.featuresToDisable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
 				.serializers(new ZonedDateTimeSerializer(CUSTOM_FORMATTER))
+				.timeZone(TimeZone.getTimeZone("UTC"))
 				.build();
 	}
 }
