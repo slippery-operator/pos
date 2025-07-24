@@ -37,10 +37,8 @@ public class AuthApi {
         user.setPassword(passwordEncoder.encode(password));
         user.setRole(role);
         user.setLastLogin(null);
-
         // Save user to database
         UserPojo savedUser = userDao.insertUser(user);
-
         // Return user response without password
         return new UserResponse(
                 savedUser.getId(),
@@ -61,7 +59,6 @@ public class AuthApi {
         // Update last login time
         user.setLastLogin(ZonedDateTime.now());
         userDao.updateUser(user);
-
         // Return user response without password
         return new UserResponse(
                 user.getId(),
