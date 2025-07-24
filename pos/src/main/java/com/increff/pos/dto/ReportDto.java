@@ -24,8 +24,6 @@ public class ReportDto {
     @Autowired
     private ConvertUtil convertUtil;
 
-
-//    TODO: cleanup DateUtil
     public List<DaySalesResponse> getDaySalesByDateRange(LocalDate startDate, LocalDate endDate) {
         ZonedDateTime startDateTime = DateUtil.toStartOfDayUTC(startDate);
         ZonedDateTime endDateTime = DateUtil.toEndOfDayUTC(endDate);
