@@ -1,7 +1,9 @@
 package com.increff.pos.spring;
 
 import com.increff.pos.model.Constants;
+import com.increff.pos.util.JwtUtil;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -21,7 +23,10 @@ import java.util.List;
 @Component
 public class CustomAuthenticationFilter extends OncePerRequestFilter {
 
-//    private static final Logger logger = Logger.getLogger(CustomAuthenticationFilter.class);
+    private static final Logger logger = Logger.getLogger(CustomAuthenticationFilter.class);
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
@@ -33,39 +38,48 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
+        // Check for JWT token in Authorization header
+        String authHeader = request.getHeader("Authorization");
+        boolean isAuthenticated = false;
+        
+        logger.debug("Request path: " + requestPath + ", Authorization header: " + (authHeader != null ? "present" : "null"));
+        
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7); // Remove "Bearer " prefix
+            logger.debug("JWT token found: " + token.substring(0, Math.min(20, token.length())) + "...");
+            
+            if (jwtUtil.validateToken(token)) {
+                Integer userId = jwtUtil.getUserIdFromToken(token);
+                String userRole = jwtUtil.getRoleFromToken(token);
+                
+                logger.debug("JWT token validated - userId: " + userId + ", userRole: " + userRole);
 
-        // Get session without creating a new one
-        HttpSession session = request.getSession(false);
+                // Create authentication token
+                List<GrantedAuthority> authorities = new ArrayList<>();
+                authorities.add(new SimpleGrantedAuthority("ROLE_" + userRole));
 
-        if (session != null) {
-            // Get user information from session
-            Integer userId = (Integer) session.getAttribute(Constants.SESSION_USER_ID);
-            String userRole = (String) session.getAttribute(Constants.SESSION_ROLE);
-            Long lastCheckedTime = (Long) session.getAttribute(Constants.SESSION_LAST_CHECKED_TIME);
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(userId, null, authorities);
 
-            if (userId != null && userRole != null && lastCheckedTime != null) {
-                // Check if session is still valid (within 5 minutes)
-                long currentTime = System.currentTimeMillis();
-                long timeDifference = currentTime - lastCheckedTime;
+                // Set authentication in security context
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                isAuthenticated = true;
 
-                if (timeDifference < Constants.SESSION_REVALIDATION_INTERVAL_MS) {
-                    // Update last checked time
-                    session.setAttribute("lastCheckedTime", currentTime);
-
-                    // Create authentication token
-                    List<GrantedAuthority> authorities = new ArrayList<>();
-                    authorities.add(new SimpleGrantedAuthority("ROLE_" + userRole));
-
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(userId, null, authorities);
-
-                    // Set authentication in security context
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                } else {
-                    // Session expired, invalidate it
-                    session.invalidate();
-                }
+                logger.debug("JWT token validated for user: " + userId);
+            } else {
+                logger.debug("JWT token validation failed");
             }
+        }
+        if (!isAuthenticated) {
+            logger.warn("Unauthorized access attempt to: " + requestPath + " - No valid JWT token found");
+            response.setHeader("Access-Control-Allow-Origin", "http://localhost:4200");
+            response.setHeader("Access-Control-Allow-Credentials", "true");
+            response.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS,HEAD");
+            response.setHeader("Access-Control-Allow-Headers", "*");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("{\"error\": \"Authentication required\"}");
+            response.setContentType("application/json");
+            return; // Don't continue filter chain
         }
         filterChain.doFilter(request, response);
     }
