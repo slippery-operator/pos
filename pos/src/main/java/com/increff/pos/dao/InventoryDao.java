@@ -27,20 +27,27 @@ public class InventoryDao extends AbstractDao<InventoryPojo> {
         return selectByField("productId", productId);
     }
 
-    public List<InventoryPojo> findByProductNameLike(String productName, int page, int size) {
+    public List<InventoryPojo> findByProductNameLike(String productName, String barcode, int page, int size) {
         String sql = "SELECT i.* FROM inventory i " + "JOIN product p ON i.product_id = p.id " +
-                "WHERE i.quantity > 0 ";
+                "WHERE i.quantity > 0";
+        // Build dynamic conditions
         if (productName != null && !productName.trim().isEmpty()) {
-            sql += "WHERE LOWER(p.name) LIKE ? ";
+            sql += " AND LOWER(p.name) LIKE ?";
         }
-        sql += "ORDER BY p.name ASC LIMIT ? OFFSET ?";
+        if (barcode != null && !barcode.trim().isEmpty()) {
+            sql += " AND LOWER(p.barcode) LIKE ?";
+        }
+        sql += " ORDER BY p.name ASC LIMIT ? OFFSET ?";
         Query nativeQuery = entityManager.createNativeQuery(sql, InventoryPojo.class);
         int paramIndex = 1;
         if (productName != null && !productName.trim().isEmpty()) {
             nativeQuery.setParameter(paramIndex++, productName.toLowerCase() + "%");
         }
-        nativeQuery.setParameter(paramIndex++, size);        // LIMIT
-        nativeQuery.setParameter(paramIndex, page * size);   // OFFSE
+        if (barcode != null && !barcode.trim().isEmpty()) {
+            nativeQuery.setParameter(paramIndex++, barcode.toLowerCase() + "%");
+        }
+        nativeQuery.setParameter(paramIndex++, size);             // LIMIT
+        nativeQuery.setParameter(paramIndex, page * size);        // OFFSET
         return nativeQuery.getResultList();
     }
 

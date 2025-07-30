@@ -35,8 +35,8 @@ public class InventoryDto extends AbstractDto<InventoryForm> {
     @Autowired
     private InventoryFlow flow;
 
-    public List<InventoryResponse> searchInventory(String productName, int page, int size) {
-        List<InventoryPojo> inventoryPojos = inventoryApi.searchInventory(toLowerCase(productName), page, size);
+    public List<InventoryResponse> searchInventory(String productName, String barcode, int page, int size) {
+        List<InventoryPojo> inventoryPojos = inventoryApi.searchInventory(toLowerCase(productName), toLowerCase(barcode), page, size);
         return convertUtil.convertList(inventoryPojos, InventoryResponse.class);
     }
 

@@ -63,6 +63,7 @@ public class OrderApiTest {
      * Test searching orders with all parameters.
      * Verifies that search parameters are passed correctly to DAO.
      */
+
     @Test
     public void testSearchOrders_WithAllParameters() {
         // Given: Search parameters
@@ -122,6 +123,7 @@ public class OrderApiTest {
      * Test searching orders - no results.
      * Verifies that empty result is handled correctly.
      */
+    // TODO: add more testcases involving only orderId, start date > end date
     @Test
     public void testSearchOrders_NoResults() {
         // Given: Search parameters that return no results

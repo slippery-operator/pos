@@ -53,7 +53,7 @@ public class OrderFlow {
         }
         for (OrderItemForm orderItem : orderItems) {
             Integer productId = productBarcodeToId.get(orderItem.getBarcode());
-            inventoryApi.validateInventoryAvailability(productId, orderItem.getQuantity());
+            inventoryApi.validateInventoryAvailability(productId, orderItem.getQuantity(), orderItem.getBarcode());
         }
         return productBarcodeToId;
     }

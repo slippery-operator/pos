@@ -19,8 +19,8 @@ public class InventoryApi {
     @Autowired
     private InventoryDao inventoryDao;
 
-    public List<InventoryPojo> searchInventory(String productName, int page, int size) {
-        return inventoryDao.findByProductNameLike(productName, page, size);
+    public List<InventoryPojo> searchInventory(String productName, String barcode, int page, int size) {
+        return inventoryDao.findByProductNameLike(productName, barcode, page, size);
     }
 
     public InventoryPojo createInventory(Integer productId, Integer quantity) {
@@ -45,18 +45,18 @@ public class InventoryApi {
         return existingInventory;
     }
 
-    public void validateInventoryAvailability(Integer productId, Integer requiredQuantity) {
+    public void validateInventoryAvailability(Integer productId, Integer requiredQuantity, String barcode) {
         InventoryPojo inventory = inventoryDao.selectByProductId(productId);
         if (inventory == null) {
             throw new ApiException(ErrorType.BAD_REQUEST, "No inventory found for cart product: " + productId);
         }
         if (inventory.getQuantity() < requiredQuantity) {
-            throw new ApiException(ErrorType.BAD_REQUEST, "Insufficient inventory for cart product " +  productId);
+            throw new ApiException(ErrorType.BAD_REQUEST, "Insufficient inventory for cart product " +  barcode);
         }
     }
 
     public void reduceInventory(Integer productId, Integer orderQuantity) {
-        validateInventoryAvailability(productId, orderQuantity);
+        validateInventoryAvailability(productId, orderQuantity, "");
         InventoryPojo inventory = inventoryDao.selectByProductId(productId);
         int newQuantity = inventory.getQuantity() - orderQuantity;
         inventory.setQuantity(newQuantity);

@@ -58,6 +58,7 @@
                             <fo:block font-weight="bold" space-after="2mm">Invoice Details:</fo:block>
                             <fo:block>Order ID: $orderId</fo:block>
                             <fo:block>Order Date: $orderTime</fo:block>
+                            <fo:block>Invoice Generated: $currentDate</fo:block>
                         </fo:table-cell>
                     </fo:table-row>
                 </fo:table-body>

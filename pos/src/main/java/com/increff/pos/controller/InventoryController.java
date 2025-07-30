@@ -24,9 +24,10 @@ public class InventoryController {
     @GetMapping
     public List<InventoryResponse> searchInventory(
             @RequestParam(required = false) String productName,
+            @RequestParam(required = false) String barcode,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return dto.searchInventory(productName, page, size);
+        return dto.searchInventory(productName, barcode, page, size);
     }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

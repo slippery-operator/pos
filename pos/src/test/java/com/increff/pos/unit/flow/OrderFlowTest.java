@@ -97,6 +97,7 @@ public class OrderFlowTest {
 
         // When: OrderFlow creates the order
         OrdersPojo result = orderFlow.createOrder(orderItems);
+        // TODO: validation for dao result
 
         // Then: Result should be valid
         assertNotNull(result);
@@ -255,6 +256,8 @@ public class OrderFlowTest {
         item1.setBarcode(testProduct1.getBarcode());
         item1.setQuantity(5);
         item1.setMrp(90.0);
+
+        // TODO: create function for constructing mockito objects
 
         OrderItemForm item2 = new OrderItemForm();
         item2.setBarcode(testProduct1.getBarcode()); // Same barcode
