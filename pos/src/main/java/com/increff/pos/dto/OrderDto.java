@@ -2,9 +2,11 @@ package com.increff.pos.dto;
 
 import com.increff.pos.api.OrderApi;
 import com.increff.pos.api.OrderItemApi;
+import com.increff.pos.exception.ApiException;
 import com.increff.pos.flow.OrderFlow;
 import com.increff.pos.entity.OrderItemsPojo;
 import com.increff.pos.entity.OrdersPojo;
+import com.increff.pos.model.enums.ErrorType;
 import com.increff.pos.model.form.OrderItemForm;
 import com.increff.pos.model.response.OrderItemResponse;
 import com.increff.pos.model.response.OrderResponse;
@@ -46,6 +48,9 @@ public class OrderDto extends AbstractDto<OrderItemForm> {
     }
 
     public List<OrderResponse> searchOrders(LocalDate startDate, LocalDate endDate, Integer orderId, int page, int size) {
+        if (endDate.isBefore(startDate)) {
+            throw new ApiException(ErrorType.BAD_REQUEST, "End date cannot be before start date");
+        }
         ZonedDateTime startDateTime = DateUtil.toStartOfDayUTC(startDate);
         ZonedDateTime endDateTime = DateUtil.toEndOfDayUTC(endDate);
         List<OrdersPojo> orders = orderApi.searchOrders(startDateTime, endDateTime, orderId, page, size);

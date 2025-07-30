@@ -80,26 +80,4 @@ public class InventoryDto extends AbstractDto<InventoryForm> {
                 .collect(Collectors.toList());
     }
 
-//    private Map<Integer, Integer> mapProductIdsToRowNumbers(List<InventoryFormWithRow> validForms) {
-//        Map<Integer, Integer> productRowMap = new HashMap<>();
-//        for (InventoryFormWithRow form : validForms) {
-//            productRowMap.put(form.getForm().getProductId(), form.getRowNumber());
-//        }
-//        return productRowMap;
-//    }
-
-//    private List<ValidationError> validateInventoryWithoutSaving(Map<Integer, Integer> productRowMap) {
-//        if (productRowMap.isEmpty()) return Collections.emptyList();
-//
-//        return inventoryApi.validateInventoryWithoutSaving(productRowMap).entrySet().stream()
-//                .sorted(Map.Entry.comparingByKey())
-//                .map(Map.Entry::getValue)
-//                .collect(Collectors.toList());
-//    }
-//
-//    private List<InventoryPojo> convertToInventoryPojos(List<InventoryFormWithRow> validForms) {
-//        return validForms.stream()
-//                .map(form -> convertUtil.convert(form.getForm(), InventoryPojo.class))
-//                .collect(Collectors.toList());
-//    }
 }

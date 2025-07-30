@@ -2,6 +2,8 @@ package com.increff.pos.dto;
 
 import com.increff.pos.api.ReportApi;
 import com.increff.pos.entity.DaySalesPojo;
+import com.increff.pos.exception.ApiException;
+import com.increff.pos.model.enums.ErrorType;
 import com.increff.pos.model.response.DaySalesResponse;
 import com.increff.pos.util.ConvertUtil;
 import com.increff.pos.util.DateUtil;
@@ -25,6 +27,9 @@ public class ReportDto {
     private ConvertUtil convertUtil;
 
     public List<DaySalesResponse> getDaySalesByDateRange(LocalDate startDate, LocalDate endDate) {
+        if (endDate.isBefore(startDate)) {
+            throw new ApiException(ErrorType.BAD_REQUEST, "End date cannot be before start date");
+        }
         ZonedDateTime startDateTime = DateUtil.toStartOfDayUTC(startDate);
         ZonedDateTime endDateTime = DateUtil.toEndOfDayUTC(endDate);
         List<DaySalesPojo> daySalesList = api.getDaySalesByDateRange(startDateTime, endDateTime);
